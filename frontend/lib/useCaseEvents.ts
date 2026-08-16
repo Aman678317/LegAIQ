@@ -1,0 +1,140 @@
+"use client";
+
+import { useEffect, useRef, useState, useCallback } from "react";
+import { createClient } from "@/lib/supabase";
+
+export interface JobEvent {
+  id: string;
+  job_type: string;
+  state: string;
+  progress: number;
+  document_id: string | null;
+  error_message: string | null;
+  updated_at: string;
+}
+
+export interface DocumentEvent {
+  id: string;
+  file_name: string;
+  status: string;
+  page_count: number | null;
+  ocr_confidence: number | null;
+  error_message: string | null;
+  updated_at: string;
+}
+
+type ConnectionStatus = "connecting" | "live" | "polling";
+
+/**
+ * Subscribes to real-time case updates via SSE, with automatic fallback
+ * to interval polling if the stream drops (e.g. dev-server reloads).
+ *
+ * Returns the latest documents map plus the connection status, so the UI
+ * can show "live" vs "polling" honestly.
+ */
+export function useCaseEvents(caseId: string | undefined, pollMs = 5000) {
+  const [jobs, setJobs] = useState<Record<string, JobEvent>>({});
+  const [documents, setDocuments] = useState<Record<string, DocumentEvent>>({});
+  const [status, setStatus] = useState<ConnectionStatus>("connecting");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const applyJob = useCallback((job: JobEvent) => {
+    setJobs((prev) => ({ ...prev, [job.id]: job }));
+  }, []);
+
+  const applyDocument = useCallback((doc: DocumentEvent) => {
+    setDocuments((prev) => ({ ...prev, [doc.id]: doc }));
+  }, []);
+
+  // Fallback poll — used until the SSE stream connects, and whenever it errors
+  const poll = useCallback(async () => {
+    if (!caseId) return;
+    try {
+      const supabase = createClient();
+      const [{ data: docRows }, { data: jobRows }] = await Promise.all([
+        supabase.from("documents").select("id, file_name, status, page_count, ocr_confidence, error_message, updated_at").eq("case_id", caseId),
+        supabase.from("jobs").select("id, job_type, state, progress, document_id, error_message, updated_at").eq("case_id", caseId).order("updated_at", { ascending: false }).limit(40),
+      ]);
+      if (docRows) setDocuments(Object.fromEntries(docRows.map((d: any) => [d.id, d])));
+      if (jobRows) setJobs(Object.fromEntries(jobRows.map((j: any) => [j.id, j])));
+    } catch {
+      // ignore; next poll retries
+    }
+  }, [caseId]);
+
+  useEffect(() => {
+    if (!caseId) return;
+    let es: EventSource | null = null;
+    let cancelled = false;
+
+    async function connect() {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || cancelled) {
+        setStatus("polling");
+        return;
+      }
+
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/cases/${caseId}/events?token=${session.access_token}`;
+      es = new EventSource(url);
+
+      es.addEventListener("open", () => {
+        if (!cancelled) setStatus("live");
+        stopPolling();
+      });
+
+      es.addEventListener("state", (e) => {
+        const data = JSON.parse((e as MessageEvent).data);
+        setDocuments(Object.fromEntries((data.documents || []).map((d: any) => [d.id, d])));
+        setJobs(Object.fromEntries((data.jobs || []).map((j: any) => [j.id, j])));
+      });
+
+      es.addEventListener("job", (e) => applyJob(JSON.parse((e as MessageEvent).data)));
+      es.addEventListener("document", (e) => applyDocument(JSON.parse((e as MessageEvent).data)));
+
+      es.addEventListener("error", () => {
+        if (cancelled) return;
+        setStatus("polling");
+        es?.close();
+        startPolling();
+        // Attempt reconnect after a pause
+        setTimeout(() => {
+          if (!cancelled) {
+            stopPolling();
+            connect();
+          }
+        }, 15000);
+      });
+    }
+
+    function startPolling() {
+      if (!pollRef.current) {
+        poll();
+        pollRef.current = setInterval(poll, pollMs);
+      }
+    }
+    function stopPolling() {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    }
+
+    // Start with one poll to populate instantly, then try SSE
+    poll();
+    connect();
+
+    return () => {
+      cancelled = true;
+      es?.close();
+      stopPolling();
+    };
+  }, [caseId, pollMs, poll, applyJob, applyDocument]);
+
+  return {
+    jobs: Object.values(jobs),
+    documents: Object.values(documents),
+    documentMap: documents,
+    status,
+  };
+}

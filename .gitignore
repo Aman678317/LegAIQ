@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Supabase local
+supabase/.temp/
+
+# Celery
+celerybeat-schedule
+
+# Playwright / test artifacts
+frontend/test-results/
+frontend/e2e-results/
+frontend/playwright-report/
+
+# Agent/IDE session data
+.zcode/
+.mimosa/
+
+# OneDrive stray files
+*.url
