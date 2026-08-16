@@ -155,15 +155,20 @@ Blueprint, with Harvey.ai as the design reference for the landing page.
 
 ## Known Limitations / Not Yet Implemented
 
-1. **Google Vision OCR** — provider stub raises NotImplementedError; use tesseract
-2. **DOCX export** — PDF only (dependency-free implementation)
-3. **Billing go-live** — Razorpay/Stripe adapters are implemented and tested but
+1. **Billing go-live** — Razorpay/Stripe adapters are implemented and tested but
    inert until keys + webhook URLs are configured (per spec: no fake transactions)
-4. **Research in-request** — runs inline in the API rather than via the worker
+2. **Research in-request** — runs inline in the API rather than via the worker
    queue (fine at current scale; dispatch scaffolding exists)
-5. **Agent cost budgets** — estimated from listed prices; no hard provider-side cap
-6. **Deployment** — render.yaml is complete but not yet provisioned; CI is ready
-   and gates every push once the repo is on GitHub
+3. **Agent cost budgets** — estimated from listed prices; no hard provider-side cap
+4. **Deployment** — repo is committed and CI-ready; provision Supabase + Render
+   from `render.yaml`, apply migrations 001–012, then push to GitHub
+5. **Security scanning** — the pre-commit scanner cleared the codebase but noted
+   an incomplete deep scan (library source limit); re-run a full audit after
+   `npm ci`/`pip install` on the deployment machine
+
+Closed in the final pass: DOCX export (dependency-free OOXML writer, tested),
+Google Vision OCR (real implementation, guarded import), URL-safety guard in
+the frontend API client, and E2E auth fixtures renamed as obvious non-secrets.
 
 ## Risks
 
