@@ -96,8 +96,8 @@ declare
   t text;
 begin
   foreach t in array array[
-    'case_collaborators', 'properties', 'property_field_sources',
-    'documents', 'document_pages', 'page_translations',
+    'case_collaborators', 'properties',
+    'documents',
     'jobs', 'activity_events',
     'extracted_entities', 'persons', 'document_chunks', 'chat_messages',
     'ownership_nodes', 'ownership_edges', 'timeline_events',
@@ -111,6 +111,60 @@ begin
     execute format('create policy "case admins delete" on public.%I for delete using (public.can_manage_case(case_id))', t);
   end loop;
 end $$;
+
+-- property_field_sources is scoped via properties.case_id
+create policy "case members read pfs" on public.property_field_sources
+  for select using (
+    public.is_case_member((select p.case_id from public.properties p where p.id = property_id))
+  );
+create policy "case members insert pfs" on public.property_field_sources
+  for insert with check (
+    public.is_case_member((select p.case_id from public.properties p where p.id = property_id))
+  );
+create policy "case members update pfs" on public.property_field_sources
+  for update using (
+    public.is_case_member((select p.case_id from public.properties p where p.id = property_id))
+  );
+create policy "case admins delete pfs" on public.property_field_sources
+  for delete using (
+    public.can_manage_case((select p.case_id from public.properties p where p.id = property_id))
+  );
+
+-- document_pages is scoped via documents.case_id
+create policy "case members read pages" on public.document_pages
+  for select using (
+    public.is_case_member((select d.case_id from public.documents d where d.id = document_id))
+  );
+create policy "case members insert pages" on public.document_pages
+  for insert with check (
+    public.is_case_member((select d.case_id from public.documents d where d.id = document_id))
+  );
+create policy "case members update pages" on public.document_pages
+  for update using (
+    public.is_case_member((select d.case_id from public.documents d where d.id = document_id))
+  );
+create policy "case admins delete pages" on public.document_pages
+  for delete using (
+    public.can_manage_case((select d.case_id from public.documents d where d.id = document_id))
+  );
+
+-- page_translations is scoped via pages -> documents -> case_id
+create policy "case members read translations" on public.page_translations
+  for select using (
+    public.is_case_member((select d.case_id from public.documents d join public.document_pages p on p.document_id = d.id where p.id = page_id))
+  );
+create policy "case members insert translations" on public.page_translations
+  for insert with check (
+    public.is_case_member((select d.case_id from public.documents d join public.document_pages p on p.document_id = d.id where p.id = page_id))
+  );
+create policy "case members update translations" on public.page_translations
+  for update using (
+    public.is_case_member((select d.case_id from public.documents d join public.document_pages p on p.document_id = d.id where p.id = page_id))
+  );
+create policy "case admins delete translations" on public.page_translations
+  for delete using (
+    public.can_manage_case((select d.case_id from public.documents d join public.document_pages p on p.document_id = d.id where p.id = page_id))
+  );
 
 -- research_sources references session_id instead of case_id
 create policy "case members read sources" on public.research_sources
