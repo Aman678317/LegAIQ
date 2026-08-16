@@ -17,27 +17,21 @@ create policy "authenticated can upload case docs"
   on storage.objects for insert to authenticated
   with check (
     bucket_id = 'case-documents'
-    and public.is_case_member(
-      (storage.foldername(name))[4]::uuid
-    )
+    and public.is_case_member(split_part(name, '/', 4)::uuid)
   );
 
 create policy "case members can read case docs"
   on storage.objects for select to authenticated
   using (
     bucket_id = 'case-documents'
-    and public.is_case_member(
-      (storage.foldername(name))[4]::uuid
-    )
+    and public.is_case_member(split_part(name, '/', 4)::uuid)
   );
 
 create policy "case members can read reports"
   on storage.objects for select to authenticated
   using (
     bucket_id = 'case-reports'
-    and public.is_case_member(
-      (storage.foldername(name))[4]::uuid
-    )
+    and public.is_case_member(split_part(name, '/', 4)::uuid)
   );
 
 -- updated_at auto-touch trigger
