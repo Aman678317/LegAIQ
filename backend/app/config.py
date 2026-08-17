@@ -1,5 +1,7 @@
-from pydantic_settings import BaseSettings
+from typing import Any
 from functools import lru_cache
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -26,6 +28,29 @@ class Settings(BaseSettings):
 
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return ["*"]
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    import json
+                    parsed = json.loads(v)
+                    if isinstance(parsed, list):
+                        return [str(x) for x in parsed]
+                except Exception:
+                    pass
+            # comma-separated
+            if "," in v:
+                return [i.strip().strip('"').strip("'") for i in v.split(",") if i.strip()]
+            return [v.strip('"').strip("'")]
+        if isinstance(v, (list, tuple)):
+            return [str(x) for x in v]
+        return ["*"]
 
     # AI Providers
     OPENAI_API_KEY: str = ""
