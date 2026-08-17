@@ -73,12 +73,48 @@ class Settings(BaseSettings):
 
     # Storage
     MAX_UPLOAD_SIZE_MB: int = 50
-    ALLOWED_FILE_TYPES: list[str] = ["application/pdf", "image/jpeg", "image/png", "image/tiff"]
+    ALLOWED_FILE_TYPES_RAW: str = Field(
+        default="application/pdf,image/jpeg,image/png,image/tiff",
+        validation_alias="ALLOWED_FILE_TYPES"
+    )
+
+    @computed_field
+    @property
+    def ALLOWED_FILE_TYPES(self) -> list[str]:
+        raw = self.ALLOWED_FILE_TYPES_RAW
+        if not raw:
+            return []
+        try:
+            import json
+            if raw.strip().startswith("["):
+                parsed = json.loads(raw)
+                if isinstance(parsed, list):
+                    return [str(x) for x in parsed]
+        except Exception:
+            pass
+        return [p.strip() for p in raw.split(",") if p.strip()]
 
     # Supported Languages
-    SUPPORTED_LANGUAGES: list[str] = [
-        "en", "hi", "kn", "ta", "te", "ml", "mr", "bn", "gu", "pa", "ur"
-    ]
+    SUPPORTED_LANGUAGES_RAW: str = Field(
+        default="en,hi,kn,ta,te,ml,mr,bn,gu,pa,ur",
+        validation_alias="SUPPORTED_LANGUAGES"
+    )
+
+    @computed_field
+    @property
+    def SUPPORTED_LANGUAGES(self) -> list[str]:
+        raw = self.SUPPORTED_LANGUAGES_RAW
+        if not raw:
+            return []
+        try:
+            import json
+            if raw.strip().startswith("["):
+                parsed = json.loads(raw)
+                if isinstance(parsed, list):
+                    return [str(x) for x in parsed]
+        except Exception:
+            pass
+        return [p.strip() for p in raw.split(",") if p.strip()]
 
     # LLM Defaults
     DEFAULT_LLM_PROVIDER: str = "openai"
