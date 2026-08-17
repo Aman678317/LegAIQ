@@ -20,6 +20,17 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+async def root():
+    return {
+        "status": "online",
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "docs": "/api/docs",
+        "health": "/api/health",
+    }
+
+
 @app.get("/api/health")
 async def health_check():
     return {
