@@ -119,14 +119,20 @@ async def start_research(case_id: str, body: ResearchRequest, _=Depends(get_case
                     fetched.append({"title": s["title"], "url": s["url"], "text": text[:4000]})
                 except Exception:
                     fetched.append({"title": s["title"], "url": s["url"], "text": s["snippet"]})
+            if fetched:
+                source_block = "\n\n".join(
+                    f"=== Source: {f['title']} ({f['url']}) ===\n{f['text']}"
+                    for f in fetched
+                )
+
         lang_instruction = ""
         if body.language and body.language != "en":
             lang_instruction = f"\nRespond in the language '{body.language}', maintaining formal Indian legal terminology."
 
         prompt_str = (
-            f"RESEARCH QUESTION: {body.question}\n\nRETRIEVED SOURCES:\n\n{source_block}\n\nSynthesize an authoritative answer citing sources.{lang_instruction}"
+            f"RESEARCH QUESTION: {body.question}\n\n<retrieved_sources>\n{source_block}\n</retrieved_sources>\n\nSynthesize an authoritative Indian legal research memorandum citing the sources above with applicable statutory sections and judicial precedents.{lang_instruction}"
             if source_block
-            else f"INDIAN LEGAL RESEARCH QUESTION: {body.question}\n\nJurisdiction: {body.jurisdiction or case.get('jurisdiction_state') or 'India'}\n\nProvide comprehensive statutory and landmark precedent legal analysis.{lang_instruction}"
+            else f"INDIAN LEGAL RESEARCH QUESTION: {body.question}\n\nJurisdiction: {body.jurisdiction or case.get('jurisdiction_state') or 'India'}\n\nProvide comprehensive statutory and landmark precedent legal analysis under Indian law.{lang_instruction}"
         )
 
         response = await llm_router.complete(LLMRequest(

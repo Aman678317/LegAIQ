@@ -157,6 +157,81 @@ async def get_pages(document_id: str, case_id: str, _=Depends(get_case_access)):
     )
 
 
+class TranslationRequest(BaseModel):
+    page: Optional[int] = 1
+    language: str = "en"
+
+
+@router.post("/{document_id}/translate")
+async def translate_document(
+    document_id: str, case_id: str, body: TranslationRequest,
+    _=Depends(get_case_access),
+):
+    ctx, case = _
+    target_lang = body.language
+    page_number = body.page or 1
+
+    if target_lang not in settings.SUPPORTED_LANGUAGES:
+        raise HTTPException(400, f"Unsupported language '{target_lang}'")
+
+    db = svc()
+    if not db:
+        raise HTTPException(500, "Database not available")
+
+    page = (
+        db.table("document_pages").select("id, text")
+        .eq("document_id", document_id).eq("page_number", page_number).single().execute()
+    )
+    if not page.data:
+        raise HTTPException(404, "Page not found")
+
+    existing = (
+        db.table("page_translations").select("translated_text")
+        .eq("page_id", page.data["id"]).eq("target_language", target_lang)
+        .execute().data
+    )
+    if existing:
+        return {"page_number": page_number, "language": target_lang, "text": existing[0]["translated_text"], "cached": True, "status": "COMPLETED"}
+
+    # Generate inline when provider available
+    if settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OLLAMA_BASE_URL:
+        from app.ai.provider import LLMRequest, router as llm_router
+        lang_names = {
+            "en": "English", "hi": "Hindi", "kn": "Kannada", "ta": "Tamil",
+            "te": "Telugu", "ml": "Malayalam", "mr": "Marathi", "bn": "Bengali",
+            "gu": "Gujarati", "pa": "Punjabi", "ur": "Urdu", "or": "Odia", "as": "Assamese",
+        }
+        raw_text = page.data.get("text", "")
+        if raw_text:
+            try:
+                response = await llm_router.complete(LLMRequest(
+                    system=f"Translate the legal document text into {lang_names.get(target_lang, target_lang)}. "
+                           "Preserve party names, survey numbers, dates, and amounts exactly. Output translation only.",
+                    prompt=raw_text[:12000],
+                    task="translation",
+                ))
+                translated = response.content
+                try:
+                    db.table("page_translations").upsert({
+                        "page_id": page.data["id"], "target_language": target_lang,
+                        "translated_text": translated, "provider": response.provider,
+                    }, on_conflict="page_id,target_language").execute()
+                except Exception:
+                    pass
+                return {"page_number": page_number, "language": target_lang, "text": translated, "cached": False, "status": "COMPLETED"}
+            except Exception:
+                pass
+
+    # Queue via worker as fallback
+    db.table("jobs").insert({
+        "case_id": case_id,
+        "document_id": document_id,
+        "job_type": "translation",
+        "payload": {"page_number": page_number, "target_language": target_lang},
+    }).execute()
+    return {"page_number": page_number, "language": target_lang, "status": "QUEUED", "cached": False}
+
+
 @router.get("/{document_id}/pages/{page_number}/translation/{target_lang}")
 async def get_page_translation(
     document_id: str, page_number: int, target_lang: str, case_id: str,

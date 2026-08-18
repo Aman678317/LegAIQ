@@ -202,9 +202,10 @@ async def _extraction_impl(job: dict):
                 except json.JSONDecodeError:
                     entities = []
     else:
-        # Regex fallback — honest extraction without an LLM
+        # Regex fallback — honest extraction without an LLM with Indian land intelligence
         for page in pages:
             text = page["text"] or ""
+            # Standard deed patterns
             for pattern, etype in REGEX_PATTERNS:
                 for m in re.finditer(pattern, text, re.IGNORECASE):
                     entities.append({
@@ -212,6 +213,13 @@ async def _extraction_impl(job: dict):
                         "source_text": text[max(0, m.start()-40):m.end()+40][:200],
                         "page_number": page["page_number"], "confidence": 0.7,
                     })
+            # Specialized Indian land revenue entities (Gat, Khasra, CTS, Area, Encumbrances)
+            try:
+                from app.ai.land_intelligence import land_extractor
+                land_entities = land_extractor.extract_from_text(text, page["page_number"])
+                entities.extend(land_entities)
+            except Exception:
+                pass
 
     # Clear previous extraction for this document, insert fresh
     database.table("extracted_entities").delete().eq("document_id", doc_id).execute()
@@ -427,9 +435,12 @@ def _ownership_impl(job: dict):
 
 # ==================== COMPARISON ====================
 
+from app.ai.land_intelligence import are_land_areas_equivalent, land_extractor
+
 COMPARE_FIELDS = [
-    "survey_number", "hissa", "plot_number", "khata_number", "area",
-    "village", "taluk", "district", "registration_number",
+    "survey_number", "gat_number", "khasra_number", "hissa",
+    "plot_number", "khata_number", "cts_number", "area",
+    "village", "taluk", "district", "registration_number", "encumbrance",
 ]
 
 
@@ -478,15 +489,36 @@ def _comparison_impl(job: dict):
         if not values_by_doc:
             continue
 
-        distinct = {_norm_value(v["value"]) for v in values_by_doc.values() if v["value"]}
+        raw_values = [v["value"] for v in values_by_doc.values() if v.get("value")]
+        distinct = {_norm_value(v) for v in raw_values}
         present_docs = set(values_by_doc.keys())
 
-        if len(distinct) > 1:
-            verdict = "MISMATCH"
-        elif present_docs < set(doc_ids):
-            verdict = "MISSING" if len(present_docs) < len(doc_ids) and len(distinct) <= 1 else "MATCH"
+        verdict = "MATCH"
+        area_explanation = None
+
+        if field == "area" and len(raw_values) >= 2:
+            # Smart Indian land area unit equivalence check (Acres vs Guntas vs Sq.M vs Sq.Ft)
+            all_equiv = True
+            first_val = raw_values[0]
+            for other_val in raw_values[1:]:
+                equiv, expl = are_land_areas_equivalent(first_val, other_val)
+                if not equiv:
+                    all_equiv = False
+                    area_explanation = expl
+                    break
+            if not all_equiv:
+                verdict = "MISMATCH"
+            elif present_docs < set(doc_ids):
+                verdict = "MISSING"
+            else:
+                verdict = "MATCH"
         else:
-            verdict = "MATCH"
+            if len(distinct) > 1:
+                verdict = "MISMATCH"
+            elif present_docs < set(doc_ids):
+                verdict = "MISSING" if len(present_docs) < len(doc_ids) and len(distinct) <= 1 else "MATCH"
+            else:
+                verdict = "MATCH"
 
         values_json = [{
             "document_id": did, "document_name": name_by_id[did],
@@ -494,13 +526,14 @@ def _comparison_impl(job: dict):
             "source_text": e["source_text"],
         } for did, e in values_by_doc.items()]
 
-        explanation = None
-        if verdict == "MISMATCH":
-            vals = ", ".join(f"{name_by_id[d]}: {e['value']}" for d, e in values_by_doc.items())
-            explanation = f"Conflicting values found — {vals}"
-        elif verdict == "MISSING":
-            missing = [name_by_id[d] for d in doc_ids if d not in present_docs]
-            explanation = f"Not found in: {', '.join(missing)}"
+        explanation = area_explanation
+        if not explanation:
+            if verdict == "MISMATCH":
+                vals = ", ".join(f"{name_by_id[d]}: {e['value']}" for d, e in values_by_doc.items())
+                explanation = f"Conflicting values found — {vals}"
+            elif verdict == "MISSING":
+                missing = [name_by_id[d] for d in doc_ids if d not in present_docs]
+                explanation = f"Not found in: {', '.join(missing)}"
 
         database.table("comparison_results").insert({
             "case_id": case_id, "field_name": field, "verdict": verdict,
@@ -511,12 +544,13 @@ def _comparison_impl(job: dict):
 # ==================== RISK ANALYSIS ====================
 
 RISK_CATEGORY_BY_FIELD = {
-    "survey_number": ("BOUNDARY", "HIGH"), "hissa": ("BOUNDARY", "MEDIUM"),
+    "survey_number": ("BOUNDARY", "HIGH"), "gat_number": ("BOUNDARY", "HIGH"),
+    "khasra_number": ("BOUNDARY", "HIGH"), "hissa": ("BOUNDARY", "MEDIUM"),
     "plot_number": ("BOUNDARY", "MEDIUM"), "area": ("TITLE", "MEDIUM"),
-    "khata_number": ("REGISTRATION", "MEDIUM"),
+    "khata_number": ("REGISTRATION", "MEDIUM"), "cts_number": ("BOUNDARY", "MEDIUM"),
     "registration_number": ("REGISTRATION", "HIGH"),
     "village": ("BOUNDARY", "HIGH"), "taluk": ("BOUNDARY", "HIGH"),
-    "district": ("BOUNDARY", "HIGH"),
+    "district": ("BOUNDARY", "HIGH"), "encumbrance": ("ENCUMBRANCE", "HIGH"),
 }
 
 

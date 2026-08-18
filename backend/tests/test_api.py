@@ -168,3 +168,49 @@ class TestOrgMembers:
             assert "last OWNER" in res.json()["detail"]
         finally:
             app.dependency_overrides[get_auth_context] = original
+
+
+class TestDocumentAndResearchEndpoints:
+    def test_document_translation_post(self, api_client, fake):
+        # Create case
+        case_res = api_client.post(f"{API}/cases", json={
+            "name": "Deed Translation Case", "case_type": "PROPERTY", "organization_id": ORG_ID,
+        })
+        case_id = case_res.json()["id"]
+
+        # Insert doc and page in fake db
+        doc_id = "doc-trans-1"
+        fake.tables.rows("documents").append({
+            "id": doc_id, "case_id": case_id, "file_name": "kannada_deed.pdf",
+            "file_type": "application/pdf", "status": "COMPLETED", "uploaded_by": USER_ID,
+        })
+        fake.tables.rows("document_pages").append({
+            "id": "page-trans-1", "document_id": doc_id, "page_number": 1,
+            "text": "ಸರ್ವೆ ನಂ. 124/2 ರ ಪೈಕಿ ಪೂರ್ವ ಭಾಗದ 1 ಎಕರೆ 7 ಗುಂಟೆ ಜಮೀನು",
+            "language": "kn", "confidence": 0.95,
+        })
+
+        # Test POST /cases/{case_id}/documents/{document_id}/translate
+        res = api_client.post(f"{API}/cases/{case_id}/documents/{doc_id}/translate", json={
+            "page": 1, "language": "hi",
+        })
+        assert res.status_code == 200
+        data = res.json()
+        assert data["language"] == "hi"
+        assert data["page_number"] == 1
+        assert data["status"] in ("COMPLETED", "QUEUED")
+
+    def test_research_endpoint(self, api_client, fake):
+        case_res = api_client.post(f"{API}/cases", json={
+            "name": "Research Case", "case_type": "PROPERTY", "organization_id": ORG_ID,
+        })
+        case_id = case_res.json()["id"]
+
+        res = api_client.post(f"{API}/cases/{case_id}/research", json={
+            "question": "What is the limitation period for challenging a fraudulent sale deed?",
+            "jurisdiction": "Karnataka",
+        })
+        assert res.status_code == 200
+        data = res.json()
+        assert data["answer"]
+        assert data["status"] == "COMPLETED"

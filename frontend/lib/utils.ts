@@ -61,6 +61,8 @@ export const LANGUAGES = [
   { code: "gu", label: "ગુજરાતી (Gujarati)" },
   { code: "pa", label: "ਪੰਜਾਬੀ (Punjabi)" },
   { code: "ur", label: "اردو (Urdu)" },
+  { code: "or", label: "ଓଡ଼ିଆ (Odia)" },
+  { code: "as", label: "অসমীয়া (Assamese)" },
 ] as const;
 
 export const VERIFICATION_STYLES: Record<string, { label: string; className: string }> = {

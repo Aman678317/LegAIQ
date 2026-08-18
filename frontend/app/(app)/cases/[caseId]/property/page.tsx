@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Landmark, Loader2, Save, Sparkles, Building2 } from "lucide-react";
+import { Landmark, Loader2, Save, Sparkles, Building2, HelpCircle, Calculator, CheckCircle2, ShieldAlert } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Card, Badge } from "@/components/ui";
 import { VERIFICATION_STYLES } from "@/lib/utils";
@@ -11,15 +11,20 @@ const FIELD_LABELS: Record<string, string> = {
   name: "Asset / Property Name",
   address: "Registered / Property Address",
   state: "Jurisdiction / State",
-  district: "Operating Nexus / District",
-  taluk: "Taluk / Service Area",
-  village: "Village / Circle",
-  survey_number: "Survey / Asset Identifier",
-  hissa_number: "Hissa Number",
-  plot_number: "Plot / License Number",
-  khata_number: "Tax PAN / Khata Number",
-  registration_number: "Registration / Registry No.",
-  property_id_number: "Asset ID / ISIN",
+  district: "District / Jilha",
+  taluk: "Taluk / Tehsil / Hobli",
+  village: "Village / Mauza",
+  survey_number: "Survey Number",
+  gat_number: "Gat / Gut Number (7/12 Satbara)",
+  khasra_number: "Khasra Number (Jamabandi)",
+  cts_number: "CTS / City Survey No. (Urban)",
+  hissa_number: "Hissa / Sub-Division Number",
+  plot_number: "Plot / Site Number",
+  khata_number: "Khata / Khatauni Number",
+  area: "Land Extent & Area Extent",
+  encumbrance: "Encumbrance / Bojha / Bank Mortgage",
+  registration_number: "Registration / Doc Number",
+  property_id_number: "Property ID / PID / e-Swathu",
   description: "Asset / Property Description",
 };
 
@@ -28,6 +33,7 @@ export default function PropertyPage() {
   const [data, setData] = useState<any>(null);
   const [caseInfo, setCaseInfo] = useState<any>(null);
   const [extracted, setExtracted] = useState<Record<string, any[]>>({});
+  const [lawyerQuestions, setLawyerQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [extracting, setExtracting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -35,16 +41,22 @@ export default function PropertyPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  // Live Land Area Calculator State
+  const [calcInput, setCalcInput] = useState("1 Acre 20 Guntas");
+  const [calcResult, setCalcResult] = useState<string | null>(null);
+
   async function load(forceRefresh = false) {
     try {
-      const [c, p, e] = await Promise.all([
+      const [c, p, e, q] = await Promise.all([
         api.getCase(caseId).catch(() => null),
         forceRefresh ? api.getProperty(caseId).then(() => api.getProperty(caseId)) : api.getProperty(caseId),
         api.propertyEntities(caseId).catch(() => ({})),
+        api.propertyLawyerQuestions(caseId).catch(() => ({ questions: [] })),
       ]);
       setCaseInfo(c);
       setData(p);
       setExtracted(e || {});
+      setLawyerQuestions(q?.questions || []);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -188,6 +200,110 @@ export default function PropertyPage() {
           Values you type are marked <strong>User Provided</strong> until a document
           confirms them. Document-confirmed values appear as <strong>Document Verified</strong>.
         </p>
+      </Card>
+
+      {/* Advocate Due Diligence Inquiry Questions */}
+      <Card className="p-6 border-primary/30">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <HelpCircle size={17} className="text-primary" />
+            <h2 className="text-base font-semibold text-white">
+              Advocate Due Diligence Inquiry Checklist
+            </h2>
+          </div>
+          <Badge className="border-primary/30 bg-primary/10 text-primary">
+            India Land Revenue Engine
+          </Badge>
+        </div>
+        <p className="mb-4 text-xs text-text-secondary">
+          Targeted title inquiry questions automatically generated based on detected land records, encumbrances, and chain-of-title gaps:
+        </p>
+        <div className="space-y-2.5">
+          {lawyerQuestions.length === 0 ? (
+            <p className="text-xs text-text-muted">No title red flags detected. Standard 30-year EC recommended.</p>
+          ) : (
+            lawyerQuestions.map((q, idx) => (
+              <div key={idx} className="flex items-start gap-3 rounded-lg border border-border bg-bg-surface px-4 py-3 text-xs text-text-secondary">
+                <ShieldAlert size={15} className="mt-0.5 shrink-0 text-amber-400" />
+                <span className="leading-relaxed">{q}</span>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
+
+      {/* Indian Land Area Converter Widget */}
+      <Card className="p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calculator size={17} className="text-emerald-400" />
+            <h2 className="text-base font-semibold text-white">
+              Indian Land Measurement Unit Converter
+            </h2>
+          </div>
+          <Badge className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+            Acre · Gunta · Cent · Bigha · Sq.Ft
+          </Badge>
+        </div>
+        <p className="mb-3 text-xs text-text-secondary">
+          Test or reconcile any Indian revenue area measurement unit against metric & imperial standards:
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <input
+            value={calcInput}
+            onChange={(e) => setCalcInput(e.target.value)}
+            placeholder="e.g. 2 Acres 14 Guntas, 1.5 Hectare, 5 Bigha"
+            className="flex-1 rounded-lg border border-border bg-bg px-3.5 py-2 text-sm text-white placeholder-text-muted outline-none focus:border-primary"
+          />
+          <Button
+            variant="secondary"
+            onClick={() => {
+              const text = calcInput.toLowerCase();
+              let sqm = 0;
+              if (text.includes("acre") || text.includes("ac")) {
+                const m = text.match(/(\d+(?:\.\d+)?)\s*ac/);
+                if (m) sqm += parseFloat(m[1]) * 4046.86;
+              }
+              if (text.includes("gunta") || text.includes("gts")) {
+                const m = text.match(/(\d+(?:\.\d+)?)\s*g/);
+                if (m) sqm += parseFloat(m[1]) * 101.17;
+              }
+              if (text.includes("cent")) {
+                const m = text.match(/(\d+(?:\.\d+)?)\s*cent/);
+                if (m) sqm += parseFloat(m[1]) * 40.47;
+              }
+              if (text.includes("hectare") || text.includes("ha")) {
+                const m = text.match(/(\d+(?:\.\d+)?)\s*h/);
+                if (m) sqm += parseFloat(m[1]) * 10000;
+              }
+              if (text.includes("bigha")) {
+                const m = text.match(/(\d+(?:\.\d+)?)\s*bigha/);
+                if (m) sqm += parseFloat(m[1]) * 2529.29;
+              }
+              if (text.includes("sq.ft") || text.includes("square feet")) {
+                const m = text.match(/([\d,]+(?:\.\d+)?)\s*sq/);
+                if (m) sqm += parseFloat(m[1].replace(/,/g, "")) * 0.0929;
+              }
+              if (sqm === 0 && !isNaN(Number(calcInput))) {
+                sqm = Number(calcInput) * 4046.86;
+              }
+              const acres = sqm / 4046.86;
+              const wholeAc = Math.floor(acres);
+              const guntas = (acres - wholeAc) * 40;
+              const sqft = sqm * 10.7639;
+              setCalcResult(
+                `Standard Extent: ${wholeAc} Acre(s) ${guntas.toFixed(2)} Gunta(s) | ${(acres * 100).toFixed(1)} Cents | ${sqm.toFixed(1)} Sq.M | ${Math.round(sqft).toLocaleString()} Sq.Ft`
+              );
+            }}
+          >
+            Calculate Extent
+          </Button>
+        </div>
+        {calcResult && (
+          <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 font-mono text-xs text-emerald-400">
+            {calcResult}
+          </div>
+        )}
       </Card>
     </div>
   );

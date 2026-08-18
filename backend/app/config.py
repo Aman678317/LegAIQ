@@ -99,9 +99,9 @@ class Settings(BaseSettings):
             pass
         return [p.strip() for p in raw.split(",") if p.strip()]
 
-    # Supported Languages
+    # Supported Languages (13 Major Indian Languages + English)
     SUPPORTED_LANGUAGES_RAW: str = Field(
-        default="en,hi,kn,ta,te,ml,mr,bn,gu,pa,ur",
+        default="en,hi,kn,ta,te,ml,mr,bn,gu,pa,ur,or,as",
         validation_alias="SUPPORTED_LANGUAGES"
     )
 

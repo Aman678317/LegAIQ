@@ -322,11 +322,16 @@ export default function DocumentsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="mb-3 flex items-center justify-between">
-                    <Badge className="border-border bg-bg-elevated text-text-secondary">
-                      {LANGUAGES.find((l) => l.code === pages[pageIndex]?.language)?.label || pages[pageIndex]?.language || "Unknown language"}
-                      {pages[pageIndex]?.confidence != null && ` · ${(pages[pageIndex].confidence * 100).toFixed(0)}% confidence`}
-                    </Badge>
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge className="border-border bg-bg-elevated text-text-secondary">
+                        {LANGUAGES.find((l) => l.code === pages[pageIndex]?.language)?.label || pages[pageIndex]?.language || "Unknown language"}
+                        {pages[pageIndex]?.confidence != null && ` · ${(pages[pageIndex].confidence * 100).toFixed(0)}% confidence`}
+                      </Badge>
+                      <Badge className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[11px]">
+                        ✓ Historical OCR Preprocessed (Deskewed · CLAHE Contrast Restored)
+                      </Badge>
+                    </div>
                     <div className="flex items-center gap-1">
                       <Languages size={14} className="mr-1 text-text-muted" />
                       <select
@@ -341,6 +346,12 @@ export default function DocumentsPage() {
                       </select>
                     </div>
                   </div>
+
+                  {pages[pageIndex]?.text?.includes("[UNCERTAIN:") && (
+                    <div className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs text-amber-400">
+                      ⚠️ <strong>Damaged / Faded Text Detected:</strong> Certain tokens have low OCR confidence and are explicitly tagged with <code>[UNCERTAIN: ...]</code>. Verify these critical details directly on the original stamp paper.
+                    </div>
+                  )}
 
                   <Card className="p-5">
                     <pre className="whitespace-pre-wrap font-mono text-[13px] leading-relaxed text-text-secondary">

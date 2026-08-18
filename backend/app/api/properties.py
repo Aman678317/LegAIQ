@@ -23,7 +23,8 @@ def svc():
 
 PROPERTY_FIELDS = [
     "name", "address", "state", "district", "taluk", "village",
-    "survey_number", "hissa_number", "plot_number", "khata_number",
+    "survey_number", "gat_number", "khasra_number", "cts_number",
+    "hissa_number", "plot_number", "khata_number", "area", "encumbrance",
     "registration_number", "property_id_number", "description",
 ]
 
@@ -36,9 +37,14 @@ class PropertyUpdate(BaseModel):
     taluk: Optional[str] = None
     village: Optional[str] = None
     survey_number: Optional[str] = None
+    gat_number: Optional[str] = None
+    khasra_number: Optional[str] = None
+    cts_number: Optional[str] = None
     hissa_number: Optional[str] = None
     plot_number: Optional[str] = None
     khata_number: Optional[str] = None
+    area: Optional[str] = None
+    encumbrance: Optional[str] = None
     registration_number: Optional[str] = None
     property_id_number: Optional[str] = None
     description: Optional[str] = None
@@ -109,11 +115,15 @@ async def property_entities(case_id: str, _=Depends(get_case_access)):
     """Show all document-extracted values for property fields, with evidence."""
     ctx, case = _
     PROPERTY_ENTITY_TYPES = {
-        "survey_number": "survey_number", "hissa": "hissa_number",
-        "plot_number": "plot_number", "khata_number": "khata_number",
-        "village": "village", "taluk": "taluk", "district": "district",
+        "survey_number": "survey_number", "gat_number": "gat_number",
+        "khasra_number": "khasra_number", "cts_number": "cts_number",
+        "hissa": "hissa_number", "plot_number": "plot_number",
+        "khata_number": "khata_number", "village": "village",
+        "taluk": "taluk", "district": "district",
         "registration_number": "registration_number", "area": "area",
-        "boundaries": "boundaries",
+        "encumbrance": "encumbrance", "boundaries": "boundaries",
+        "boundary_east": "boundary_east", "boundary_west": "boundary_west",
+        "boundary_north": "boundary_north", "boundary_south": "boundary_south",
     }
     rows = (
         svc().table("extracted_entities")
@@ -134,3 +144,20 @@ async def property_entities(case_id: str, _=Depends(get_case_access)):
             "confidence": float(r["confidence"] or 0),
         })
     return grouped
+
+
+@router.get("/cases/{case_id}/property/lawyer-questions")
+async def get_lawyer_questions(case_id: str, _=Depends(get_case_access)):
+    """Generates tailored legal due diligence inquiry questions for property advocates."""
+    ctx, case = _
+    db = svc()
+    entities = db.table("extracted_entities").select("*").eq("case_id", case_id).execute().data or []
+    mismatches = db.table("comparison_results").select("*").eq("case_id", case_id).eq("verdict", "MISMATCH").execute().data or []
+    risks = db.table("risk_items").select("*").eq("case_id", case_id).execute().data or []
+
+    from app.ai.land_intelligence import land_extractor
+    questions = land_extractor.generate_lawyer_questions(
+        case.get("name", "Property Due Diligence"),
+        entities, mismatches, risks
+    )
+    return {"case_id": case_id, "questions": questions}

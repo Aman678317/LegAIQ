@@ -21,6 +21,8 @@ const LANGUAGE_NAMES: Record<string, string> = {
   gu: "Gujarati (ગુજરાતી)",
   pa: "Punjabi (ਪੰਜਾਬੀ)",
   ur: "Urdu (اردو)",
+  or: "Odia (ଓଡ଼ିଆ)",
+  as: "Assamese (অসমীয়া)",
 };
 
 /**

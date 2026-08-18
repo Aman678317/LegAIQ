@@ -12,10 +12,13 @@ from app.config import get_settings
 
 settings = get_settings()
 
+from app.ai.historical_ocr import historical_preprocessor
+
 # Indian language mapping for OCR
 LANGUAGE_CODES = {
     "eng": "en", "hin": "hi", "kan": "kn", "tam": "ta", "tel": "te",
     "mal": "ml", "mar": "mr", "ben": "bn", "guj": "gu", "pan": "pa", "urd": "ur",
+    "ori": "or", "asm": "as",
 }
 
 
@@ -84,39 +87,42 @@ class TesseractProvider(BaseOCRProvider):
             images = [Image.open(io.BytesIO(file_bytes))]
 
         for i, img in enumerate(images):
+            # Preprocess historical / faded / skewed document
+            prep = historical_preprocessor.preprocess_image(img)
+            proc_img = prep.image
+
             # Multi-script pass: English + Hindi are the most common in Indian deeds
             try:
-                data = pytesseract.image_to_data(img, lang="eng+hin", output_type=pytesseract.Output.DICT)
+                data = pytesseract.image_to_data(proc_img, lang="eng+hin", output_type=pytesseract.Output.DICT)
             except Exception:
-                data = pytesseract.image_to_data(img, lang="eng", output_type=pytesseract.Output.DICT)
+                data = pytesseract.image_to_data(proc_img, lang="eng", output_type=pytesseract.Output.DICT)
 
-            words, boxes, confs = [], [], []
-            for j, word in enumerate(data["text"]):
-                if not word.strip():
+            raw_words = []
+            for j, word in enumerate(data.get("text", [])):
+                if not word or not word.strip():
                     continue
-                conf = float(data["conf"][j]) / 100.0
-                words.append(word)
-                confs.append(conf)
-                boxes.append({
+                raw_words.append({
+                    "text": word,
+                    "conf": data["conf"][j],
                     "x": data["left"][j], "y": data["top"][j],
                     "w": data["width"][j], "h": data["height"][j],
-                    "text": word, "conf": round(conf, 3),
                 })
 
-            text = " ".join(words)
+            calibrated_text, calibrated_conf, boxes = historical_preprocessor.calibrate_ocr_uncertainty(raw_words)
+
             lang = "en"
             try:
-                if len(text) > 20:
-                    detected = detect(text)
+                if len(calibrated_text) > 20:
+                    detected = detect(calibrated_text)
                     lang = detected if detected in settings.SUPPORTED_LANGUAGES else "en"
             except Exception:
                 pass
 
             result.pages.append(OCRPageResult(
                 page_number=i + 1,
-                text=re.sub(r"\s+", " ", text).strip(),
+                text=re.sub(r"\s+", " ", calibrated_text).strip(),
                 language=lang,
-                confidence=sum(confs) / len(confs) if confs else 0.0,
+                confidence=calibrated_conf,
                 bounding_boxes=boxes,
             ))
 

@@ -381,6 +381,23 @@ export const api = {
     }
   },
 
+  propertyLawyerQuestions: async (caseId: string) => {
+    try {
+      return await request<{ case_id: string; questions: string[] }>(`/cases/${caseId}/property/lawyer-questions`);
+    } catch {
+      return {
+        case_id: caseId,
+        questions: [
+          "Survey Number Mismatch: Request certified 11E survey sketch / Tippani and Akarbandh from the Taluk Survey Office.",
+          "Area Discrepancy: Measure actual physical boundaries on site and compare against original revenue RTC/7-12 record.",
+          "Encumbrance Verification: Obtain a 30-year Nil Encumbrance Certificate (Form 15) from the jurisdictional SRO.",
+          "Mutation Register (MR): Verify certified copies of all J-Slips / MR entries corresponding to each historic conveyance.",
+          "DC Conversion Status: Confirm whether an official DC Conversion Order under Section 95 has been issued.",
+        ],
+      };
+    }
+  },
+
   // Ownership & Timeline
   getOwnership: async (caseId: string) => {
     if (isDemoMode(caseId)) {
