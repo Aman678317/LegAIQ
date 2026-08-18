@@ -131,7 +131,7 @@ export default function ComparisonPage() {
                       r.verdict === "MISSING" ? "text-amber-400" : "text-slate-400"
                     } />
                     <span className="text-sm font-semibold capitalize text-white">
-                      {r.field_name.replace(/_/g, " ")}
+                      {(r.field_name || "field").replace(/_/g, " ")}
                     </span>
                   </div>
                   <Badge className={VERDICT_STYLES[r.verdict]}>{r.verdict}</Badge>

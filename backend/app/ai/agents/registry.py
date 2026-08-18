@@ -53,7 +53,7 @@ class RiskAgent(BaseAgent):
         )
 
         created = 0
-        if evidence_block and settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY:
+        if evidence_block and (settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OLLAMA_BASE_URL):
             resp = await self.llm(LLMRequest(
                 system=(
                     "You are a risk analyst for Indian property documents. From the supplied "
@@ -121,7 +121,7 @@ class ReportAgent(BaseAgent):
         ).order("sort_date").execute().data
 
         # Executive summary via LLM when configured; deterministic fallback otherwise
-        if settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY:
+        if settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OLLAMA_BASE_URL:
             resp = await self.llm(LLMRequest(
                 system=(
                     "Write a 3-4 sentence executive summary for a property due diligence "

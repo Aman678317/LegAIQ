@@ -43,15 +43,17 @@ export default function CaseHomePage() {
     if (liveDocs.length === 0) return;
     setDocuments((prev) => {
       const map = Object.fromEntries(liveDocs.map((d: any) => [d.id, d]));
-      const merged = prev.map((doc) => (map[doc.id] ? { ...doc, ...map[doc.id] } : doc));
-      // Refresh counts + activity when any document finishes processing
-      const anyJustCompleted = liveDocs.some(
-        (d: any) => d.status === "COMPLETED" && !prev.find((p) => p.id === d.id && p.status === "COMPLETED")
-      );
-      if (anyJustCompleted) loadSummary();
-      return merged;
+      let hasChanges = false;
+      const merged = prev.map((doc) => {
+        const live = map[doc.id];
+        if (live && (live.status !== doc.status || live.ocr_confidence !== doc.ocr_confidence || live.page_count !== doc.page_count)) {
+          hasChanges = true;
+          return { ...doc, ...live };
+        }
+        return doc;
+      });
+      return hasChanges ? merged : prev;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveDocs]);
 
   if (loading) {
@@ -197,7 +199,7 @@ export default function CaseHomePage() {
                     </div>
                   </div>
                   <span className={`ml-3 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[doc.status] || ""}`}>
-                    {doc.status.replace("_", " ")}
+                    {(doc.status || "COMPLETED").replace(/_/g, " ")}
                   </span>
                 </div>
               ))}

@@ -1,11 +1,10 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { Loader2, UserPlus, Trash2, ShieldCheck, CreditCard } from "lucide-react";
+import { Loader2, UserPlus, Trash2, ShieldCheck, CreditCard, Cpu, RefreshCw, CheckCircle2, XCircle, Terminal, Sparkles } from "lucide-react";
 import { api } from "@/lib/api";
 import { getUserOrgs } from "@/lib/auth";
 import { Button, Card, Badge } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { checkOllamaStatus, queryLocalOllama, getOllamaBaseUrl, OllamaStatus } from "@/lib/ollama";
 
 const ROLES = ["OWNER", "ADMIN", "LAWYER", "REVIEWER", "STAFF", "CLIENT"];
 
@@ -17,11 +16,64 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [billing, setBilling] = useState<any>(null);
 
+  // Ollama states
+  const [ollamaUrl, setOllamaUrl] = useState("");
+  const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus>({
+    online: false,
+    models: [],
+    activeModel: null,
+  });
+  const [testingOllama, setTestingOllama] = useState(false);
+  const [ollamaTestResult, setOllamaTestResult] = useState<string | null>(null);
+
   // Add member form
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("LAWYER");
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+
+  async function loadOllama(urlToTest?: string) {
+    setTestingOllama(true);
+    try {
+      const status = await checkOllamaStatus(urlToTest);
+      setOllamaStatus(status);
+    } catch {
+      setOllamaStatus({ online: false, models: [], activeModel: null });
+    } finally {
+      setTestingOllama(false);
+    }
+  }
+
+  async function testOllamaCompletion() {
+    setTestingOllama(true);
+    setOllamaTestResult(null);
+    try {
+      const model = ollamaStatus.activeModel || "llama3";
+      const res = await queryLocalOllama(
+        "Explain Section 9(1)(i) of Income Tax Act in 1 sentence.",
+        "You are Jurisiva AI Indian legal intelligence assistant.",
+        model,
+        ollamaUrl || undefined
+      );
+      if (res && res.text) {
+        setOllamaTestResult(`Success (${res.duration_ms}ms, model: ${res.model}): ${res.text}`);
+      } else {
+        setOllamaTestResult("Ollama responded with empty content or error. Verify model weights are downloaded.");
+      }
+    } catch (e: any) {
+      setOllamaTestResult(`Failed: ${e.message}`);
+    } finally {
+      setTestingOllama(false);
+    }
+  }
+
+  function handleSaveOllamaUrl(e: React.FormEvent) {
+    e.preventDefault();
+    if (typeof window !== "undefined") {
+      localStorage.setItem("jurisiva_ollama_url", ollamaUrl);
+      loadOllama(ollamaUrl);
+    }
+  }
 
   async function loadMembers(org: any) {
     setError(null);
@@ -44,6 +96,9 @@ export default function SettingsPage() {
           .then(setBilling)
           .catch(() => setBilling(null));
       }
+      const defaultUrl = getOllamaBaseUrl();
+      setOllamaUrl(defaultUrl);
+      loadOllama(defaultUrl);
       setLoading(false);
     }
     init();
@@ -98,15 +153,136 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Settings</h1>
+        <h1 className="text-2xl font-semibold text-white">Settings &amp; AI Configuration</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Manage your organization&rsquo;s members and their roles. All changes are audit-logged.
+          Configure organization settings, roles, and local/cloud Ollama AI connectivity.
         </p>
       </div>
 
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div>
       )}
+
+      {/* Ollama Local AI Card */}
+      <Card className="p-6">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+              <Cpu size={22} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-white">Ollama Local AI Engine</h2>
+                <Badge
+                  className={
+                    ollamaStatus.online
+                      ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
+                      : "border-amber-500/30 bg-amber-500/15 text-amber-400"
+                  }
+                >
+                  {ollamaStatus.online ? (
+                    <span className="flex items-center gap-1">
+                      <CheckCircle2 size={12} /> Connected ({ollamaStatus.latency_ms}ms)
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <XCircle size={12} /> Offline / Fallback
+                    </span>
+                  )}
+                </Badge>
+              </div>
+              <p className="text-xs text-text-muted">
+                100% private on-device LLM inference &amp; embeddings for Indian law without third-party API keys.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={testingOllama}
+              onClick={() => loadOllama(ollamaUrl)}
+            >
+              <RefreshCw size={13} className={testingOllama ? "animate-spin" : ""} />
+              Check Status
+            </Button>
+            <Button
+              size="sm"
+              disabled={testingOllama}
+              onClick={testOllamaCompletion}
+            >
+              <Sparkles size={13} />
+              Test Completion
+            </Button>
+          </div>
+        </div>
+
+        {/* Ollama endpoint config */}
+        <form onSubmit={handleSaveOllamaUrl} className="mt-5 flex flex-wrap gap-2.5">
+          <div className="min-w-64 flex-1">
+            <label className="mb-1 block text-xs font-medium text-text-secondary">Ollama Server URL</label>
+            <input
+              type="text"
+              value={ollamaUrl}
+              onChange={(e) => setOllamaUrl(e.target.value)}
+              placeholder="http://localhost:11434"
+              className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-xs font-mono text-white outline-none focus:border-primary"
+            />
+          </div>
+          <div className="flex items-end">
+            <Button type="submit" size="sm" variant="secondary">
+              Save URL
+            </Button>
+          </div>
+        </form>
+
+        {/* Installed Models list */}
+        {ollamaStatus.online && (
+          <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3.5">
+            <div className="text-xs font-semibold text-emerald-400">
+              Installed Models ({ollamaStatus.models.length}):
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {ollamaStatus.models.map((m) => (
+                <span
+                  key={m}
+                  className={`rounded-md px-2 py-1 font-mono text-[11px] ${
+                    m === ollamaStatus.activeModel
+                      ? "bg-emerald-500/20 font-semibold text-emerald-300 ring-1 ring-emerald-400/40"
+                      : "bg-bg text-text-secondary"
+                  }`}
+                >
+                  {m}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Test Result Box */}
+        {ollamaTestResult && (
+          <div className="mt-4 rounded-lg border border-border bg-bg p-3 text-xs">
+            <div className="font-semibold text-white">Diagnostic Output:</div>
+            <p className="mt-1 font-mono text-text-secondary">{ollamaTestResult}</p>
+          </div>
+        )}
+
+        {/* Quick terminal instructions */}
+        <div className="mt-4 rounded-lg border border-border bg-bg p-3.5 text-xs text-text-muted">
+          <div className="flex items-center gap-1.5 font-semibold text-white">
+            <Terminal size={14} className="text-primary" /> Start Ollama in your Terminal:
+          </div>
+          <div className="mt-2 space-y-1.5 font-mono text-[11px]">
+            <div className="rounded bg-bg-elevated px-2 py-1 text-slate-300">
+              <span className="text-text-muted"># Windows PowerShell:</span> $env:OLLAMA_ORIGINS=&quot;*&quot; ; ollama serve
+            </div>
+            <div className="rounded bg-bg-elevated px-2 py-1 text-slate-300">
+              <span className="text-text-muted"># Pull models:</span> ollama pull llama3 ; ollama pull nomic-embed-text
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* Org switcher */}
       {orgs.length > 1 && (

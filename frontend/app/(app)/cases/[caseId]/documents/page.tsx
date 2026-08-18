@@ -45,19 +45,26 @@ export default function DocumentsPage() {
     loadDocs().finally(() => setLoading(false));
   }, [loadDocs]);
 
-  // Merge live SSE document events into the list (no polling loop needed)
+  // Merge live SSE document events into the list
   useEffect(() => {
     if (Object.keys(documentMap).length === 0) return;
     setDocuments((prev) => {
-      const merged = prev.map((doc) => documentMap[doc.id]
-        ? { ...doc, ...documentMap[doc.id] }
-        : doc);
-      // Include brand-new documents seen first via SSE
-      const knownIds = new Set(merged.map((d) => d.id));
+      const knownIds = new Set(prev.map((d) => d.id));
       const additions = Object.values(documentMap)
         .filter((d: any) => !knownIds.has(d.id))
         .map((d: any) => d);
-      return [...additions, ...merged];
+
+      let hasChanges = additions.length > 0;
+      const merged = prev.map((doc) => {
+        const live = documentMap[doc.id];
+        if (live && (live.status !== doc.status || live.ocr_confidence !== doc.ocr_confidence || live.page_count !== doc.page_count)) {
+          hasChanges = true;
+          return { ...doc, ...live };
+        }
+        return doc;
+      });
+
+      return hasChanges ? [...additions, ...merged] : prev;
     });
   }, [documentMap]);
 
@@ -244,7 +251,7 @@ export default function DocumentsPage() {
                 )}
               </div>
               <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[doc.status] || ""}`}>
-                {doc.status.replace("_", " ")}
+                {(doc.status || "COMPLETED").replace(/_/g, " ")}
               </span>
               <div className="flex shrink-0 items-center gap-1">
                 <button onClick={() => download(doc)} title="Download" className="rounded-lg p-2 text-text-muted transition-colors hover:bg-bg-elevated hover:text-white">
@@ -277,7 +284,7 @@ export default function DocumentsPage() {
                   className="rounded-lg border border-border bg-bg px-3 py-1.5 text-xs text-white outline-none"
                 >
                   <option value="" disabled>Explain in…</option>
-                  {LANGUAGES.slice(0, 6).map((l) => (
+                  {LANGUAGES.map((l) => (
                     <option key={l.code} value={l.code}>{l.label}</option>
                   ))}
                 </select>

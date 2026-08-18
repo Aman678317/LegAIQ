@@ -57,6 +57,7 @@ from app.api.voice import router as voice_router
 from app.api.admin import router as admin_router
 from app.api.org import router as org_router
 from app.api.billing import router as billing_router
+from app.api.ai import router as ai_router
 
 app.include_router(cases_router, prefix=settings.API_V1_PREFIX)
 app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
@@ -74,3 +75,4 @@ app.include_router(voice_router, prefix=settings.API_V1_PREFIX)
 app.include_router(admin_router, prefix=settings.API_V1_PREFIX)
 app.include_router(org_router, prefix=settings.API_V1_PREFIX)
 app.include_router(billing_router, prefix=settings.API_V1_PREFIX)
+app.include_router(ai_router, prefix=settings.API_V1_PREFIX)

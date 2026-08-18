@@ -80,6 +80,50 @@ npm run dev
 
 The application is accessible at http://localhost:3000.
 
+---
+
+## Local AI with Ollama (100% Private, Offline & Free)
+
+Jurisiva AI has first-class native support for [Ollama](https://ollama.com) for 100% private, local LLM inference and document embeddings with zero external API key requirements.
+
+### 1. Install & Launch Ollama with CORS Enabled
+
+In your terminal:
+
+**Windows PowerShell:**
+```powershell
+$env:OLLAMA_ORIGINS="*" ; ollama serve
+```
+
+**macOS / Linux:**
+```bash
+OLLAMA_ORIGINS="*" ollama serve
+```
+
+### 2. Pull Recommended Models
+
+In a separate terminal:
+```bash
+# Recommended general LLM (8B)
+ollama pull llama3
+
+# Fast vector embedding model for document RAG
+ollama pull nomic-embed-text
+
+# Optional legal/reasoning alternative models
+ollama pull mistral
+ollama pull deepseek-r1
+```
+
+### 3. Verify Connection from Terminal
+
+Run the built-in diagnostic test:
+```bash
+python test_ollama.py
+```
+
+---
+
 ## Testing
 
 ### Backend Tests

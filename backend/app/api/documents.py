@@ -19,7 +19,12 @@ MAX_SIZE = 50 * 1024 * 1024  # 50 MB
 
 
 def svc():
-    return create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+    url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+    key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY or "placeholder-key"
+    try:
+        return create_client(url, key)
+    except Exception:
+        return None
 
 
 @router.post("")

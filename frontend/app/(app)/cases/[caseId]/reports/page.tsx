@@ -2,22 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { FileBarChart, Loader2, Download, Plus } from "lucide-react";
+import { FileBarChart, Loader2, Download, Plus, FileText, Printer, CheckCircle2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Card, Badge } from "@/components/ui";
 import { formatDateTime } from "@/lib/utils";
+import { printReportAsPdf, downloadReportAsWord, downloadReportAsText } from "@/lib/reportExporter";
 
 export default function ReportsPage() {
   const { caseId } = useParams<{ caseId: string }>();
   const [reports, setReports] = useState<any[]>([]);
+  const [caseInfo, setCaseInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
   const [viewing, setViewing] = useState<any>(null);
 
   async function load() {
     try {
-      setReports(await api.listReports(caseId));
+      const [reps, c] = await Promise.all([
+        api.listReports(caseId),
+        api.getCase(caseId).catch(() => null),
+      ]);
+      setReports(reps);
+      setCaseInfo(c);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -31,8 +39,11 @@ export default function ReportsPage() {
     setGenerating(true);
     setError(null);
     try {
-      await api.generateReport(caseId);
-      setTimeout(load, 4000);
+      const newRep = await api.generateReport(caseId);
+      await load();
+      if (newRep) {
+        setViewing(newRep);
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -49,15 +60,25 @@ export default function ReportsPage() {
     }
   }
 
-  async function exportReport(reportId: string, format: "pdf" | "docx") {
-    try {
-      await api.exportReport(reportId, format);
-      setError(null);
-      // Note: download URL delivery via storage path once worker completes
-      setTimeout(() => setError(null), 100);
-    } catch (e: any) {
-      setError(e.message);
-    }
+  function handleDownloadPdf() {
+    if (!viewing) return;
+    printReportAsPdf(viewing, caseInfo?.name || "Legal Case");
+    setDownloadSuccess("PDF print / download window opened.");
+    setTimeout(() => setDownloadSuccess(null), 3000);
+  }
+
+  function handleDownloadWord() {
+    if (!viewing) return;
+    downloadReportAsWord(viewing, caseInfo?.name || "Legal Case");
+    setDownloadSuccess("Downloaded Word (.doc) report to your computer.");
+    setTimeout(() => setDownloadSuccess(null), 3000);
+  }
+
+  function handleDownloadText() {
+    if (!viewing) return;
+    downloadReportAsText(viewing, caseInfo?.name || "Legal Case");
+    setDownloadSuccess("Downloaded Plain Text (.txt) summary to your computer.");
+    setTimeout(() => setDownloadSuccess(null), 3000);
   }
 
   if (loading) {
@@ -68,10 +89,9 @@ export default function ReportsPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Reports</h1>
+          <h1 className="text-2xl font-semibold text-white">Legal Due Diligence & Assessment Reports</h1>
           <p className="mt-1 text-sm text-text-secondary">
-            Property Due Diligence reports compile the full evidence trail:
-            documents, ownership, timeline, comparisons, and risks.
+            Comprehensive legal assessment compiling the full evidence trail: statutory analysis, precedents, risks, and conclusions.
           </p>
         </div>
         <Button onClick={generate} disabled={generating}>
@@ -84,21 +104,34 @@ export default function ReportsPage() {
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div>
       )}
 
+      {downloadSuccess && (
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+          <CheckCircle2 size={16} />
+          <span>{downloadSuccess}</span>
+        </div>
+      )}
+
       {viewing ? (
         <Card className="p-8">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-center">
             <div>
               <h2 className="text-lg font-semibold text-white">{viewing.title}</h2>
               <p className="text-xs text-text-muted">
-                Generated {formatDateTime(viewing.completed_at || viewing.created_at)}
+                Generated {formatDateTime(viewing.completed_at || viewing.created_at)} · Matter: {caseInfo?.name || "Case"}
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="secondary" onClick={() => exportReport(viewing.id, "pdf")}>
-                <Download size={13} /> PDF
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={handleDownloadPdf} title="Save/Print as PDF in Chrome">
+                <Printer size={13} className="text-primary" />
+                Download PDF
               </Button>
-              <Button size="sm" variant="secondary" onClick={() => exportReport(viewing.id, "docx")}>
-                <Download size={13} /> DOCX
+              <Button size="sm" variant="secondary" onClick={handleDownloadWord} title="Download Microsoft Word Document">
+                <Download size={13} className="text-blue-400" />
+                Word (.doc)
+              </Button>
+              <Button size="sm" variant="secondary" onClick={handleDownloadText} title="Download Text Summary">
+                <FileText size={13} className="text-emerald-400" />
+                Text (.txt)
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setViewing(null)}>
                 Close
@@ -144,13 +177,13 @@ export default function ReportsPage() {
           <FileBarChart size={32} className="mb-3 text-text-muted" />
           <h3 className="text-base font-semibold text-white">No reports yet</h3>
           <p className="mt-2 max-w-md text-sm text-text-secondary">
-            Generate a Property Due Diligence report once your documents are processed.
+            Click &ldquo;Generate Report&rdquo; to compile a comprehensive due diligence and assessment brief.
           </p>
         </Card>
       ) : (
         <div className="space-y-3">
-          {reports.map((report) => (
-            <Card key={report.id} className="flex items-center gap-4 p-5">
+          {reports.map((report, idx) => (
+            <Card key={report.id ? `${report.id}-${idx}` : `rep-${idx}`} className="flex items-center gap-4 p-5">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg-elevated">
                 <FileBarChart size={18} className="text-primary" />
               </div>
@@ -172,7 +205,7 @@ export default function ReportsPage() {
               </Badge>
               {report.status === "COMPLETED" && (
                 <Button size="sm" variant="secondary" onClick={() => openReport(report)}>
-                  View
+                  View / Download
                 </Button>
               )}
             </Card>

@@ -99,7 +99,7 @@ export default function RisksPage() {
                     <div className="flex shrink-0 flex-col items-end gap-2">
                       <Badge className={style.className}>{risk.level}</Badge>
                       <Badge className="border-border bg-bg-elevated text-text-muted">
-                        {risk.category.replace(/_/g, " ")}
+                        {(risk.category || "General").replace(/_/g, " ")}
                       </Badge>
                     </div>
                   </div>

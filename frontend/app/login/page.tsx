@@ -20,6 +20,22 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    const isDemoSupabase = typeof window !== 'undefined' && window.location.hostname === 'localhost' && process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost');
+    if (isDemoSupabase) {
+      // Mock login for local dev without real Supabase
+      if (!email || !password) {
+        setError("Email and password are required.");
+        setLoading(false);
+        return;
+      }
+      setTimeout(() => {
+        setLoading(false);
+        router.push("/dashboard");
+        router.refresh();
+      }, 600);
+      return;
+    }
+
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -35,6 +51,12 @@ export default function LoginPage() {
   async function handleReset() {
     if (!email) {
       setError("Enter your email first, then click reset.");
+      return;
+    }
+    const isDemoSupabase = typeof window !== 'undefined' && window.location.hostname === 'localhost' && process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost');
+    if (isDemoSupabase) {
+      setResetSent(true);
+      setError(null);
       return;
     }
     const supabase = createClient();

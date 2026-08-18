@@ -1,17 +1,22 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { PenLine, Loader2, Plus, Trash2, Save } from "lucide-react";
+import { PenLine, Loader2, Plus, Trash2, Save, Download, Printer, Cpu } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Card, Badge } from "@/components/ui";
 import { formatDateTime, DRAFT_TYPES } from "@/lib/utils";
+import { downloadDraftFile } from "@/lib/reportExporter";
+import { checkOllamaStatus, OllamaStatus } from "@/lib/ollama";
 
 export default function DraftingPage() {
   const { caseId } = useParams<{ caseId: string }>();
   const [drafts, setDrafts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus>({
+    online: false,
+    models: [],
+    activeModel: null,
+  });
 
   // Create form
   const [showCreate, setShowCreate] = useState(false);
@@ -35,7 +40,10 @@ export default function DraftingPage() {
     }
   }
 
-  useEffect(() => { load(); }, [caseId]);
+  useEffect(() => {
+    load();
+    checkOllamaStatus().then(setOllamaStatus);
+  }, [caseId]);
 
   async function createDraft(e: React.FormEvent) {
     e.preventDefault();
@@ -94,10 +102,23 @@ export default function DraftingPage() {
             Drafts are grounded in verified case facts. Missing facts appear as [VERIFY: …] placeholders.
           </p>
         </div>
-        <Button onClick={() => setShowCreate(!showCreate)}>
-          <Plus size={15} />
-          New Draft
-        </Button>
+        <div className="flex items-center gap-3">
+          {ollamaStatus.online ? (
+            <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-400">
+              <Cpu size={13} className="animate-pulse text-emerald-400" />
+              <span className="font-mono text-xs">Ollama: {ollamaStatus.activeModel || "Online"}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-bg-elevated px-2.5 py-1 text-xs text-text-muted">
+              <Cpu size={13} className="text-primary" />
+              <span>Local Legal AI Engine</span>
+            </div>
+          )}
+          <Button onClick={() => setShowCreate(!showCreate)}>
+            <Plus size={15} />
+            New Draft
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -157,10 +178,10 @@ export default function DraftingPage() {
             <div>
               <h2 className="text-base font-semibold text-white">{editing.title}</h2>
               <p className="text-xs text-text-muted">
-                {editing.draft_type.replace(/_/g, " ")} · v{editing.version} · {formatDateTime(editing.updated_at)}
+                {(editing.draft_type || "legal_draft").replace(/_/g, " ")} · v{editing.version || 1} · {formatDateTime(editing.updated_at || editing.created_at)}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge className={
                 editing.status === "FINAL"
                   ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
@@ -168,13 +189,19 @@ export default function DraftingPage() {
                   ? "border-amber-500/30 bg-amber-500/15 text-amber-400"
                   : "border-slate-500/30 bg-slate-500/15 text-slate-400"
               }>
-                {editing.status}
+                {editing.status || "DRAFT"}
               </Badge>
+              <Button size="sm" variant="secondary" onClick={() => downloadDraftFile({ title: editing.title, content }, "pdf")} title="Print / Save as PDF">
+                <Printer size={13} className="text-primary" /> PDF
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => downloadDraftFile({ title: editing.title, content }, "doc")} title="Download Word Document">
+                <Download size={13} className="text-blue-400" /> Word (.doc)
+              </Button>
               <Button size="sm" onClick={saveDraft} disabled={saving}>
                 {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
                 Save
               </Button>
-              <Button size="sm" variant="secondary" onClick={() => setEditing(null)}>
+              <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
                 Close
               </Button>
             </div>
@@ -200,12 +227,12 @@ export default function DraftingPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {drafts.map((draft) => (
-            <Card key={draft.id} className="flex items-center gap-4 p-5">
+          {drafts.map((draft, idx) => (
+            <Card key={draft.id ? `${draft.id}-${idx}` : `draft-${idx}`} className="flex items-center gap-4 p-5">
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-sm font-semibold text-white">{draft.title}</h3>
                 <p className="text-xs text-text-muted">
-                  {draft.draft_type.replace(/_/g, " ")} · v{draft.version} · {formatDateTime(draft.updated_at)}
+                  {(draft.draft_type || "legal_draft").replace(/_/g, " ")} · v{draft.version || 1} · {formatDateTime(draft.updated_at || draft.created_at)}
                 </p>
               </div>
               <Badge className={

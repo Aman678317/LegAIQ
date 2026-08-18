@@ -11,6 +11,7 @@ import {
 import { createClient } from "@/lib/supabase";
 import { getUserOrgs } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 const SIDEBAR_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -34,7 +35,8 @@ const CASE_ITEMS = [
 ];
 
 function CaseSidebar({ caseId }: { caseId: string }) {
-  const pathname = usePathname();
+  const rawPath = usePathname();
+  const pathname = rawPath || "";
   const base = `/cases/${caseId}`;
   return (
     <div className="space-y-1">
@@ -64,7 +66,8 @@ function CaseSidebar({ caseId }: { caseId: string }) {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname || "";
   const [user, setUser] = useState<any>(null);
   const [orgs, setOrgs] = useState<any[]>([]);
   const [activeOrg, setActiveOrg] = useState<any>(null);
@@ -77,6 +80,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function init() {
+      const isDemoSupabase = typeof window !== 'undefined' && window.location.hostname === 'localhost' && (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost') || !process.env.NEXT_PUBLIC_SUPABASE_URL);
+      if (isDemoSupabase) {
+        // Mock user for local dev
+        setUser({ email: 'demo@example.com', id: 'demo-id' });
+        setOrgs([{ organization: { id: 'demo-org', name: 'Demo Workspace', slug: 'demo' }, role: 'OWNER' }]);
+        setActiveOrg({ id: 'demo-org', name: 'Demo Workspace', slug: 'demo' });
+        setIsPlatformAdmin(true);
+        setLoading(false);
+
+        if (caseMatch) {
+          try {
+            const c = await api.getCase(caseMatch[1]);
+            setCaseName(c?.name || "Case");
+          } catch {
+            setCaseName("Case");
+          }
+        } else {
+          setCaseName(null);
+        }
+        return;
+      }
+
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {

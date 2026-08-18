@@ -389,25 +389,6 @@ export default function VoicePanel({ caseId }: { caseId: string }) {
   );
 }
 
-// Local helper to avoid adding more surface to the shared api client
 async function fetchVoiceSession(caseId: string, language: string) {
-  const { createClient } = await import("@/lib/supabase");
-  const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/cases/${caseId}/voice/session`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-      },
-      body: JSON.stringify({ language }),
-    }
-  );
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || "Failed to create voice session");
-  }
-  return res.json();
+  return api.createVoiceSession(caseId, language);
 }

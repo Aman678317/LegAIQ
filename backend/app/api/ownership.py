@@ -10,16 +10,26 @@ router = APIRouter(tags=["ownership"])
 
 
 def svc():
-    return create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+    url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+    key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY or "placeholder-key"
+    try:
+        return create_client(url, key)
+    except Exception:
+        return None
 
 
 @router.get("/cases/{case_id}/ownership")
 async def get_ownership_graph(case_id: str, _=Depends(get_case_access)):
     ctx, case = _
     db = svc()
-    nodes = db.table("ownership_nodes").select("*").eq("case_id", case_id).execute().data
-    edges = db.table("ownership_edges").select("*").eq("case_id", case_id).execute().data
-    return {"nodes": nodes, "edges": edges}
+    if not db:
+        return {"nodes": [], "edges": []}
+    try:
+        nodes = db.table("ownership_nodes").select("*").eq("case_id", case_id).execute().data or []
+        edges = db.table("ownership_edges").select("*").eq("case_id", case_id).execute().data or []
+        return {"nodes": nodes, "edges": edges}
+    except Exception:
+        return {"nodes": [], "edges": []}
 
 
 @router.post("/cases/{case_id}/ownership/rebuild")

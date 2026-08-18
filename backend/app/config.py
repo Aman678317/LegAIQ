@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     JWT_EXPIRATION_HOURS: int = 24
 
     # CORS
-    CORS_ORIGINS_RAW: str = Field(default="http://localhost:3000,http://localhost:5173", validation_alias="CORS_ORIGINS")
+    CORS_ORIGINS_RAW: str = Field(default="*", validation_alias="CORS_ORIGINS")
 
     @computed_field
     @property
@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: str = ""
     GOOGLE_APPLICATION_CREDENTIALS: str = ""
 
+    # Ollama Local AI
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "llama3"
+    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
+
     # OCR
     OCR_PROVIDER: str = "tesseract"
     TESSERACT_CMD: str = "tesseract"
@@ -64,8 +69,8 @@ class Settings(BaseSettings):
 
     # Voice — server-side providers for browsers without Web Speech
     STT_API_KEY: str = ""
-    STT_API_BASE: str = "https://api.openai.com/v1"
-    STT_MODEL: str = "whisper-1"
+    STT_API_BASE: str = "https://api.groq.com/openai/v1"
+    STT_MODEL: str = "whisper-large-v3-turbo"
     TTS_API_KEY: str = ""
     TTS_API_BASE: str = "https://api.openai.com/v1"
     TTS_MODEL: str = "tts-1"

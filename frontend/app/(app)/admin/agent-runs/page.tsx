@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2, ChevronDown } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, Badge } from "@/components/ui";
@@ -36,8 +36,8 @@ export default function AdminAgentRunsPage() {
           </thead>
           <tbody>
             {data.items.map((run: any) => (
-              <>
-                <tr key={run.id} className="border-b border-border/50 hover:bg-bg-elevated/50">
+              <React.Fragment key={run.id}>
+                <tr className="border-b border-border/50 hover:bg-bg-elevated/50">
                   <td className="px-5 py-3 font-medium text-white">{run.agent_name}</td>
                   <td className="px-5 py-3">
                     <Badge className={
@@ -99,7 +99,7 @@ export default function AdminAgentRunsPage() {
                     </td>
                   </tr>
                 )}
-              </>
+              </React.Fragment>
             ))}
             {data.items.length === 0 && (
               <tr><td colSpan={8} className="px-5 py-8 text-center text-text-muted">No agent runs yet.</td></tr>

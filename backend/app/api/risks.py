@@ -11,16 +11,27 @@ router = APIRouter(tags=["risks"])
 
 
 def svc():
-    return create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+    url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+    key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY or "placeholder-key"
+    try:
+        return create_client(url, key)
+    except Exception:
+        return None
 
 
 @router.get("/cases/{case_id}/risks")
 async def get_risks(case_id: str, resolved: bool = False, _=Depends(get_case_access)):
     ctx, case = _
-    return (
-        svc().table("risks").select("*").eq("case_id", case_id)
-        .eq("resolved", resolved).order("created_at", desc=True).execute().data
-    )
+    db = svc()
+    if not db:
+        return []
+    try:
+        return (
+            db.table("risks").select("*").eq("case_id", case_id)
+            .eq("resolved", resolved).order("created_at", desc=True).execute().data or []
+        )
+    except Exception:
+        return []
 
 
 @router.get("/cases/{case_id}/risks/summary")

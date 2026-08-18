@@ -36,6 +36,7 @@ class DraftCreate(BaseModel):
     draft_type: str
     title: str = Field(min_length=1, max_length=300)
     instructions: str = Field(min_length=10, max_length=6000)
+    model: Optional[str] = None
 
 
 class DraftUpdate(BaseModel):
@@ -45,7 +46,12 @@ class DraftUpdate(BaseModel):
 
 
 def svc():
-    return create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+    url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+    key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY or "placeholder-key"
+    try:
+        return create_client(url, key)
+    except Exception:
+        return None
 
 
 async def build_case_fact_block(case_id: str) -> str:
@@ -82,6 +88,7 @@ USER INSTRUCTIONS:
 
 Jurisdiction: {case.get('jurisdiction_state') or 'Not specified'}""",
         task="drafting",
+        model=body.model,
         max_tokens=4000,
     ))
 

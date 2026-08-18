@@ -2,10 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Search, Loader2, ExternalLink, ShieldCheck, ShieldAlert } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  ExternalLink,
+  ShieldCheck,
+  ShieldAlert,
+  Cpu,
+  Languages,
+  Sparkles,
+  BookOpen,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Card, Badge } from "@/components/ui";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, LANGUAGES } from "@/lib/utils";
+import { checkOllamaStatus, OllamaStatus } from "@/lib/ollama";
+import { downloadDraftFile } from "@/lib/reportExporter";
+
+const TAX_RESEARCH_PROMPTS = [
+  "What is the ratio decidendi in Vodafone International Holdings ((2012) 6 SCC 613)?",
+  "Analyze Section 195 withholding tax on offshore payments to non-residents.",
+  "What was the legal effect of Taxation Laws (Amendment) Act 2021 on retrospective tax?",
+  "How does the 'Look At' doctrine apply to multi-tiered foreign holding structures?",
+];
+
+const PROPERTY_RESEARCH_PROMPTS = [
+  "What is the legal effect of a survey number mismatch between deeds in Karnataka?",
+  "What is the limitation period for filing a suit for partition under the Limitation Act 1963?",
+  "Can oral evidence contradict registered conveyance terms under the Indian Evidence Act / BSA?",
+  "What is the evidentiary value of an unmutated RTC revenue record in property title disputes?",
+];
 
 export default function ResearchPage() {
   const { caseId } = useParams<{ caseId: string }>();
@@ -15,10 +41,23 @@ export default function ResearchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sourcesBySession, setSourcesBySession] = useState<Record<string, any[]>>({});
+  const [selectedLang, setSelectedLang] = useState("en");
+  const [caseInfo, setCaseInfo] = useState<any>(null);
+  const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus>({
+    online: false,
+    models: [],
+    activeModel: null,
+  });
+  const [selectedModel, setSelectedModel] = useState<string>("");
 
   async function load() {
     try {
-      setSessions(await api.listResearch(caseId));
+      const [resList, c] = await Promise.all([
+        api.listResearch(caseId),
+        api.getCase(caseId).catch(() => null),
+      ]);
+      setSessions(resList);
+      setCaseInfo(c);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -26,15 +65,21 @@ export default function ResearchPage() {
     }
   }
 
-  useEffect(() => { load(); }, [caseId]);
+  useEffect(() => {
+    load();
+    checkOllamaStatus().then((status) => {
+      setOllamaStatus(status);
+      if (status.activeModel) setSelectedModel(status.activeModel);
+    });
+  }, [caseId]);
 
-  async function runResearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (!question.trim() || researching) return;
+  async function runResearch(qText?: string) {
+    const q = (qText || question).trim();
+    if (!q || researching) return;
     setResearching(true);
     setError(null);
     try {
-      await api.startResearch(caseId, question);
+      await api.startResearch(caseId, q, "India", selectedLang, selectedModel || undefined);
       setQuestion("");
       await load();
     } catch (err: any) {
@@ -55,7 +100,6 @@ export default function ResearchPage() {
   }
 
   function renderAnswer(text: string) {
-    // Convert [Source: URL] patterns to clickable links
     const parts = text.split(/(\[Source:\s*[^\]]+\])/g);
     return parts.map((part, i) => {
       const match = part.match(/\[Source:\s*(https?:\/\/[^\]]+)\]/);
@@ -77,44 +121,117 @@ export default function ResearchPage() {
     });
   }
 
+  const isTax =
+    caseInfo?.case_type === "TAX" ||
+    caseInfo?.name?.toLowerCase().includes("vodafone") ||
+    caseId?.toLowerCase().includes("vodafone");
+
+  const prompts = isTax ? TAX_RESEARCH_PROMPTS : PROPERTY_RESEARCH_PROMPTS;
+
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-white">Legal Research</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          The research agent searches authoritative Indian sources and cites what it finds.
-          It never fabricates citations.
-        </p>
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/* Header & Controls */}
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Legal Research Intelligence</h1>
+          <p className="mt-1 text-xs text-text-secondary">
+            AI searches authoritative Indian statutes, Supreme Court rulings, and official repositories with verified citations.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Ollama Status */}
+          {ollamaStatus.online ? (
+            <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-400">
+              <Cpu size={13} className="animate-pulse text-emerald-400" />
+              {ollamaStatus.models.length > 1 ? (
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="bg-transparent font-mono text-xs text-emerald-300 outline-none"
+                >
+                  {ollamaStatus.models.map((m) => (
+                    <option key={m} value={m} className="bg-bg text-white">
+                      Ollama: {m}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="font-mono text-xs">Ollama: {ollamaStatus.activeModel || "Online"}</span>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-bg-elevated px-2.5 py-1 text-xs text-text-muted">
+              <Cpu size={13} className="text-primary" />
+              <span>Local Research Engine</span>
+            </div>
+          )}
+
+          {/* Language Selector */}
+          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-bg px-2.5 py-1 text-xs text-white">
+            <Languages size={13} className="text-primary" />
+            <select
+              value={selectedLang}
+              onChange={(e) => setSelectedLang(e.target.value)}
+              className="bg-transparent text-xs text-white outline-none"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code} className="bg-bg text-white">
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div>
       )}
 
-      <form onSubmit={runResearch} className="flex gap-3">
+      {/* Search Bar */}
+      <form onSubmit={(e) => { e.preventDefault(); runResearch(); }} className="flex gap-3">
         <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="e.g., What is the limitation period for suit for partition in Karnataka?"
-          className="flex-1 rounded-xl border border-border bg-bg-surface px-4 py-3 text-sm text-white placeholder-text-muted outline-none focus:border-primary"
+          placeholder={
+            isTax
+              ? "e.g., What is the scope of Section 9(1)(i) regarding indirect transfers under Indian Income Tax Act?"
+              : "e.g., What is the limitation period for suit for partition in Karnataka?"
+          }
+          className="flex-1 rounded-xl border border-border bg-bg-surface px-4 py-3.5 text-sm text-white placeholder-text-muted outline-none focus:border-primary"
         />
         <Button type="submit" disabled={researching || !question.trim()}>
-          {researching ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
-          Research
+          {researching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+          Research with AI
         </Button>
       </form>
 
+      {/* Suggested Prompts */}
+      <div className="flex flex-wrap gap-2">
+        {prompts.map((p) => (
+          <button
+            key={p}
+            onClick={() => runResearch(p)}
+            className="rounded-full border border-border/70 bg-bg px-3.5 py-1.5 text-xs text-text-secondary transition-colors hover:border-primary/50 hover:text-white"
+          >
+            <Sparkles size={11} className="mr-1.5 inline text-primary" />
+            {p}
+          </button>
+        ))}
+      </div>
+
+      {/* Research Output Cards */}
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : sessions.length === 0 ? (
         <Card className="flex flex-col items-center p-12 text-center">
-          <Search size={32} className="mb-3 text-text-muted" />
-          <h3 className="text-base font-semibold text-white">No research yet</h3>
-          <p className="mt-2 max-w-md text-sm text-text-secondary">
-            Ask a legal question above. The agent plans a search, retrieves sources,
-            verifies what it can, and answers with citations.
+          <BookOpen size={36} className="mb-3 text-text-muted" />
+          <h3 className="text-base font-semibold text-white">No research sessions yet</h3>
+          <p className="mt-2 max-w-md text-xs text-text-secondary">
+            Select a legal prompt above or enter a custom proposition. The research agent analyzes Indian statutes, binding Supreme Court precedents, and provides verifiable citations.
           </p>
         </Card>
       ) : (
@@ -126,22 +243,46 @@ export default function ResearchPage() {
               onMouseEnter={() => session.status === "COMPLETED" && loadSources(session.id)}
             >
               <div className="flex items-start justify-between gap-4">
-                <h3 className="text-sm font-semibold text-white">{session.question}</h3>
-                <Badge className={
-                  session.status === "COMPLETED"
-                    ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
-                    : session.status === "RUNNING"
-                    ? "border-blue-500/30 bg-blue-500/15 text-blue-400"
-                    : "border-red-500/30 bg-red-500/15 text-red-400"
-                }>
-                  {session.status}
-                </Badge>
+                <div>
+                  <h3 className="text-base font-semibold text-white">{session.question}</h3>
+                  <div className="mt-1 flex items-center gap-3 text-xs text-text-muted">
+                    {session.jurisdiction && <span>Jurisdiction: {session.jurisdiction}</span>}
+                    <span>·</span>
+                    <span>{formatDateTime(session.created_at)}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {session.status === "COMPLETED" && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => downloadDraftFile({ title: `Legal Research Memo: ${session.question}`, content: session.answer }, "pdf")}
+                        title="Download / Print as PDF"
+                      >
+                        PDF
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => downloadDraftFile({ title: `Legal Research Memo: ${session.question}`, content: session.answer }, "doc")}
+                        title="Download Word (.doc) memo"
+                      >
+                        Word
+                      </Button>
+                    </div>
+                  )}
+                  <Badge className={
+                    session.status === "COMPLETED"
+                      ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
+                      : session.status === "RUNNING"
+                      ? "border-blue-500/30 bg-blue-500/15 text-blue-400"
+                      : "border-red-500/30 bg-red-500/15 text-red-400"
+                  }>
+                    {session.status}
+                  </Badge>
+                </div>
               </div>
-
-              {session.jurisdiction && (
-                <p className="mt-1 text-xs text-text-muted">Jurisdiction: {session.jurisdiction}</p>
-              )}
-              <p className="text-xs text-text-muted">{formatDateTime(session.created_at)}</p>
 
               {session.answer && (
                 <div className="mt-4 whitespace-pre-wrap border-t border-border pt-4 text-sm leading-relaxed text-text-secondary">
@@ -149,28 +290,31 @@ export default function ResearchPage() {
                 </div>
               )}
 
+              {/* Authoritative Sources */}
               {sourcesBySession[session.id] && sourcesBySession[session.id].length > 0 && (
-                <div className="mt-4 border-t border-border pt-4">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
-                    Sources ({sourcesBySession[session.id].length})
+                <div className="mt-5 border-t border-border/60 pt-4">
+                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+                    Authoritative Citations & Legal Repositories ({sourcesBySession[session.id].length})
                   </p>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {sourcesBySession[session.id].map((s: any) => (
-                      <div key={s.id} className="flex items-center gap-2 text-xs">
-                        {s.verified ? (
-                          <ShieldCheck size={12} className="shrink-0 text-emerald-400" />
-                        ) : (
-                          <ShieldAlert size={12} className="shrink-0 text-amber-400" />
-                        )}
-                        <a
-                          href={s.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="truncate text-text-secondary hover:text-white"
-                        >
-                          {s.title}
-                        </a>
-                        <span className="shrink-0 text-text-muted">· {new URL(s.url).hostname}</span>
+                      <div key={s.id} className="flex items-center justify-between rounded-lg border border-border/40 bg-bg px-3.5 py-2 text-xs">
+                        <div className="flex items-center gap-2 truncate">
+                          {s.verified ? (
+                            <ShieldCheck size={14} className="shrink-0 text-emerald-400" />
+                          ) : (
+                            <ShieldAlert size={14} className="shrink-0 text-amber-400" />
+                          )}
+                          <a
+                            href={s.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="truncate text-white hover:text-primary hover:underline"
+                          >
+                            {s.title}
+                          </a>
+                        </div>
+                        <span className="shrink-0 text-text-muted">{new URL(s.url).hostname}</span>
                       </div>
                     ))}
                   </div>
