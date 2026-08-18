@@ -7,6 +7,7 @@ import {
   Scale, LayoutDashboard, FolderOpen, FileText, BrainCircuit, Network,
   Clock, GitCompare, AlertTriangle, Search, MessageSquare, PenLine,
   FileBarChart, LogOut, Loader2, ChevronDown, Mic, Settings, ShieldAlert,
+  Bot,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { getUserOrgs } from "@/lib/auth";
@@ -15,6 +16,7 @@ import { api } from "@/lib/api";
 
 const SIDEBAR_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/chat", label: "AI Chatbot (Ollama)", icon: Bot },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
