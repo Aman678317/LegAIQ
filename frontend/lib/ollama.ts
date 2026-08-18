@@ -15,9 +15,19 @@ export interface OllamaStatus {
   online: boolean;
   models: string[];
   activeModel: string | null;
+  latency_ms?: number;
+  error?: string;
 }
 
 const DEFAULT_OLLAMA_URL = process.env.NEXT_PUBLIC_OLLAMA_URL || "http://localhost:11434";
+
+export function getOllamaBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem("jurisiva_ollama_url");
+    if (saved) return saved;
+  }
+  return DEFAULT_OLLAMA_URL;
+}
 
 /**
  * Check if local Ollama service is running and retrieve installed models
@@ -27,6 +37,7 @@ export async function checkOllamaStatus(baseUrl = DEFAULT_OLLAMA_URL): Promise<O
     return { online: false, models: [], activeModel: null };
   }
 
+  const start = Date.now();
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1800);
@@ -44,11 +55,13 @@ export async function checkOllamaStatus(baseUrl = DEFAULT_OLLAMA_URL): Promise<O
     const data = await res.json();
     const models = (data.models || []).map((m: any) => m.name);
     const activeModel = models[0] || "llama3";
+    const latency_ms = Date.now() - start;
 
     return {
       online: true,
       models,
       activeModel,
+      latency_ms,
     };
   } catch {
     return { online: false, models: [], activeModel: null };

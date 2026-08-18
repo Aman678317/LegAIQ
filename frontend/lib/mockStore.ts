@@ -454,7 +454,7 @@ export function getDemoProperty(caseId: string, forceRefresh = false) {
   const domain = detectDomain(ctx);
   const isTaxOrVodafone = domain === "TAX" || ctx.caseName.toLowerCase().includes("vodafone");
 
-  const stored = forceRefresh ? null : getStorage<Record<string, any>>(`property_${caseId}`, null);
+  const stored = forceRefresh ? null : getStorage<Record<string, any> | null>(`property_${caseId}`, null);
 
   if (stored && stored.fields && Array.isArray(stored.fields)) {
     const isStoredTax = stored.fields.some(

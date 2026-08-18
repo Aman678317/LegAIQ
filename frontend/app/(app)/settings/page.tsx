@@ -184,7 +184,7 @@ export default function SettingsPage() {
                 >
                   {ollamaStatus.online ? (
                     <span className="flex items-center gap-1">
-                      <CheckCircle2 size={12} /> Connected ({ollamaStatus.latency_ms}ms)
+                      <CheckCircle2 size={12} /> Connected {ollamaStatus.latency_ms !== undefined ? `(${ollamaStatus.latency_ms}ms)` : ""}
                     </span>
                   ) : (
                     <span className="flex items-center gap-1">
