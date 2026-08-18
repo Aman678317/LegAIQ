@@ -53,8 +53,16 @@ export async function checkOllamaStatus(baseUrl = DEFAULT_OLLAMA_URL): Promise<O
     }
 
     const data = await res.json();
-    const models = (data.models || []).map((m: any) => m.name);
-    const activeModel = models[0] || "llama3";
+    const allModels = (data.models || []).map((m: any) => m.name);
+    // Separate text/chat generation models from embedding-only models
+    const chatModels = allModels.filter(
+      (m: string) =>
+        !m.toLowerCase().includes("embed") &&
+        !m.toLowerCase().includes("bge") &&
+        !m.toLowerCase().includes("minilm")
+    );
+    const models = chatModels.length > 0 ? chatModels : allModels;
+    const activeModel = chatModels[0] || (allModels.length > 0 ? allModels[0] : "llama3");
     const latency_ms = Date.now() - start;
 
     return {
@@ -91,6 +99,14 @@ export async function chatWithOllama(
   temperature = 0.7
 ): Promise<{ text: string; model: string; duration_ms: number } | null> {
   const start = Date.now();
+
+  // If the user selected an embedding model, fallback to llama3 or let universal fallback handle it
+  const isEmbedModel =
+    model.toLowerCase().includes("embed") ||
+    model.toLowerCase().includes("bge") ||
+    model.toLowerCase().includes("minilm");
+  const actualModel = isEmbedModel ? "llama3" : model;
+
   const formattedMessages: Array<{ role: string; content: string }> = [];
 
   if (systemPrompt) {
@@ -103,14 +119,14 @@ export async function chatWithOllama(
   // 1. Try direct connection to Ollama
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 min timeout for long generation
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 1 min timeout
 
     const res = await fetch(`${baseUrl}/api/chat`, {
       method: "POST",
       signal: controller.signal,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model,
+        model: actualModel,
         messages: formattedMessages,
         stream: false,
         options: { temperature },
@@ -124,7 +140,7 @@ export async function chatWithOllama(
       if (content) {
         return {
           text: content,
-          model,
+          model: actualModel,
           duration_ms: Date.now() - start,
         };
       }
@@ -139,7 +155,7 @@ export async function chatWithOllama(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model,
+        model: actualModel,
         messages: formattedMessages,
         stream: false,
         options: { temperature },
@@ -152,7 +168,7 @@ export async function chatWithOllama(
       if (content) {
         return {
           text: content,
-          model,
+          model: actualModel,
           duration_ms: Date.now() - start,
         };
       }

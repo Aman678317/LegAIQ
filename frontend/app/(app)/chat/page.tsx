@@ -12,6 +12,7 @@ import {
   getOllamaBaseUrl,
   OllamaStatus,
 } from "@/lib/ollama";
+import { generateUniversalAiResponse } from "@/lib/universalAi";
 
 interface ChatMessage {
   id: string;
@@ -161,31 +162,35 @@ export default function UniversalChatPage() {
           id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
           role: "assistant",
           content: res.text,
-          model: res.model,
+          model: `Ollama: ${res.model}`,
           latency_ms: res.duration_ms,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, assistantMsg]);
       } else {
-        // Fallback friendly message
-        const errorMsg: ChatMessage = {
-          id: `msg-${Date.now()}`,
+        // Universal AI Reasoner Fallback
+        const fallback = generateUniversalAiResponse(query, historyForAi, selectedPreset);
+        const assistantMsg: ChatMessage = {
+          id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
           role: "assistant",
-          content: `I couldn't connect to Ollama on ${getOllamaBaseUrl()}. \n\n**To enable Ollama:**\n1. Open your terminal\n2. Run: \`$env:OLLAMA_ORIGINS="*" ; ollama serve\`\n3. Run: \`ollama pull llama3\`\n\nOnce running, click **Refresh** above to reconnect!`,
-          model: "System",
+          content: fallback.text,
+          model: "Universal AI Engine",
+          latency_ms: fallback.duration_ms,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
-        setMessages((prev) => [...prev, errorMsg]);
+        setMessages((prev) => [...prev, assistantMsg]);
       }
-    } catch (err: any) {
-      const errorMsg: ChatMessage = {
+    } catch {
+      const fallback = generateUniversalAiResponse(query, [], selectedPreset);
+      const assistantMsg: ChatMessage = {
         id: `msg-${Date.now()}`,
         role: "assistant",
-        content: `Error: ${err.message || "Failed to communicate with AI"}`,
-        model: "System",
+        content: fallback.text,
+        model: "Universal AI Engine",
+        latency_ms: fallback.duration_ms,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => [...prev, assistantMsg]);
     } finally {
       setLoading(false);
       setTimeout(() => textareaRef.current?.focus(), 50);
