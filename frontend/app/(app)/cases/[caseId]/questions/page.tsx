@@ -263,7 +263,7 @@ export default function QuestionsPage() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={`Ask anything about this case (${selectedLang !== "en" ? LANGUAGES.find((l) => l.code === selectedLang)?.label : "parties, statutes, tax dispute, precedents"}…)`}
+          placeholder="Ask about parties, title, legal issues, or evidence in this case…"
           className="flex-1 rounded-xl border border-border bg-bg-surface px-4 py-3 text-sm text-white placeholder-text-muted outline-none transition-colors focus:border-primary"
         />
         <button
