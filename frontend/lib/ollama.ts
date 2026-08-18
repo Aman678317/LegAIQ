@@ -149,7 +149,35 @@ export async function chatWithOllama(
     // direct connection failed (e.g. CORS or network error), try proxy next
   }
 
-  // 2. Try Next.js API route proxy /api/ollama/chat
+  // 2. Try Next.js Unified Chat API route /api/chat
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: actualModel,
+        messages: formattedMessages,
+        system: systemPrompt,
+        temperature,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const content = data?.text || data?.message?.content || "";
+      if (content) {
+        return {
+          text: content,
+          model: data.model || actualModel,
+          duration_ms: Date.now() - start,
+        };
+      }
+    }
+  } catch {
+    // API route failed, continue
+  }
+
+  // 3. Try Next.js Ollama proxy /api/ollama/chat
   try {
     const res = await fetch("/api/ollama/chat", {
       method: "POST",
