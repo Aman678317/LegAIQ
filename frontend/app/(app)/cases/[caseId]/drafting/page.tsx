@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PenLine, Loader2, Plus, Trash2, Save, Download, Printer, Cpu } from "lucide-react";

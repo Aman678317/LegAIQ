@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { Loader2, UserPlus, Trash2, ShieldCheck, CreditCard, Cpu, RefreshCw, CheckCircle2, XCircle, Terminal, Sparkles } from "lucide-react";
 import { api } from "@/lib/api";

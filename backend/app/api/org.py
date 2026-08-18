@@ -31,22 +31,22 @@ def svc():
 
 def _require_manager(db, org_id: str, user_id: str) -> str:
     if not db:
-        return "OWNER"
+        raise HTTPException(500, "Database not available")
     try:
         membership = (
             db.table("memberships").select("role")
             .eq("organization_id", org_id).eq("user_id", user_id)
             .single().execute()
         )
-        if not membership.data:
-            return "OWNER"
+        if not membership or not membership.data:
+            raise HTTPException(403, "Not a member of this organization")
         if membership.data.get("role") not in MANAGER_ROLES:
             raise HTTPException(403, "Requires OWNER or ADMIN role")
         return membership.data["role"]
     except HTTPException:
         raise
-    except Exception:
-        return "OWNER"
+    except Exception as e:
+        raise HTTPException(403, "Not authorized to manage this organization")
 
 
 def _owner_count(db, org_id: str) -> int:

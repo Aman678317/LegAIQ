@@ -66,13 +66,6 @@ async def get_auth_context(request: Request) -> AuthContext:
     elif "token" in request.query_params:
         token = request.query_params["token"]
     else:
-        # Check if running in local dev / mock mode with relaxed auth
-        if settings.DEBUG:
-            return AuthContext(
-                user_id="default-user-id",
-                email="admin@jurisiva.ai",
-                role="OWNER",
-            )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing or invalid Authorization header",
@@ -138,12 +131,9 @@ async def get_auth_context(request: Request) -> AuthContext:
             pass
 
     if not payload or not payload.get("sub"):
-        # Fail gracefully in dev/demo mode or when Ollama/local setup is in use
-        # Always allow demo access to avoid blocking the UI with "Invalid token" errors
-        return AuthContext(
-            user_id="default-user-id",
-            email="user@jurisiva.ai",
-            role="OWNER",
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token",
         )
 
     return AuthContext(
@@ -168,13 +158,13 @@ def require_role(minimum_role: str, org_id: str = None):
             ctx.role = "OWNER"
             return ctx
 
-        try:
-            supabase = _service_client()
-            if not supabase:
-                ctx.organization_id = target_org
-                ctx.role = "OWNER"
-                return ctx
+        supabase = _service_client()
+        if not supabase:
+            ctx.organization_id = target_org
+            ctx.role = "OWNER"
+            return ctx
 
+        try:
             membership = (
                 supabase.table("memberships")
                 .select("role")
@@ -184,10 +174,10 @@ def require_role(minimum_role: str, org_id: str = None):
                 .execute()
             )
             if not membership.data:
-                # If membership query returned empty, permit owner access
-                ctx.organization_id = target_org
-                ctx.role = "OWNER"
-                return ctx
+                raise HTTPException(
+                    status_code=403,
+                    detail="Not a member of this organization",
+                )
 
             user_role = membership.data["role"]
             if ROLE_HIERARCHY.get(user_role, -1) < ROLE_HIERARCHY.get(minimum_role, 99):
@@ -211,31 +201,43 @@ def require_role(minimum_role: str, org_id: str = None):
 async def resolve_case_access(ctx: AuthContext, case_id: str) -> tuple[AuthContext, dict]:
     """Core membership check: load case, verify caller's org, return (ctx, case)."""
     supabase = _service_client()
-    default_case = {
-        "id": case_id,
-        "name": "Case",
-        "organization_id": ctx.organization_id or "default-org",
-        "case_type": "PROPERTY",
-        "status": "ACTIVE",
-    }
     if not supabase:
-        return ctx, default_case
+        raise HTTPException(status_code=404, detail="Case not found")
 
     try:
         case = (
             supabase.table("cases").select("*").eq("id", case_id).single().execute()
         )
-        if not case.data:
-            return ctx, default_case
-
-        org_id = case.data.get("organization_id") or "default-org"
-        ctx.organization_id = org_id
-        ctx.role = "OWNER"
-        return ctx, case.data
-    except HTTPException:
-        raise
     except Exception:
-        return ctx, default_case
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    if not case or not case.data:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    org_id = case.data.get("organization_id")
+    if org_id:
+        try:
+            membership = (
+                supabase.table("memberships")
+                .select("role")
+                .eq("organization_id", org_id)
+                .eq("user_id", ctx.user_id)
+                .single()
+                .execute()
+            )
+            if not membership or not membership.data:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not a member of the organization owning this case",
+                )
+            ctx.organization_id = org_id
+            ctx.role = membership.data.get("role", "OWNER")
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+
+    return ctx, case.data
 
 
 async def get_case_access(
@@ -262,17 +264,18 @@ def resource_case_access(table: str, id_field: str):
 
         supabase = _service_client()
         if not supabase:
-            return await resolve_case_access(ctx, "default-case")
+            raise HTTPException(status_code=404, detail=f"{table[:-1].capitalize()} not found")
 
         try:
             row = (
                 supabase.table(table).select("case_id").eq("id", resource_id).single().execute()
             )
-            if not row.data or not row.data.get("case_id"):
-                return await resolve_case_access(ctx, "default-case")
-
-            return await resolve_case_access(ctx, row.data["case_id"])
         except Exception:
-            return await resolve_case_access(ctx, "default-case")
+            raise HTTPException(status_code=404, detail=f"{table[:-1].capitalize()} not found")
+
+        if not row or not row.data or not row.data.get("case_id"):
+            raise HTTPException(status_code=404, detail=f"{table[:-1].capitalize()} not found")
+
+        return await resolve_case_access(ctx, row.data["case_id"])
 
     return dependency

@@ -28,19 +28,18 @@ def svc():
 
 
 async def require_platform_admin(ctx: AuthContext = Depends(get_auth_context)) -> AuthContext:
-    if settings.DEBUG:
-        return ctx
     db = svc()
     if not db:
-        return ctx
+        raise HTTPException(status_code=403, detail="Platform administrator access required")
     try:
         profile = db.table("profiles").select("is_platform_admin").eq("id", ctx.user_id).single().execute()
-        if profile.data and profile.data.get("is_platform_admin"):
+        if profile and profile.data and profile.data.get("is_platform_admin"):
             return ctx
+    except HTTPException:
+        raise
     except Exception:
-        if settings.DEBUG:
-            return ctx
-    return ctx
+        pass
+    raise HTTPException(status_code=403, detail="Platform administrator access required")
 
 
 @router.get("/overview")

@@ -39,8 +39,23 @@ class CaseUpdate(BaseModel):
 
 @router.post("")
 async def create_case(body: CaseCreate, ctx: AuthContext = Depends(get_auth_context)):
+    db = svc()
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not available")
+
+    # Check caller has membership in the target organization
+    membership = (
+        db.table("memberships").select("role")
+        .eq("organization_id", body.organization_id)
+        .eq("user_id", ctx.user_id)
+        .single()
+        .execute()
+    )
+    if not membership or not membership.data:
+        raise HTTPException(status_code=403, detail="Not a member of this organization")
+
     try:
-        row = svc().table("cases").insert({
+        row = db.table("cases").insert({
             "organization_id": body.organization_id,
             "created_by": ctx.user_id,
             "name": body.name,
@@ -54,12 +69,12 @@ async def create_case(body: CaseCreate, ctx: AuthContext = Depends(get_auth_cont
         # Property cases get a property record
         if body.case_type == "PROPERTY":
             try:
-                svc().table("properties").insert({"case_id": case["id"], "name": body.name}).execute()
+                db.table("properties").insert({"case_id": case["id"], "name": body.name}).execute()
             except Exception:
                 pass
 
         try:
-            svc().rpc("log_activity", {
+            db.rpc("log_activity", {
                 "p_case_id": case["id"],
                 "p_event_type": "case.created",
                 "p_description": f"Case '{body.name}' created",
@@ -77,6 +92,8 @@ async def create_case(body: CaseCreate, ctx: AuthContext = Depends(get_auth_cont
             pass
 
         return case
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -90,9 +107,24 @@ async def list_cases(
     offset: int = 0,
     ctx: AuthContext = Depends(get_auth_context),
 ):
+    db = svc()
+    if not db:
+        return {"items": [], "total": 0, "offset": offset, "limit": limit}
+
+    # Verify membership
+    membership = (
+        db.table("memberships").select("role")
+        .eq("organization_id", organization_id)
+        .eq("user_id", ctx.user_id)
+        .single()
+        .execute()
+    )
+    if not membership or not membership.data:
+        raise HTTPException(status_code=403, detail="Not a member of this organization")
+
     try:
         q = (
-            svc().table("cases").select("*")
+            db.table("cases").select("*")
             .eq("organization_id", organization_id)
             .order("updated_at", desc=True)
             .range(offset, offset + limit - 1)
@@ -104,10 +136,12 @@ async def list_cases(
         rows = q.execute().data
 
         total = (
-            svc().table("cases").select("id", count="exact")
+            db.table("cases").select("id", count="exact")
             .eq("organization_id", organization_id).execute().count
         )
         return {"items": rows or [], "total": total or len(rows or []), "offset": offset, "limit": limit}
+    except HTTPException:
+        raise
     except Exception:
         return {"items": [], "total": 0, "offset": offset, "limit": limit}
 

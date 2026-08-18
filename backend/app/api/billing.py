@@ -29,17 +29,19 @@ def svc():
 
 def _require_member(db, org_id: str, user_id: str) -> None:
     if not db:
-        return
+        raise HTTPException(status_code=403, detail="Not a member of this organization")
     try:
         membership = (
             db.table("memberships").select("role")
             .eq("organization_id", org_id).eq("user_id", user_id)
             .single().execute()
         )
-        if not membership.data:
-            return
+        if not membership or not membership.data:
+            raise HTTPException(status_code=403, detail="Not a member of this organization")
+    except HTTPException:
+        raise
     except Exception:
-        return
+        raise HTTPException(status_code=403, detail="Not a member of this organization")
 
 
 @router.get("/{org_id}/billing")

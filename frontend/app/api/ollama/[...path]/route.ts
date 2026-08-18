@@ -7,9 +7,10 @@ const OLLAMA_BASE_URL =
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  context: { params: Promise<{ path?: string[] }> }
 ) {
-  const path = (params.path || []).join("/");
+  const resolved = await context.params;
+  const path = (resolved?.path || []).join("/");
   const targetUrl = `${OLLAMA_BASE_URL.replace(/\/$/, "")}/api/${path}`;
 
   try {
@@ -35,9 +36,10 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  context: { params: Promise<{ path?: string[] }> }
 ) {
-  const path = (params.path || []).join("/");
+  const resolved = await context.params;
+  const path = (resolved?.path || []).join("/");
   const targetUrl = `${OLLAMA_BASE_URL.replace(/\/$/, "")}/api/${path}`;
 
   try {
