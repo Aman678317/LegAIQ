@@ -65,7 +65,7 @@ class HistoricalDocumentPreprocessor:
 
         return PreprocessedImageResult(
             image=enhanced_img,
-            skew_angle=round(angle, 2),
+            skew_angle=float(round(angle, 2)),
             detected_stamps=stamps,
             quality_score=round(quality, 2),
             is_faded_or_damaged=is_damaged,
@@ -101,7 +101,7 @@ class HistoricalDocumentPreprocessor:
 
             # Test angles between -15 and +15 degrees in 1 degree steps
             best_angle = 0.0
-            max_variance = -1.0
+            max_variance = 0.001
 
             for test_angle in range(-15, 16):
                 rotated = thresh.rotate(test_angle, expand=False, fillcolor=255)
@@ -116,11 +116,11 @@ class HistoricalDocumentPreprocessor:
                     var_val = sum((val - mean_val) ** 2 for val in profile) / len(profile)
                     if var_val > max_variance:
                         max_variance = var_val
-                        best_angle = test_angle
+                        best_angle = float(test_angle)
 
             if abs(best_angle) >= 0.5:
                 # Rotate original high-resolution image
-                return img.rotate(-best_angle, expand=True, resample=Image.Resampling.BICUBIC, fillcolor=(255, 255, 255)), best_angle
+                return img.rotate(-best_angle, expand=True, resample=Image.Resampling.BICUBIC, fillcolor=(255, 255, 255)), float(best_angle)
         except Exception:
             pass
 

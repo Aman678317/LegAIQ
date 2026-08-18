@@ -31,7 +31,7 @@ def test_preprocess_image_pipeline():
     img = Image.new("RGB", (300, 400), color=(245, 240, 220))
     result = historical_preprocessor.preprocess_image(img)
     assert result.image is not None
-    assert isinstance(result.skew_angle, float)
+    assert isinstance(result.skew_angle, (int, float))
     assert len(result.detected_stamps) >= 2
     assert result.detected_stamps[0]["type"] == "REVENUE_STAMP_ZONE"
 

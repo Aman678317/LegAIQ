@@ -178,9 +178,9 @@ class IndianLandExtractor:
     ]
 
     LOCATION_PATTERNS = [
-        (r"(?:Village|Mauza|Grama|Gao)\s*[:#-]?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)", "village"),
-        (r"(?:Taluk|Taluka|Tehsil|Hobli)\s*[:#-]?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)", "taluk"),
-        (r"(?:District|Dist\.?|Jilha)\s*[:#-]?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)", "district"),
+        (r"(?:Village|Mauza|Grama|Gao)\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "village"),
+        (r"(?:Taluk|Taluka|Tehsil|Hobli)\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "taluk"),
+        (r"(?:District|Dist\.?|Jilha)\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "district"),
     ]
 
     BOUNDARY_PATTERNS = [
@@ -196,7 +196,7 @@ class IndianLandExtractor:
         # 1. Survey & Identification Numbers
         for pattern, etype in self.SURVEY_PATTERNS:
             for m in re.finditer(pattern, text, re.IGNORECASE):
-                val = m.group(1).strip()
+                val = m.group(1).split("\n")[0].split(",")[0].strip()
                 snippet = text[max(0, m.start() - 30):min(len(text), m.end() + 30)]
                 results.append({
                     "entity_type": etype,
@@ -209,7 +209,7 @@ class IndianLandExtractor:
         # 2. Location
         for pattern, etype in self.LOCATION_PATTERNS:
             for m in re.finditer(pattern, text, re.IGNORECASE):
-                val = m.group(1).strip()
+                val = m.group(1).split("\n")[0].split(",")[0].strip()
                 snippet = text[max(0, m.start() - 30):min(len(text), m.end() + 30)]
                 results.append({
                     "entity_type": etype,
