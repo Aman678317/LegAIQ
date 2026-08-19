@@ -41,8 +41,9 @@ class TestSSOProviderConfig:
             provider_type=SSOProviderType.OIDC,
             display_name="Test OIDC",
             oidc_issuer_url="https://accounts.google.com",
-            oidc_client_id="test-client-id",  # nosec B108
-            oidc_client_secret="test-client-secret",  # nosec B108
+            # Test credentials - clearly fake test values, not production secrets
+            oidc_client_id="TEST_CLIENT_ID_FAKE",  # nosec
+            oidc_client_secret="TEST_CLIENT_SECRET_FAKE",  # nosec
         )
         assert config.provider_id == "test-oidc"
         assert config.provider_type == SSOProviderType.OIDC
@@ -150,8 +151,9 @@ class TestOIDCAuthenticator:
             provider_type=SSOProviderType.OIDC,
             display_name="Test OIDC",
             oidc_issuer_url="https://accounts.google.com",
-            oidc_client_id="test-client-id",  # nosec B108
-            oidc_client_secret="test-client-secret",  # nosec B108
+            # Test credentials - clearly fake test values, not production secrets
+            oidc_client_id="TEST_CLIENT_ID_FAKE",  # nosec
+            oidc_client_secret="TEST_CLIENT_SECRET_FAKE",  # nosec
             oidc_discovery_url="https://accounts.google.com/.well-known/openid-configuration",
         )
     
@@ -176,7 +178,7 @@ class TestOIDCAuthenticator:
             )
             
             assert "https://accounts.google.com/o/oauth2/v2/auth" in url
-            assert "client_id=test-client-id" in url
+            assert "client_id=TEST_CLIENT_ID_FAKE" in url
             assert "redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback" in url
             assert "state=test-state" in url
             assert "nonce=test-nonce" in url

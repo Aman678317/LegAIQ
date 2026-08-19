@@ -23,6 +23,7 @@ Note: Most state portals don't have official public APIs. This module provides:
 import asyncio
 import json
 import re
+import secrets
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -143,28 +144,36 @@ class BasePortalConnector(ABC):
 
     def _create_mock_record(self, survey_number: str, district: str, taluk: str, village: str) -> LandRecord:
         """Create a mock land record for development/testing."""
-        import random
-        # nosec B311 - Mock data generation, not cryptographic use
+        # Use secrets for secure random generation - mock data, not cryptographic
+        owner_num = secrets.randbelow(100) + 1
+        coowner_num = secrets.randbelow(100) + 1
+        area_sqm = secrets.randbelow(9000) + 1000
+        acres = secrets.randbelow(5) + 1
+        gunta = secrets.randbelow(40)
+        is_agricultural = secrets.randbelow(10) > 2  # 70% chance
+        doc_ref_num = secrets.randbelow(9000) + 1000
+        has_encumbrance = secrets.randbelow(2) == 1
+        
         return LandRecord(
             state=self.state,
             survey_number=survey_number,
             district=district,
             taluk=taluk,
             village=village,
-            owner_names=[f"Mock Owner {random.randint(1, 100)}", f"Co-owner {random.randint(1, 100)}"],  # nosec B311
-            area_sqm=random.uniform(1000, 10000),  # nosec B311
-            area_formatted=f"{random.randint(1, 5)} Acre(s) {random.randint(0, 39)} Gunta(s)",  # nosec B311
-            land_type="Agricultural" if random.random() > 0.3 else "Non-Agricultural",  # nosec B311
+            owner_names=[f"Mock Owner {owner_num}", f"Co-owner {coowner_num}"],
+            area_sqm=area_sqm,
+            area_formatted=f"{acres} Acre(s) {gunta} Gunta(s)",
+            land_type="Agricultural" if is_agricultural else "Non-Agricultural",
             tenure="Bhumidhari with transferable rights",
             document_type="RTC" if self.state == PortalState.KARNATAKA else "7/12 Extract",
-            document_reference=f"DOC/{random.randint(1000, 9999)}/{datetime.now().year}",
+            document_reference=f"DOC/{doc_ref_num}/{datetime.now().year}",
             mutation_entries=[
                 {"date": "2020-01-15", "type": "Sale", "from": "Previous Owner", "to": "Current Owner", "doc_ref": "DOC/1234/2020"},
                 {"date": "2015-03-22", "type": "Inheritance", "from": "Ancestor", "to": "Previous Owner", "doc_ref": "DOC/5678/2015"},
             ],
             encumbrances=[
                 {"type": "Mortgage", "bank": "State Bank of India", "amount": "50,00,000", "date": "2021-06-10"},
-            ] if random.random() > 0.5 else [],  # nosec B311
+            ] if has_encumbrance else [],
             raw_data={"mock": True},
             confidence=0.75,
         )

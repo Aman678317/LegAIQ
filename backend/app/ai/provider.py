@@ -1,6 +1,6 @@
 """LLM provider abstraction with model routing.
 
-Providers: OpenAI, Anthropic, Google. A mock provider is used when no keys
+Providers: OpenAI, Anthropic, Google, Ollama (local). A mock provider is used when no keys
 are configured so every feature still works end-to-end (clearly labelled).
 """
 import time
@@ -14,7 +14,20 @@ from app.config import get_settings
 
 settings = get_settings()
 
+# Task to model mapping with Ollama local models as primary (free, no API keys)
 TASK_MODEL_MAP = {
+    "extraction": ("ollama", "llama3.1:8b"),
+    "classification": ("ollama", "llama3.1:8b"),
+    "reasoning": ("ollama", "llama3.1:70b"),
+    "research": ("ollama", "llama3.1:70b"),
+    "translation": ("ollama", "llama3.1:8b"),
+    "drafting": ("ollama", "llama3.1:70b"),
+    "summarization": ("ollama", "llama3.1:8b"),
+    "chat": ("ollama", "llama3.1:70b"),
+}
+
+# Fallback cloud models when Ollama unavailable
+CLOUD_FALLBACK_MAP = {
     "extraction": ("openai", "gpt-4o-mini"),
     "classification": ("openai", "gpt-4o-mini"),
     "reasoning": ("anthropic", "claude-sonnet-4-20250514"),
@@ -56,6 +69,10 @@ class BaseLLMProvider(ABC):
 
     @abstractmethod
     def is_configured(self) -> bool: ...
+
+    async def list_models(self) -> list[str]:
+        """List available models. Override in subclasses."""
+        return []
 
 
 class OpenAIProvider(BaseLLMProvider):
@@ -140,8 +157,46 @@ class OllamaProvider(BaseLLMProvider):
     def is_configured(self) -> bool:
         return bool(settings.OLLAMA_BASE_URL)
 
+    async def list_models(self) -> list[str]:
+        """List available Ollama models."""
+        if not self.is_configured():
+            return []
+        base_url = (settings.OLLAMA_BASE_URL or "http://localhost:11434").rstrip("/")
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.get(f"{base_url}/api/tags")
+                resp.raise_for_status()
+                data = resp.json()
+                return [m["name"] for m in data.get("models", [])]
+        except Exception:
+            return []
+
+    async def _check_model_available(self, model: str) -> bool:
+        """Check if a model is available locally."""
+        models = await self.list_models()
+        return model in models or any(m.startswith(model.split(":")[0]) for m in models)
+
     async def complete(self, request: LLMRequest) -> LLMResponse:
-        model = request.model or settings.OLLAMA_MODEL or "llama3"
+        # Use task-specific model if no model specified
+        if not request.model:
+            _, task_model = TASK_MODEL_MAP.get(request.task, ("ollama", "llama3.1:8b"))
+            model = task_model
+        else:
+            model = request.model
+
+        # Verify model is available, fallback to default if not
+        if not await self._check_model_available(model):
+            # Try to find a suitable fallback
+            available = await self.list_models()
+            if available:
+                # Prefer larger models for reasoning/research, smaller for extraction
+                if request.task in ("reasoning", "research", "drafting", "chat"):
+                    model = next((m for m in available if "70b" in m or "72b" in m), available[0])
+                else:
+                    model = next((m for m in available if "8b" in m or "7b" in m), available[0])
+            else:
+                model = "llama3.1:8b"
+
         start = time.monotonic()
         base_url = (settings.OLLAMA_BASE_URL or "http://localhost:11434").rstrip("/")
         try:
@@ -157,6 +212,7 @@ class OllamaProvider(BaseLLMProvider):
                         "stream": False,
                         "options": {
                             "temperature": request.temperature,
+                            "num_ctx": 32768,  # 32k context window
                         },
                         **({"format": "json"} if request.json_mode else {}),
                     },
@@ -173,10 +229,24 @@ class OllamaProvider(BaseLLMProvider):
                 completion_tokens=data.get("eval_count", 0),
                 estimated_cost_usd=0.0,
             )
+        except httpx.ConnectError as e:
+            return LLMResponse(
+                content=f'{{"error": "ollama_unavailable", "message": "Cannot connect to Ollama at {base_url}. Is Ollama running?"}}' if request.json_mode else f"Cannot connect to Ollama at {base_url}. Is Ollama running?",
+                provider=self.name,
+                model=model,
+                latency_ms=int((time.monotonic() - start) * 1000),
+            )
+        except httpx.TimeoutException as e:
+            return LLMResponse(
+                content=f'{{"error": "ollama_timeout", "message": "Ollama request timed out after 180s"}}' if request.json_mode else "Ollama request timed out. Try a smaller model or simpler query.",
+                provider=self.name,
+                model=model,
+                latency_ms=int((time.monotonic() - start) * 1000),
+            )
         except Exception as e:
             # Return structured error response that ModelRouter recognizes for fallback
             return LLMResponse(
-                content=f'{{"error": "ollama_unavailable", "message": "Ollama service unreachable: {str(e)}"}}' if request.json_mode else f"Ollama service error: {str(e)}",
+                content=f'{{"error": "ollama_unavailable", "message": "Ollama service error: {str(e)}"}}' if request.json_mode else f"Ollama service error: {str(e)}",
                 provider=self.name,
                 model=model,
                 latency_ms=int((time.monotonic() - start) * 1000),
@@ -220,11 +290,12 @@ class ModelRouter:
     """Routes a task type to the best available provider with Ollama local-first priority."""
 
     def resolve(self, task: str) -> BaseLLMProvider:
-        # Check Ollama first if configured
+        # Check Ollama first if configured (local-first for free AI)
         ollama = _PROVIDERS.get("ollama")
         if ollama and ollama.is_configured():
             return ollama
 
+        # Check cloud providers
         preferred, _ = TASK_MODEL_MAP.get(task, ("openai", settings.DEFAULT_MODEL))
         provider = _PROVIDERS.get(preferred)
         if provider and provider.is_configured():
@@ -240,9 +311,10 @@ class ModelRouter:
         resp = await provider.complete(request)
 
         # If Ollama was called but returned an error/unreachable, gracefully fall back to cloud providers
-        if provider.name == "ollama" and ("ollama_unavailable" in resp.content or "Ollama service error" in resp.content):
-            preferred, _ = TASK_MODEL_MAP.get(request.task, ("openai", settings.DEFAULT_MODEL))
-            fallback_provider = _PROVIDERS.get(preferred)
+        if provider.name == "ollama" and ("ollama_unavailable" in resp.content or "Ollama service error" in resp.content or "ollama_timeout" in resp.content):
+            # Try cloud fallback for this task
+            fallback_task = CLOUD_FALLBACK_MAP.get(request.task, ("openai", settings.DEFAULT_MODEL))[0]
+            fallback_provider = _PROVIDERS.get(fallback_task)
             if fallback_provider and fallback_provider.is_configured() and fallback_provider.name != "ollama":
                 try:
                     return await fallback_provider.complete(request)

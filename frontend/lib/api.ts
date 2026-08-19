@@ -314,6 +314,89 @@ export const api = {
     }
   },
 
+  askQuestionStream: async (
+    caseId: string,
+    question: string,
+    language = "en",
+    model?: string,
+    onChunk?: (chunk: string) => void
+  ) => {
+    if (isDemoMode(caseId)) {
+      const result = await mockStore.askDemoQuestion(caseId, question, language, model);
+      onChunk?.(result.content || "");
+      return result;
+    }
+    
+    try {
+      const res = await fetch(safeApiUrl(`/cases/${caseId}/questions`), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "text/event-stream",
+        },
+        body: JSON.stringify({ question, language, model, stream: true }),
+      });
+      
+      if (!res.ok) {
+        throw new ApiError(res.status, "Streaming request failed");
+      }
+      
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = "";
+      
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+          
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") {
+                return {
+                  id: `msg-${Date.now()}`,
+                  case_id: caseId,
+                  role: "assistant",
+                  content: fullContent,
+                  citations: [],
+                  created_at: new Date().toISOString(),
+                };
+              }
+              
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  fullContent += parsed.content;
+                  onChunk?.(parsed.content);
+                }
+                if (parsed.error) {
+                  throw new Error(parsed.error);
+                }
+              } catch {
+                // Ignore parsing errors for non-JSON lines
+              }
+            }
+          }
+        }
+      }
+      
+      return {
+        id: `msg-${Date.now()}`,
+        case_id: caseId,
+        role: "assistant",
+        content: fullContent,
+        citations: [],
+        created_at: new Date().toISOString(),
+      };
+    } catch {
+      return await mockStore.askDemoQuestion(caseId, question, language, model);
+    }
+  },
+
   getChatHistory: async (caseId: string) => {
     if (isDemoMode(caseId)) {
       return mockStore.getDemoChatHistory(caseId);

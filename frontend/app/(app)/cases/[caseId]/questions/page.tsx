@@ -76,13 +76,35 @@ export default function QuestionsPage() {
     setInput("");
 
     // Optimistic user message
-    setMessages((m) => [...m, { id: `temp-${Date.now()}`, role: "user", content: question }]);
+    const userMsgId = `temp-${Date.now()}`;
+    const streamingMsgId = `streaming-${userMsgId}`;
+    setMessages((m) => [...m, { id: userMsgId, role: "user", content: question }]);
+    // Add placeholder for streaming response
+    setMessages((m) => [...m, { id: streamingMsgId, role: "assistant", content: "", citations: [] }]);
 
     try {
-      const answer = await api.askQuestion(caseId, question, selectedLang, selectedModel || undefined);
+      let fullContent = "";
+      const answer = await api.askQuestionStream(
+        caseId,
+        question,
+        selectedLang,
+        selectedModel || undefined,
+        (chunk) => {
+          fullContent += chunk;
+          // Update the streaming message with streaming content
+          setMessages((m) => m.map((msg) =>
+            msg.id === streamingMsgId ? { ...msg, content: fullContent } : msg
+          ));
+        }
+      );
+      
+      // Replace streaming message with final answer
+      setMessages((m) => m.filter((msg) => msg.id !== streamingMsgId));
       setMessages((m) => [...m, answer]);
     } catch (e: any) {
       setError(e.message);
+      // Remove streaming placeholder on error
+      setMessages((m) => m.filter((msg) => msg.id !== streamingMsgId));
     } finally {
       setAsking(false);
     }

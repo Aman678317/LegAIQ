@@ -1135,14 +1135,23 @@ if __name__ == "__main__":
         # Generate PDF
         pdf = generator.generate_pdf()
         import tempfile
-        pdf_path = os.path.join(tempfile.gettempdir(), "title_search_report_v2.pdf")  # nosec B108
+        import pathlib
+        # Validate output path to prevent path traversal - nosec B108
+        temp_dir = pathlib.Path(tempfile.gettempdir()).resolve()
+        pdf_filename = "title_search_report_v2.pdf"
+        pdf_path = temp_dir / pdf_filename
+        if not str(pdf_path).startswith(str(temp_dir)):
+            raise ValueError("Invalid output path")
         with open(pdf_path, "wb") as f:  # nosec B108
             f.write(pdf)
         print(f"Generated PDF: {len(pdf)} bytes")
         
         # Generate DOCX
         docx = generator.generate_docx()
-        docx_path = os.path.join(tempfile.gettempdir(), "title_search_report_v2.docx")  # nosec B108
+        docx_filename = "title_search_report_v2.docx"
+        docx_path = temp_dir / docx_filename
+        if not str(docx_path).startswith(str(temp_dir)):
+            raise ValueError("Invalid output path")
         with open(docx_path, "wb") as f:  # nosec B108
             f.write(docx)
         print(f"Generated DOCX: {len(docx)} bytes")
