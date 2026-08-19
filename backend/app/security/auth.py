@@ -154,25 +154,23 @@ def require_role(minimum_role: str, org_id: str = None):
         if not target_org:
             target_org = "default-org"
 
-        if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_ROLE_KEY:
-            # Dev/demo mode only
-            ctx.organization_id = target_org
-            ctx.role = "OWNER"
-            return ctx
-
         supabase = _service_client()
         if not supabase:
             raise HTTPException(status_code=500, detail="Database not available")
 
         # ALWAYS verify membership - no fallback to OWNER
-        membership = (
-            supabase.table("memberships")
-            .select("role")
-            .eq("organization_id", target_org)
-            .eq("user_id", ctx.user_id)
-            .single()
-            .execute()
-        )
+        try:
+            membership = (
+                supabase.table("memberships")
+                .select("role")
+                .eq("organization_id", target_org)
+                .eq("user_id", ctx.user_id)
+                .single()
+                .execute()
+            )
+        except Exception:
+            membership = None
+
         if not membership or not membership.data:
             raise HTTPException(
                 status_code=403,
