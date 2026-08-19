@@ -25,10 +25,19 @@ from enum import Enum
 from typing import Any, Optional
 from functools import lru_cache
 
-from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
-from presidio_analyzer.nlp_engine import NlpEngineProvider
-from presidio_anonymizer import AnonymizerEngine
-from presidio_anonymizer.entities import OperatorConfig
+try:
+    from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
+    from presidio_analyzer.nlp_engine import NlpEngineProvider
+    from presidio_anonymizer import AnonymizerEngine
+    from presidio_anonymizer.entities import OperatorConfig
+    PRESIDIO_AVAILABLE = True
+except ImportError:
+    PRESIDIO_AVAILABLE = False
+    AnalyzerEngine = None
+    RecognizerRegistry = None
+    NlpEngineProvider = None
+    AnonymizerEngine = None
+    OperatorConfig = None
 
 
 class PIIEntityType(str, Enum):
@@ -394,6 +403,11 @@ class PIIDetectionEngine:
     
     def _init_presidio(self):
         """Initialize Presidio analyzer and anonymizer."""
+        if not PRESIDIO_AVAILABLE:
+            self._presidio_analyzer = None
+            self._presidio_anonymizer = None
+            return
+
         try:
             # Configure NLP engine
             nlp_provider = NlpEngineProvider(nlp_configuration={
