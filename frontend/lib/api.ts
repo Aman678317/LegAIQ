@@ -548,6 +548,8 @@ export const api = {
         mock_mode: true,
       };
     }
+  },
+
   // Contract Intelligence (Harvey AI feature parity)
   analyzeContract: async (caseId: string, body: { full_text: string; title?: string; contract_id?: string }) => {
     try {
