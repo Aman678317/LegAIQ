@@ -80,6 +80,7 @@ from app.api.ai import router as ai_router
 from app.api.sso import router as sso_router
 from app.api.pii import router as pii_router
 from app.api.analytics import router as analytics_router
+from app.api.contract_intelligence import router as contract_intelligence_router
 
 app.include_router(cases_router, prefix=settings.API_V1_PREFIX)
 app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
@@ -101,3 +102,4 @@ app.include_router(ai_router, prefix=settings.API_V1_PREFIX)
 app.include_router(sso_router, prefix=settings.API_V1_PREFIX)
 app.include_router(pii_router, prefix=settings.API_V1_PREFIX)
 app.include_router(analytics_router, prefix=settings.API_V1_PREFIX)
+app.include_router(contract_intelligence_router, prefix=settings.API_V1_PREFIX)
