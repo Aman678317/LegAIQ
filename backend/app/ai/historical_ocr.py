@@ -13,12 +13,15 @@ CLAHE Contrast Enhancement -> Stamp/Seal Detection -> Multi-Script OCR ->
 Uncertainty Tagging & Calibration -> Structured Legal Text Reconstruction
 """
 
+from __future__ import annotations
+
 import io
 import math
 import re
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, List, Dict, Any
 
+import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
 
