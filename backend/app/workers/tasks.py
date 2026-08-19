@@ -703,7 +703,12 @@ def run_report_export(self, job_id: str):
 
 
 def _export_impl(job: dict):
-    """Export report content as PDF or DOCX (both dependency-free)."""
+    """Export report content as PDF or DOCX (both dependency-free).
+
+    For Title Search Reports (v2), uses the professional TitleSearchReportGenerator
+    with legal formatting, digital signature blocks, and court-admissible structure.
+    For other reports, uses the standard formatter.
+    """
     database = db()
     payload = job.get("payload") or {}
     report_id, fmt = payload["report_id"], payload.get("format", "pdf")
@@ -713,6 +718,28 @@ def _export_impl(job: dict):
         raise ValueError("Report not found")
 
     case = database.table("cases").select("*").eq("id", report["case_id"]).single().execute().data
+    content = report.get("content") or {}
+
+    # Check if this is a Title Search Report v2 (has structured property data)
+    is_title_search = (
+        "title search" in report.get("title", "").lower() or
+        content.get("survey_number") is not None or
+        content.get("property_profile") is not None
+    )
+
+    if is_title_search and fmt in ("pdf", "docx"):
+        # Use professional Title Search Report v2 generator
+        _export_title_search_v2(job, report, case, fmt, database)
+    else:
+        # Standard export for other report types
+        _export_standard(job, report, case, fmt, database)
+
+
+def _export_standard(job: dict, report: dict, case: dict, fmt: str, database):
+    """Standard export for non-title-search reports."""
+    payload = job.get("payload") or {}
+    report_id = payload["report_id"]
+
     content = report.get("content") or {}
 
     # Shared: flatten the report into (heading, body) sections
@@ -754,6 +781,66 @@ def _export_impl(job: dict):
         )
     else:
         raise ValueError(f"Unsupported export format '{fmt}'; use pdf or docx")
+
+    database.table("reports").update({"storage_path": path}).eq("id", report_id).execute()
+
+
+def _export_title_search_v2(job: dict, report: dict, case: dict, fmt: str, database):
+    """Export using Title Search Report v2 professional generator."""
+    import asyncio
+    from app.ai.title_search_report import TitleSearchReport, TitleSearchReportGenerator, PortalState
+
+    payload = job.get("payload") or {}
+    report_id = payload["report_id"]
+
+    # Extract structured data from report content
+    content = report.get("content") or {}
+    
+    # Build TitleSearchReport from stored content
+    ts_report = TitleSearchReport(
+        report_id=report_id,
+        case_id=report["case_id"],
+        organization_id=case.get("organization_id", ""),
+        title=report.get("title", "Title Search Report"),
+        property_address=content.get("property_address", ""),
+        survey_number=content.get("survey_number", ""),
+        district=content.get("district", ""),
+        taluk=content.get("taluk", ""),
+        village=content.get("village", ""),
+        state=PortalState(content.get("state", "maharashtra")),
+        client_name=content.get("client_name", case.get("client_name", "Client")),
+        prepared_by=content.get("prepared_by", "Jurisiva Legal Intelligence"),
+        prepared_on=datetime.now(timezone.utc),
+        search_period_years=content.get("search_period_years", 30),
+        search_date_from=datetime.now(timezone.utc),
+        search_date_to=datetime.now(timezone.utc),
+        property_profile=content.get("property_profile"),
+        portal_records=content.get("portal_records", []),
+        chain_of_title=content.get("chain_of_title", []),
+        encumbrances=content.get("encumbrances", []),
+        mutations=content.get("mutations", []),
+        litigation_cases=content.get("litigation_cases", []),
+        tax_records=content.get("tax_records", []),
+        registration_history=content.get("registration_history", []),
+        risks=content.get("risks", []),
+        discrepancies=content.get("discrepancies", []),
+        recommendations=content.get("recommendations", []),
+    )
+
+    # Generate professional report
+    generator = TitleSearchReportGenerator(ts_report)
+    
+    if fmt == "pdf":
+        output = generator.generate_pdf()
+        content_type = "application/pdf"
+        ext = ".pdf"
+    else:
+        output = generator.generate_docx()
+        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ext = ".docx"
+
+    path = f"organizations/{case['organization_id']}/cases/{report['case_id']}/reports/{report_id}{ext}"
+    database.storage.from_("case-reports").upload(path, output, {"content-type": content_type, "upsert": "true"})
 
     database.table("reports").update({"storage_path": path}).eq("id", report_id).execute()
 

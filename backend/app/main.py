@@ -77,6 +77,9 @@ from app.api.admin import router as admin_router
 from app.api.org import router as org_router
 from app.api.billing import router as billing_router
 from app.api.ai import router as ai_router
+from app.api.sso import router as sso_router
+from app.api.pii import router as pii_router
+from app.api.analytics import router as analytics_router
 
 app.include_router(cases_router, prefix=settings.API_V1_PREFIX)
 app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
@@ -95,3 +98,6 @@ app.include_router(admin_router, prefix=settings.API_V1_PREFIX)
 app.include_router(org_router, prefix=settings.API_V1_PREFIX)
 app.include_router(billing_router, prefix=settings.API_V1_PREFIX)
 app.include_router(ai_router, prefix=settings.API_V1_PREFIX)
+app.include_router(sso_router, prefix=settings.API_V1_PREFIX)
+app.include_router(pii_router, prefix=settings.API_V1_PREFIX)
+app.include_router(analytics_router, prefix=settings.API_V1_PREFIX)

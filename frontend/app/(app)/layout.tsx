@@ -13,6 +13,8 @@ import { createClient } from "@/lib/supabase";
 import { getUserOrgs } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { OfflineBanner, UpdateAvailableBanner, PWAInstallPrompt, SyncStatusBadge } from "@/components/offline-indicator";
+import { pwaManager } from "@/lib/pwa";
 
 const SIDEBAR_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -79,6 +81,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [orgMenuOpen, setOrgMenuOpen] = useState(false);
 
   const caseMatch = pathname.match(/^\/cases\/([^/]+)/);
+
+  // Initialize PWA
+  useEffect(() => {
+    pwaManager.initialize();
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -149,6 +156,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-bg">
+      {/* PWA & Offline UI - rendered at top level for proper positioning */}
+      <OfflineBanner />
+      <UpdateAvailableBanner />
+      <PWAInstallPrompt />
+
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-border bg-bg-surface">
         <Link href="/dashboard" className="flex h-16 items-center gap-2.5 border-b border-border px-5">
@@ -239,40 +251,43 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          <div className="relative">
-            <button
-              onClick={() => setOrgMenuOpen(!orgMenuOpen)}
-              className="flex items-center gap-2.5 rounded-lg border border-border bg-bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:text-white"
-            >
-              <div className="flex h-6 w-6 items-center justify-center rounded bg-primary/20 text-xs font-semibold text-blue-300">
-                {(activeOrg?.name || "?")[0].toUpperCase()}
-              </div>
-              <span className="max-w-40 truncate">{activeOrg?.name || "No organization"}</span>
-              <ChevronDown size={14} />
-            </button>
-            {orgMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-bg-surface p-1.5 shadow-xl">
-                {orgs.map((m) => (
-                  <button
-                    key={m.organization.id}
-                    onClick={() => {
-                      setActiveOrg(m.organization);
-                      setOrgMenuOpen(false);
-                    }}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-text-secondary hover:bg-bg-elevated hover:text-white"
-                  >
-                    <span className="truncate">{m.organization.name}</span>
-                    <span className="text-[10px] uppercase text-text-muted">{m.role}</span>
-                  </button>
-                ))}
-                <div className="mt-1 border-t border-border pt-1.5">
-                  <div className="px-3 py-2 text-xs text-text-muted">
-                    Signed in as
-                    <div className="truncate text-text-secondary">{user?.email}</div>
+          <div className="flex items-center gap-4">
+            <SyncStatusBadge />
+            <div className="relative">
+              <button
+                onClick={() => setOrgMenuOpen(!orgMenuOpen)}
+                className="flex items-center gap-2.5 rounded-lg border border-border bg-bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:text-white"
+              >
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-primary/20 text-xs font-semibold text-blue-300">
+                  {(activeOrg?.name || "?")[0].toUpperCase()}
+                </div>
+                <span className="max-w-40 truncate">{activeOrg?.name || "No organization"}</span>
+                <ChevronDown size={14} />
+              </button>
+              {orgMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-bg-surface p-1.5 shadow-xl">
+                  {orgs.map((m) => (
+                    <button
+                      key={m.organization.id}
+                      onClick={() => {
+                        setActiveOrg(m.organization);
+                        setOrgMenuOpen(false);
+                      }}
+                      className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-text-secondary hover:bg-bg-elevated hover:text-white"
+                    >
+                      <span className="truncate">{m.organization.name}</span>
+                      <span className="text-[10px] uppercase text-text-muted">{m.role}</span>
+                    </button>
+                  ))}
+                  <div className="mt-1 border-t border-border pt-1.5">
+                    <div className="px-3 py-2 text-xs text-text-muted">
+                      Signed in as
+                      <div className="truncate text-text-secondary">{user?.email}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </header>
 

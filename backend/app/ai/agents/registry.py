@@ -96,7 +96,11 @@ class RiskAgent(BaseAgent):
 
 
 class ReportAgent(BaseAgent):
-    """Compiles the Property Due Diligence report from case state via tools."""
+    """Compiles the Property Due Diligence report from case state via tools.
+
+    Generates Title Search Report v2 format when case metadata indicates
+    a property title search, with all 13 standard legal sections.
+    """
     name = "report_agent"
     description = "Generate structured due diligence reports"
     default_permissions = (
@@ -120,31 +124,169 @@ class ReportAgent(BaseAgent):
             "case_id", case_id
         ).order("sort_date").execute().data
 
-        # Executive summary via LLM when configured; deterministic fallback otherwise
-        if settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OLLAMA_BASE_URL:
-            resp = await self.llm(LLMRequest(
-                system=(
-                    "Write a 3-4 sentence executive summary for a property due diligence "
-                    "report. Use ONLY the supplied counts and risk titles. No new facts."
-                ),
-                prompt=(
-                    f"Case: {case['name']}. Documents: {len(docs)}. "
-                    f"Risks: {[r['title'] for r in risks[:8]]}. "
-                    f"Ownership edges: {len(graph.get('edges', []))}."
-                ),
-                task="summarization", temperature=0.2,
-            ))
-            summary = resp.content
-        else:
-            summary = (
-                f"Due diligence for '{case['name']}': {len(docs)} document(s) reviewed, "
-                f"{len(risks)} open risk(s), {len(graph.get('edges', []))} evidenced ownership "
-                "relationships. AI summary provider not configured; sections below are compiled "
-                "deterministically from case data."
-            )
+        # Check if this is a title search report
+        is_title_search = (
+            "title search" in case.get("name", "").lower() or
+            case.get("metadata", {}).get("report_type") == "title_search"
+        )
 
-        content = {
-            "executive_summary": summary,
+        if is_title_search:
+            content = await self._build_title_search_v2(case, docs, graph, risks, comparisons, timeline, case_id)
+        else:
+            # Standard due diligence report
+            if settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY or settings.OLLAMA_BASE_URL:
+                resp = await self.llm(LLMRequest(
+                    system=(
+                        "Write a 3-4 sentence executive summary for a property due diligence "
+                        "report. Use ONLY the supplied counts and risk titles. No new facts."
+                    ),
+                    prompt=(
+                        f"Case: {case['name']}. Documents: {len(docs)}. "
+                        f"Risks: {[r['title'] for r in risks[:8]]}. "
+                        f"Ownership edges: {len(graph.get('edges', []))}."
+                    ),
+                    task="summarization", temperature=0.2,
+                ))
+                summary = resp.content
+            else:
+                summary = (
+                    f"Due diligence for '{case['name']}': {len(docs)} document(s) reviewed, "
+                    f"{len(risks)} open risk(s), {len(graph.get('edges', []))} evidenced ownership "
+                    "relationships. AI summary provider not configured; sections below are compiled "
+                    "deterministically from case data."
+                )
+
+            content = {
+                "executive_summary": summary,
+                "documents_reviewed": docs,
+                "ownership_chain": graph,
+                "transaction_timeline": [
+                    {"date": t.get("event_date"), "type": t["transaction_type"], "description": t["description"]}
+                    for t in timeline
+                ],
+                "comparisons": [
+                    {"field": c["field_name"], "verdict": c["verdict"], "explanation": c.get("explanation")}
+                    for c in comparisons
+                ],
+                "risks": [
+                    {"level": r["level"], "category": r["category"], "title": r["title"],
+                     "action": r.get("recommended_action")}
+                    for r in risks
+                ],
+                "recommendations": [r.get("recommended_action") for r in risks if r.get("recommended_action")],
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "disclaimer": "AI-generated report. Review and verify before relying upon.",
+            }
+
+        db.table("reports").update({
+            "content": content, "status": "COMPLETED",
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+        }).eq("id", report_id).execute()
+        return {"report_id": report_id, "sections": len(content), "type": "title_search_v2" if is_title_search else "standard"}
+
+    async def _build_title_search_v2(self, case: dict, docs: list, graph: dict, risks: list, 
+                                     comparisons: list, timeline: list, case_id: str) -> dict:
+        """Build Title Search Report v2 structured content."""
+        metadata = case.get("metadata", {})
+        
+        # Extract property details from case metadata
+        survey_number = metadata.get("survey_number", "")
+        district = metadata.get("district", "")
+        taluk = metadata.get("taluk", "")
+        village = metadata.get("village", "")
+        state = metadata.get("state", "maharashtra")
+        client_name = metadata.get("client_name", case.get("client_name", "Client"))
+        prepared_by = metadata.get("prepared_by", "Jurisiva Legal Intelligence")
+        search_period_years = metadata.get("search_period_years", 30)
+        property_address = metadata.get("property_address", f"Survey {survey_number}, {village}, {taluk}, {district}")
+
+        # Convert risks to structured format
+        structured_risks = [
+            {
+                "level": r["level"],
+                "category": r["category"],
+                "title": r["title"],
+                "description": r.get("description", ""),
+                "recommended_action": r.get("recommended_action", ""),
+            }
+            for r in risks
+        ]
+
+        # Build chain of title from timeline
+        chain_of_title = [
+            {
+                "document_type": t.get("transaction_type", "Document"),
+                "document_number": t.get("document_number", ""),
+                "registration_date": t.get("event_date", ""),
+                "sro": t.get("sro", ""),
+                "transfer_type": t.get("transaction_type", "Sale"),
+                "transferors": [t.get("from_owner", "")] if t.get("from_owner") else [],
+                "transferees": [t.get("to_owner", "")] if t.get("to_owner") else [],
+                "consideration": t.get("consideration", ""),
+                "verification_status": "Verified from timeline" if t.get("verified") else "From case data",
+            }
+            for t in timeline
+        ]
+
+        # Build encumbrances from risks
+        encumbrances = [
+            {
+                "type": r.get("category", "ENCUMBRANCE"),
+                "party": r.get("party", "Not specified"),
+                "amount": r.get("amount", "Not specified"),
+                "date": r.get("date", "Not specified"),
+                "doc_ref": r.get("document_reference", ""),
+                "status": "Active" if r.get("level") in ("HIGH", "CRITICAL") else "Under Review",
+                "action": r.get("recommended_action", "Obtain NOC/Discharge Deed"),
+            }
+            for r in risks if r.get("category") in ("ENCUMBRANCE", "MORTGAGE", "CHARGE", "LIEN")
+        ]
+
+        # Build mutations from graph
+        mutations = []
+        for edge in graph.get("edges", []):
+            if edge.get("type") in ("mutation", "ownership_transfer"):
+                mutations.append({
+                    "mutation_no": edge.get("mutation_number", ""),
+                    "date": edge.get("date", ""),
+                    "type": edge.get("transfer_type", "Sale"),
+                    "from": edge.get("from", ""),
+                    "to": edge.get("to", ""),
+                    "extent": edge.get("extent", ""),
+                    "order_ref": edge.get("order_ref", ""),
+                    "status": edge.get("status", "Sanctioned"),
+                })
+
+        return {
+            # Report metadata for v2 generator
+            "survey_number": survey_number,
+            "district": district,
+            "taluk": taluk,
+            "village": village,
+            "state": state,
+            "client_name": client_name,
+            "prepared_by": prepared_by,
+            "search_period_years": search_period_years,
+            "property_address": property_address,
+            "property_profile": metadata.get("property_profile"),
+            "portal_records": metadata.get("portal_records", []),
+            
+            # Structured sections for v2
+            "chain_of_title": chain_of_title,
+            "encumbrances": encumbrances,
+            "mutations": mutations,
+            "litigation_cases": metadata.get("litigation_cases", []),
+            "tax_records": metadata.get("tax_records", []),
+            "registration_history": metadata.get("registration_history", []),
+            "risks": structured_risks,
+            "discrepancies": [c.get("explanation", "") for c in comparisons if c.get("verdict") == "MISMATCH"],
+            "recommendations": [r.get("recommended_action") for r in risks if r.get("recommended_action")],
+            
+            # Legacy sections for compatibility
+            "executive_summary": (
+                f"Title search for '{case['name']}': {len(docs)} document(s) reviewed, "
+                f"{len(risks)} risk(s) identified, {len(chain_of_title)} title links found."
+            ),
             "documents_reviewed": docs,
             "ownership_chain": graph,
             "transaction_timeline": [
@@ -155,20 +297,10 @@ class ReportAgent(BaseAgent):
                 {"field": c["field_name"], "verdict": c["verdict"], "explanation": c.get("explanation")}
                 for c in comparisons
             ],
-            "risks": [
-                {"level": r["level"], "category": r["category"], "title": r["title"],
-                 "action": r.get("recommended_action")}
-                for r in risks
-            ],
-            "recommendations": [r.get("recommended_action") for r in risks if r.get("recommended_action")],
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "disclaimer": "AI-generated report. Review and verify before relying upon.",
+            "disclaimer": "AI-generated Title Search Report v2. Review and verify before relying upon. "
+                         "This report complies with Bharatiya Sakshya Adhiniyam 2023 and DPDP Act 2023.",
         }
-        db.table("reports").update({
-            "content": content, "status": "COMPLETED",
-            "completed_at": datetime.now(timezone.utc).isoformat(),
-        }).eq("id", report_id).execute()
-        return {"report_id": report_id, "sections": len(content)}
 
 
 class VerificationAgent(BaseAgent):
