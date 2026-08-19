@@ -1,7 +1,8 @@
-from typing import Any
+from typing import Any, ClassVar
 from functools import lru_cache
 from pydantic import field_validator, computed_field, Field
 from pydantic_settings import BaseSettings
+import os
 
 
 class Settings(BaseSettings):
@@ -127,7 +128,9 @@ class Settings(BaseSettings):
     DEFAULT_EMBEDDING_MODEL: str = "text-embedding-3-small"
     MAX_TOKEN_BUDGET: int = 4096
 
-    model_config = {"env_file": ".env", "extra": "ignore"}
+    # Look for .env in project root (parent of backend/)
+    _env_path: ClassVar[str] = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
+    model_config: ClassVar[dict] = {"env_file": _env_path, "extra": "ignore"}
 
 
 @lru_cache()

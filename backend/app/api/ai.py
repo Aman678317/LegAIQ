@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.ai.provider import LLMRequest, generate_embedding, router as llm_router
 from app.config import get_settings
-from app.security.auth import AuthContext, get_auth_context
+from app.security.auth import AuthContext, get_auth_context, require_role
 
 settings = get_settings()
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -69,7 +69,7 @@ async def get_ollama_status():
 
 
 @router.post("/ollama/chat")
-async def chat_with_ollama(body: OllamaChatRequest):
+async def chat_with_ollama(body: OllamaChatRequest, ctx: AuthContext = Depends(get_auth_context)):
     """Direct chat completion with Ollama through backend proxy."""
     base_url = (settings.OLLAMA_BASE_URL or "http://localhost:11434").rstrip("/")
     model = body.model or settings.OLLAMA_MODEL or "llama3"

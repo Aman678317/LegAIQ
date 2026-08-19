@@ -248,8 +248,9 @@ class ModelRouter:
                     return await fallback_provider.complete(request)
                 except Exception:
                     pass
+            # Try any other configured provider (including mock as last resort)
             for p in _PROVIDERS.values():
-                if p.is_configured() and p.name not in ("mock", "ollama"):
+                if p.is_configured() and p.name != "ollama":
                     try:
                         return await p.complete(request)
                     except Exception:

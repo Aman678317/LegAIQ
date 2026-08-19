@@ -1,8 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from app.config import get_settings
 
 settings = get_settings()
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute", "1000/hour"])
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -11,12 +17,25 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS - stricter configuration
+# In production, CORS_ORIGINS should be set to specific frontend URLs
+allow_origins = settings.CORS_ORIGINS
+if allow_origins == ["*"] and not settings.DEBUG:
+    # In production without explicit CORS origins, restrict to same-origin only
+    allow_origins = []
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=allow_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
+    max_age=600,
 )
 
 

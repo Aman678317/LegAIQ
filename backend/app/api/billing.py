@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from supabase import create_client
 
 from app.config import get_settings
-from app.security.auth import AuthContext, get_auth_context
+from app.security.auth import AuthContext, get_auth_context, require_role
 
 settings = get_settings()
 router = APIRouter(prefix="/orgs", tags=["billing"])
@@ -45,9 +45,9 @@ def _require_member(db, org_id: str, user_id: str) -> None:
 
 
 @router.get("/{org_id}/billing")
-async def get_billing_info(org_id: str, ctx: AuthContext = Depends(get_auth_context)):
+async def get_billing_info(org_id: str, ctx: AuthContext = Depends(require_role("STAFF"))):
     db = svc()
-    _require_member(db, org_id, ctx.user_id)
+    # require_role already verifies membership
 
     from app.services.billing import get_billing, monthly_case_count
     info = get_billing(db, org_id)
@@ -59,9 +59,9 @@ async def get_billing_info(org_id: str, ctx: AuthContext = Depends(get_auth_cont
 
 
 @router.post("/{org_id}/billing/checkout")
-async def checkout(org_id: str, ctx: AuthContext = Depends(get_auth_context)):
+async def checkout(org_id: str, ctx: AuthContext = Depends(require_role("ADMIN"))):
     db = svc()
-    _require_member(db, org_id, ctx.user_id)
+    # require_role already verifies membership and role
     sub = db.table("subscriptions").select("provider").eq("organization_id", org_id).single().execute().data
     provider = (sub or {}).get("provider")
     if not provider:
@@ -81,17 +81,10 @@ class PlanChange(BaseModel):
 
 
 @router.post("/{org_id}/billing/plan")
-async def change_plan(org_id: str, body: PlanChange, ctx: AuthContext = Depends(get_auth_context)):
+async def change_plan(org_id: str, body: PlanChange, ctx: AuthContext = Depends(require_role("ADMIN"))):
     db = svc()
-    membership = (
-        db.table("memberships").select("role")
-        .eq("organization_id", org_id).eq("user_id", ctx.user_id)
-        .single().execute()
-    )
-    if not membership.data:
-        raise HTTPException(403, "Not a member of this organization")
-    if membership.data["role"] not in ("OWNER", "ADMIN"):
-        raise HTTPException(403, "Only OWNER or ADMIN can change the plan")
+    # require_role already verifies membership and role (ADMIN or OWNER)
+    # Note: OWNER role is handled by hierarchy in require_role (OWNER > ADMIN)
 
     plan = db.table("plans").select("code, name, price_inr").eq("code", body.plan_code).single().execute().data
     if not plan:

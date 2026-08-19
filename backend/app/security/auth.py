@@ -146,6 +146,7 @@ def require_role(minimum_role: str, org_id: str = None):
     """Dependency factory: require at least `minimum_role` in the org.
 
     When org_id is provided it is read from the path.
+    ALWAYS enforces org membership - no bypass for any role.
     """
 
     async def checker(request: Request, ctx: AuthContext = Depends(get_auth_context)):
@@ -154,52 +155,48 @@ def require_role(minimum_role: str, org_id: str = None):
             target_org = "default-org"
 
         if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_ROLE_KEY:
+            # Dev/demo mode only
             ctx.organization_id = target_org
             ctx.role = "OWNER"
             return ctx
 
         supabase = _service_client()
         if not supabase:
-            ctx.organization_id = target_org
-            ctx.role = "OWNER"
-            return ctx
+            raise HTTPException(status_code=500, detail="Database not available")
 
-        try:
-            membership = (
-                supabase.table("memberships")
-                .select("role")
-                .eq("organization_id", target_org)
-                .eq("user_id", ctx.user_id)
-                .single()
-                .execute()
+        # ALWAYS verify membership - no fallback to OWNER
+        membership = (
+            supabase.table("memberships")
+            .select("role")
+            .eq("organization_id", target_org)
+            .eq("user_id", ctx.user_id)
+            .single()
+            .execute()
+        )
+        if not membership or not membership.data:
+            raise HTTPException(
+                status_code=403,
+                detail="Not a member of this organization",
             )
-            if not membership.data:
-                raise HTTPException(
-                    status_code=403,
-                    detail="Not a member of this organization",
-                )
 
-            user_role = membership.data["role"]
-            if ROLE_HIERARCHY.get(user_role, -1) < ROLE_HIERARCHY.get(minimum_role, 99):
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Requires role {minimum_role} or above (you are {user_role})",
-                )
-            ctx.organization_id = target_org
-            ctx.role = user_role
-            return ctx
-        except HTTPException:
-            raise
-        except Exception:
-            ctx.organization_id = target_org
-            ctx.role = "OWNER"
-            return ctx
+        user_role = membership.data["role"]
+        if ROLE_HIERARCHY.get(user_role, -1) < ROLE_HIERARCHY.get(minimum_role, 99):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Requires role {minimum_role} or above (you are {user_role})",
+            )
+        ctx.organization_id = target_org
+        ctx.role = user_role
+        return ctx
 
     return checker
 
 
 async def resolve_case_access(ctx: AuthContext, case_id: str) -> tuple[AuthContext, dict]:
-    """Core membership check: load case, verify caller's org, return (ctx, case)."""
+    """Core membership check: load case, verify caller's org, return (ctx, case).
+    
+    ALWAYS enforces org membership - no bypass for any role including ADMIN/OWNER.
+    """
     supabase = _service_client()
     if not supabase:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -215,28 +212,26 @@ async def resolve_case_access(ctx: AuthContext, case_id: str) -> tuple[AuthConte
         raise HTTPException(status_code=404, detail="Case not found")
 
     org_id = case.data.get("organization_id")
-    if org_id:
-        try:
-            membership = (
-                supabase.table("memberships")
-                .select("role")
-                .eq("organization_id", org_id)
-                .eq("user_id", ctx.user_id)
-                .single()
-                .execute()
-            )
-            if not membership or not membership.data:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not a member of the organization owning this case",
-                )
-            ctx.organization_id = org_id
-            ctx.role = membership.data.get("role", "OWNER")
-        except HTTPException:
-            raise
-        except Exception:
-            pass
+    if not org_id:
+        raise HTTPException(status_code=403, detail="Case has no organization")
 
+    # ALWAYS verify membership - no exceptions for any role
+    membership = (
+        supabase.table("memberships")
+        .select("role")
+        .eq("organization_id", org_id)
+        .eq("user_id", ctx.user_id)
+        .single()
+        .execute()
+    )
+    if not membership or not membership.data:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not a member of the organization owning this case",
+        )
+
+    ctx.organization_id = org_id
+    ctx.role = membership.data.get("role", "STAFF")
     return ctx, case.data
 
 

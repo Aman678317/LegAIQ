@@ -49,11 +49,36 @@ def _chain_next(job: dict, next_type: str, payload: dict | None = None):
 
 # ==================== OCR ====================
 
+def _run_async(coro):
+    """Run an async coroutine, handling both sync and async contexts."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # No running loop, safe to use asyncio.run
+        return asyncio.run(coro)
+    else:
+        # Already in an event loop - create a task and run it
+        # This works for tests where we're already in asyncio.run()
+        import concurrent.futures
+        
+        def run_in_new_loop(coro):
+            new_loop = asyncio.new_event_loop()
+            try:
+                return new_loop.run_until_complete(coro)
+            finally:
+                new_loop.close()
+        
+        # Run in a separate thread with its own event loop
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(run_in_new_loop, coro)
+            return future.result()
+
+
 @celery_app.task(bind=True, name="tasks.run_ocr", max_retries=3, default_retry_delay=30)
 def run_ocr(self, job_id: str):
     job = _load_job(job_id)
     try:
-        asyncio.run(_ocr_impl(job))
+        _run_async(_ocr_impl(job))
         _finish(job_id)
         _chain_next(job, "extraction")
     except Exception as e:
@@ -87,7 +112,8 @@ async def _ocr_impl(job: dict):
     file_bytes = database.storage.from_("case-documents").download(storage_path)
 
     provider = get_ocr_provider()
-    result = await provider.process(file_bytes, file_type)
+    # Add timeout to prevent indefinite hanging (5 minutes max)
+    result = await asyncio.wait_for(provider.process(file_bytes, file_type), timeout=300.0)
     database.table("jobs").update({"progress": 60}).eq("id", job["id"]).execute()
 
     # Persist pages (original file untouched)
@@ -161,7 +187,7 @@ REGEX_PATTERNS = [
 def run_extraction(self, job_id: str):
     job = _load_job(job_id)
     try:
-        asyncio.run(_extraction_impl(job))
+        _run_async(_extraction_impl(job))
         _finish(job_id)
         _chain_next(job, "embeddings")
     except Exception as e:
@@ -185,24 +211,36 @@ async def _extraction_impl(job: dict):
     full_text = "\n\n".join(f"[PAGE {p['page_number']}]\n{p['text'] or ''}" for p in pages)
 
     entities: list[dict] = []
+    llm_failed = False
+    
     if settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY:
-        response = await llm_router.complete(LLMRequest(
-            system=EXTRACTION_SYSTEM,
-            prompt=f"DOCUMENT TEXT:\n\n{full_text[:24000]}",
-            task="extraction", json_mode=True, temperature=0.0,
-        ))
         try:
-            data = json.loads(response.content)
-            entities = data.get("entities", [])
-        except json.JSONDecodeError:
-            match = re.search(r"\{.*\}", response.content, re.DOTALL)
-            if match:
+            response = await llm_router.complete(LLMRequest(
+                system=EXTRACTION_SYSTEM,
+                prompt=f"DOCUMENT TEXT:\n\n{full_text[:24000]}",
+                task="extraction", json_mode=True, temperature=0.0,
+            ))
+            # Check if response indicates an error (from mock or provider failures)
+            if "error" not in response.content.lower() and "not configured" not in response.content.lower():
                 try:
-                    entities = json.loads(match.group()).get("entities", [])
+                    data = json.loads(response.content)
+                    entities = data.get("entities", [])
                 except json.JSONDecodeError:
-                    entities = []
-    else:
-        # Regex fallback — honest extraction without an LLM with Indian land intelligence
+                    match = re.search(r"\{.*\}", response.content, re.DOTALL)
+                    if match:
+                        try:
+                            entities = json.loads(match.group()).get("entities", [])
+                        except json.JSONDecodeError:
+                            llm_failed = True
+                    else:
+                        llm_failed = True
+            else:
+                llm_failed = True
+        except Exception:
+            llm_failed = True
+    
+    # Fallback to regex patterns if LLM not configured, failed, or returned no entities
+    if not entities:
         for page in pages:
             text = page["text"] or ""
             # Standard deed patterns
@@ -252,7 +290,7 @@ def _chunk_text(text: str, chunk_size: int = 1200, overlap: int = 150) -> list[s
 def run_embeddings(self, job_id: str):
     job = _load_job(job_id)
     try:
-        asyncio.run(_embeddings_impl(job))
+        _run_async(_embeddings_impl(job))
         _finish(job_id)
         _chain_next(job, "ownership")
     except Exception as e:
@@ -297,7 +335,7 @@ async def _embeddings_impl(job: dict):
 def run_translation(self, job_id: str):
     job = _load_job(job_id)
     try:
-        asyncio.run(_translation_impl(job))
+        _run_async(_translation_impl(job))
         _finish(job_id)
     except Exception as e:
         if self.request.retries < self.max_retries:
@@ -348,6 +386,10 @@ def run_ownership(self, job_id: str):
             db().table("jobs").update({"state": "RETRYING"}).eq("id", job_id).execute()
             raise self.retry(exc=e)
         _finish(job_id, error=str(e))
+        # Ensure document status reflects failure
+        doc_id = job.get("document_id")
+        if doc_id:
+            db().table("documents").update({"status": "FAILED", "error_message": str(e)}).eq("id", doc_id).execute()
 
 
 def _norm_name(name: str) -> str:
@@ -618,7 +660,7 @@ def _risk_impl(job: dict):
     # Agent-generated supplementary risks (budgets + audit enforced)
     try:
         case = database.table("cases").select("organization_id").eq("id", case_id).single().execute().data
-        asyncio.run(run_risk_agent(case_id, case.get("organization_id")))
+        _run_async(run_risk_agent(case_id, case.get("organization_id")))
     except Exception:
         pass  # agent failure never blocks the deterministic risk floor
 
@@ -643,12 +685,11 @@ def run_report(self, job_id: str):
 
 def _report_agent_impl(job: dict):
     """Phase 13: report compilation runs through the budgeted ReportAgent."""
-    import asyncio
     from app.ai.agents.registry import run_report_agent
 
     report_id = (job.get("payload") or {}).get("report_id")
     case = db().table("cases").select("organization_id").eq("id", job["case_id"]).single().execute().data
-    asyncio.run(run_report_agent(job["case_id"], report_id, case.get("organization_id")))
+    _run_async(run_report_agent(job["case_id"], report_id, case.get("organization_id")))
 
 
 @celery_app.task(bind=True, name="tasks.run_report_export", max_retries=2)

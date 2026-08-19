@@ -129,8 +129,10 @@ class TestVoiceProviderEndpoints:
         res = api_client.post(f"{API}/cases", json={"name": "Voice Case", "organization_id": ORG_ID})
         return res.json()["id"]
 
-    def test_transcribe_unconfigured_is_503(self, api_client, fake):
+    def test_transcribe_unconfigured_is_503(self, api_client, fake, monkeypatch):
         """No STT key -> honest 503, never a fabricated transcript."""
+        from app.ai import voice_providers
+        monkeypatch.setattr(voice_providers, "stt_configured", lambda: False)
         case_id = self._make_case(api_client)
         res = api_client.post(
             f"{API}/cases/{case_id}/voice/transcribe",
@@ -139,7 +141,9 @@ class TestVoiceProviderEndpoints:
         assert res.status_code == 503
         assert "not configured" in res.json()["detail"].lower()
 
-    def test_speak_unconfigured_is_503(self, api_client, fake):
+    def test_speak_unconfigured_is_503(self, api_client, fake, monkeypatch):
+        from app.ai import voice_providers
+        monkeypatch.setattr(voice_providers, "tts_configured", lambda: False)
         case_id = self._make_case(api_client)
         res = api_client.post(
             f"{API}/cases/{case_id}/voice/speak",

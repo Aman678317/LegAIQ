@@ -10,7 +10,7 @@
 
 export function generateUniversalAiResponse(
   prompt: string,
-  history: Array<{ role: string; content: string }> = [],
+  _history: Array<{ role: string; content: string }> = [],
   mode = "general"
 ): { text: string; model: string; duration_ms: number } {
   const start = Date.now();

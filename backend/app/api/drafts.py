@@ -7,7 +7,7 @@ from supabase import create_client
 
 from app.ai.provider import LLMRequest, router as llm_router
 from app.config import get_settings
-from app.security.auth import get_case_access, resource_case_access
+from app.security.auth import get_case_access, resource_case_access, require_role
 
 settings = get_settings()
 router = APIRouter(tags=["drafts"])
@@ -166,7 +166,7 @@ async def verify_draft(draft_id: str, _=Depends(resource_case_access("drafts", "
 
 
 @router.delete("/drafts/{draft_id}")
-async def delete_draft(draft_id: str, _=Depends(resource_case_access("drafts", "draft_id"))):
+async def delete_draft(draft_id: str, _=Depends(resource_case_access("drafts", "draft_id")), ctx: AuthContext = Depends(require_role("ADMIN"))):
     ctx, case = _
     db = svc()
     existing = db.table("drafts").select("case_id").eq("id", draft_id).single().execute()

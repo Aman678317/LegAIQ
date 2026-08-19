@@ -42,40 +42,50 @@ async def upload_document(
     if mime not in ALLOWED_MIME and ext_mime not in ALLOWED_MIME:
         raise HTTPException(400, f"File type '{mime}' not allowed. Allowed: PDF, JPG, PNG, TIFF")
 
-    content = await file.read()
-    if len(content) > MAX_SIZE:
-        raise HTTPException(400, f"File exceeds {settings.MAX_UPLOAD_SIZE_MB} MB limit")
-    if len(content) == 0:
+    # --- Stream to private storage first (to check size) ---
+    file_size = 0
+    file_bytes = bytearray()
+    chunk_size = 1024 * 1024
+    
+    while True:
+        chunk = await file.read(chunk_size)
+        if not chunk:
+            break
+        file_bytes.extend(chunk)
+        file_size += len(chunk)
+        if file_size > MAX_SIZE:
+            raise HTTPException(400, f"File exceeds {settings.MAX_UPLOAD_SIZE_MB} MB limit")
+    
+    if file_size == 0:
         raise HTTPException(400, "Empty file")
 
-    # --- Record ---
+    # Stream upload to avoid loading entire file into memory
     doc_id = str(uuid.uuid4())
     safe_name = (file.filename or "document")[:255]
     storage_path = f"organizations/{case['organization_id']}/cases/{case_id}/documents/{doc_id}/{safe_name}"
 
+    try:
+        supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+        storage = supabase.storage.from_("case-documents")
+        
+        storage.upload(
+            storage_path, bytes(file_bytes), {"content-type": mime, "upsert": "false"}
+        )
+    except Exception as e:
+        raise HTTPException(500, f"Storage upload failed: {e}")
+
+    # Create document record after successful upload
     row = svc().table("documents").insert({
         "id": doc_id,
         "case_id": case_id,
         "uploaded_by": ctx.user_id,
         "file_name": safe_name,
         "file_type": mime,
-        "file_size": len(content),
+        "file_size": file_size,
         "storage_path": storage_path,
         "document_type": document_type,
-        "status": "VALIDATING",
+        "status": "PROCESSING",
     }).execute().data[0]
-
-    # --- Private storage upload ---
-    try:
-        supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
-        supabase.storage.from_("case-documents").upload(
-            storage_path, content, {"content-type": mime, "upsert": "false"}
-        )
-    except Exception as e:
-        svc().table("documents").update({"status": "FAILED", "error_message": f"Storage upload failed: {e}"}).eq("id", doc_id).execute()
-        raise HTTPException(500, f"Storage upload failed: {e}")
-
-    svc().table("documents").update({"status": "PROCESSING"}).eq("id", doc_id).execute()
 
     # --- Queue OCR job (enqueue for worker) ---
     svc().table("jobs").insert({
@@ -96,7 +106,7 @@ async def upload_document(
         action="document.uploaded", actor_id=ctx.user_id,
         organization_id=case["organization_id"], case_id=case_id,
         resource_type="document", resource_id=doc_id,
-        metadata={"file_type": mime, "file_size": len(content)},
+        metadata={"file_type": mime, "file_size": file_size},
     )
 
     return row

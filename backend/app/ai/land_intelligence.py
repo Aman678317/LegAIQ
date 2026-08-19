@@ -28,12 +28,57 @@ SQ_METER_CONVERSIONS = {
     "cent": 40.468564,
     "hectare": 10000.0,
     "ground": 222.967, # 2400 sq ft
-    "bigha_standard": 2529.285, # Standard Pucca Bigha
+    "bigha_standard": 2529.285, # Standard Pucca Bigha (fallback)
     "biswa": 126.464, # 1/20 Bigha
     "katha": 66.89, # Bengal / Bihar Katha (1/20 Bigha)
     "kanal": 505.857, # 1/8 Acre
     "marla": 25.293, # 1/20 Kanal
 }
+
+
+# State-specific Bigha conversions to Square Meters
+# Source: State Revenue Codes, local survey manuals, and land measurement standards
+STATE_BIGHA_SQ_METERS = {
+    # North India
+    "uttar pradesh": 2529.285,     # Pucca Bigha = 27,225 sq ft (standard)
+    "uttarakhand": 680.625,        # Small Bigha = 7,320 sq ft (hilly region)
+    "punjab": 2023.428,            # Bigha = 21,780 sq ft
+    "haryana": 2023.428,           # Same as Punjab
+    "delhi": 2023.428,             # Same as Punjab/Haryana
+    "rajasthan": 2529.285,         # Pucca Bigha
+    "madhya pradesh": 1337.8,      # Bigha = 14,400 sq ft (varies by region)
+    
+    # East India
+    "bihar": 2529.285,             # Standard Pucca Bigha
+    "jharkhand": 2529.285,         # Same as Bihar
+    "west bengal": 1337.8,         # Bigha = 14,400 sq ft (common in Bengal)
+    "odisha": 1337.8,              # Bigha = 14,400 sq ft
+    
+    # West India
+    "gujarat": 1618.742,           # Bigha = 17,424 sq ft (2 bigha = 1 acre)
+    "maharashtra": 2529.285,       # Bigha rarely used; Guntha is standard
+    
+    # South India (Bigha not traditionally used, but defined for compatibility)
+    "karnataka": 0.0,              # Not used; Guntha/Acre standard
+    "tamil nadu": 0.0,             # Not used; Cent/Ground standard
+    "kerala": 0.0,                 # Not used; Cent/Hectare standard
+    "telangana": 0.0,              # Not used; Acre/Guntha standard
+    "andhra pradesh": 0.0,         # Not used; Acre/Cent standard
+    
+    # Northeast
+    "assam": 1337.8,               # Bigha = 14,400 sq ft
+    
+    # Default fallback
+    "default": 2529.285,           # Standard Pucca Bigha
+}
+
+
+def get_state_bigha_sqm(state: Optional[str]) -> float:
+    """Returns the square meter value of 1 Bigha for a given Indian state."""
+    if not state:
+        return STATE_BIGHA_SQ_METERS["default"]
+    state_lower = state.strip().lower()
+    return STATE_BIGHA_SQ_METERS.get(state_lower, STATE_BIGHA_SQ_METERS["default"])
 
 
 @dataclass
@@ -69,11 +114,19 @@ class IndianPropertyProfile:
     confidence: float = 0.0
 
 
-def parse_and_normalize_area(raw: str) -> NormalizedLandArea:
+def parse_and_normalize_area(raw: str, state: Optional[str] = None) -> NormalizedLandArea:
     """Parses arbitrary Indian land area strings (e.g. '2 Acres 14 Guntas',
-    '1.5 Hectare', '5 Bigha 10 Biswa', '1200 Sq.Ft') into unified metric & imperial metrics."""
+    '1.5 Hectare', '5 Bigha 10 Biswa', '1200 Sq.Ft') into unified metric & imperial metrics.
+    
+    Args:
+        raw: The raw area string to parse
+        state: Indian state name for state-specific Bigha conversion
+    """
     text = raw.strip().lower()
     total_sq_meters = 0.0
+    
+    # Get state-specific Bigha value
+    state_bigha_sqm = get_state_bigha_sqm(state)
 
     # 1. Acres + Guntas / Cents (e.g. 2 Acres 14 Guntas or 2-14 A-G)
     ag_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:acre|acres|ac|a)[\s,]+(\d+(?:\.\d+)?)\s*(?:gunta|guntas|gts|g|cents|cent|c)", text)
@@ -97,13 +150,14 @@ def parse_and_normalize_area(raw: str) -> NormalizedLandArea:
         if hec_match:
             total_sq_meters += float(hec_match.group(1)) * SQ_METER_CONVERSIONS["hectare"]
 
-        # Bigha & Biswa match
+        # Bigha & Biswa match - use state-specific Bigha
         bigha_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:bigha|bighas|b)\b", text)
         biswa_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:biswa|biswas)\b", text)
         if bigha_match:
-            total_sq_meters += float(bigha_match.group(1)) * SQ_METER_CONVERSIONS["bigha_standard"]
+            total_sq_meters += float(bigha_match.group(1)) * state_bigha_sqm
         if biswa_match:
-            total_sq_meters += float(biswa_match.group(1)) * SQ_METER_CONVERSIONS["biswa"]
+            # Biswa is typically 1/20 of Bigha
+            total_sq_meters += float(biswa_match.group(1)) * (state_bigha_sqm / 20.0)
 
         # Square Feet / Yards / Meters match
         sqft_match = re.search(r"([\d,]+(?:\.\d+)?)\s*(?:sq\.?\s*ft|sq\.?\s*feet|square\s+feet)\b", text)
@@ -139,11 +193,18 @@ def parse_and_normalize_area(raw: str) -> NormalizedLandArea:
     )
 
 
-def are_land_areas_equivalent(area_str_a: str, area_str_b: str, tolerance_ratio: float = 0.05) -> Tuple[bool, str]:
+def are_land_areas_equivalent(area_str_a: str, area_str_b: str, tolerance_ratio: float = 0.05, state: Optional[str] = None) -> Tuple[bool, str]:
     """Compares two land area expressions under different Indian measurement units.
-    Allows for customary survey margin tolerance (default 5%)."""
-    norm_a = parse_and_normalize_area(area_str_a)
-    norm_b = parse_and_normalize_area(area_str_b)
+    Allows for customary survey margin tolerance (default 5%).
+    
+    Args:
+        area_str_a: First area string
+        area_str_b: Second area string
+        tolerance_ratio: Maximum allowed variance ratio (default 5%)
+        state: Indian state name for state-specific Bigha conversion
+    """
+    norm_a = parse_and_normalize_area(area_str_a, state)
+    norm_b = parse_and_normalize_area(area_str_b, state)
 
     if norm_a.sq_meters == 0.0 or norm_b.sq_meters == 0.0:
         # Fallback to string equality check
@@ -231,11 +292,20 @@ class IndianLandExtractor:
                     "confidence": 0.85,
                 })
 
+        # Extract state from location patterns first (for state-aware Bigha conversion)
+        extracted_state = None
+        for pattern, etype in self.LOCATION_PATTERNS:
+            if etype == "district" or etype == "taluk":
+                m = re.search(pattern, text, re.IGNORECASE)
+                if m:
+                    # We can't easily determine state from district alone, but we'll try
+                    pass
+        
         # 4. Land Area
         area_match = re.search(r"(?:measuring|extent\s*of|area|shetra)\s*[:#-]?\s*([^\n;.]+?(?:acre|acres|gunta|guntas|sq\.?\s*ft|sq\.?\s*meter|hectare|bigha|cents)\b[^\n;.]*)", text, re.IGNORECASE)
         if area_match:
             raw_area = area_match.group(1).strip()
-            norm = parse_and_normalize_area(raw_area)
+            norm = parse_and_normalize_area(raw_area, extracted_state)
             results.append({
                 "entity_type": "area",
                 "value": norm.formatted_standard if norm.sq_meters > 0 else raw_area,

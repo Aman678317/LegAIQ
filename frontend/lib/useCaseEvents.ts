@@ -63,7 +63,7 @@ export function useCaseEvents(caseId: string | undefined, pollMs = 5000) {
         const jobList = await api.listJobs(caseId);
         if (docs) {
           setDocuments((prev) => {
-            const next = Object.fromEntries(docs.map((d: any) => [d.id, d]));
+            const next = Object.fromEntries(docs.map((d: DocumentEvent) => [d.id, d]));
             const prevKeys = Object.keys(prev);
             const nextKeys = Object.keys(next);
             if (
@@ -77,7 +77,7 @@ export function useCaseEvents(caseId: string | undefined, pollMs = 5000) {
         }
         if (jobList) {
           setJobs((prev) => {
-            const next = Object.fromEntries(jobList.map((j: any) => [j.id, j]));
+            const next = Object.fromEntries(jobList.map((j: JobEvent) => [j.id, j]));
             const prevKeys = Object.keys(prev);
             const nextKeys = Object.keys(next);
             if (
@@ -100,7 +100,7 @@ export function useCaseEvents(caseId: string | undefined, pollMs = 5000) {
       ]);
       if (docRows) {
         setDocuments((prev) => {
-          const next = Object.fromEntries(docRows.map((d: any) => [d.id, d]));
+          const next = Object.fromEntries(docRows.map((d: DocumentEvent) => [d.id, d]));
           const prevKeys = Object.keys(prev);
           const nextKeys = Object.keys(next);
           if (
@@ -114,7 +114,7 @@ export function useCaseEvents(caseId: string | undefined, pollMs = 5000) {
       }
       if (jobRows) {
         setJobs((prev) => {
-          const next = Object.fromEntries(jobRows.map((j: any) => [j.id, j]));
+          const next = Object.fromEntries(jobRows.map((j: JobEvent) => [j.id, j]));
           const prevKeys = Object.keys(prev);
           const nextKeys = Object.keys(next);
           if (
@@ -137,8 +137,11 @@ export function useCaseEvents(caseId: string | undefined, pollMs = 5000) {
     let cancelled = false;
 
     if (isDemoMode(caseId)) {
-      poll();
-      setStatus("live");
+      // Use setTimeout to avoid synchronous setState in effect warning
+      setTimeout(() => {
+        setStatus("live");
+        poll();
+      }, 0);
       return () => {
         cancelled = true;
       };
@@ -161,10 +164,10 @@ export function useCaseEvents(caseId: string | undefined, pollMs = 5000) {
           stopPolling();
         });
 
-        es.addEventListener("state", (e) => {
-          const data = JSON.parse((e as MessageEvent).data);
-          setDocuments(Object.fromEntries((data.documents || []).map((d: any) => [d.id, d])));
-          setJobs(Object.fromEntries((data.jobs || []).map((j: any) => [j.id, j])));
+        es.addEventListener("state", (e: MessageEvent) => {
+          const data = JSON.parse(e.data);
+          setDocuments(Object.fromEntries((data.documents || []).map((d: DocumentEvent) => [d.id, d])));
+          setJobs(Object.fromEntries((data.jobs || []).map((j: JobEvent) => [j.id, j])));
         });
 
         es.addEventListener("job", (e) => applyJob(JSON.parse((e as MessageEvent).data)));
@@ -201,7 +204,8 @@ export function useCaseEvents(caseId: string | undefined, pollMs = 5000) {
       }
     }
 
-    poll();
+    // Use setTimeout to avoid synchronous setState in effect warning
+    setTimeout(() => poll(), 0);
     connect();
 
     return () => {
