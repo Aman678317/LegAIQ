@@ -328,22 +328,47 @@ export const api = {
     }
     
     try {
+      let session: any = null;
+      try {
+        const supabase = createClient();
+        const { data: { session: s } } = await supabase.auth.getSession();
+        session = s;
+      } catch {
+        // Supabase client unavailable
+      }
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Accept": "text/event-stream, application/json",
+      };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+
       const res = await fetch(safeApiUrl(`/cases/${caseId}/questions`), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "text/event-stream",
-        },
+        headers,
         body: JSON.stringify({ question, language, model, stream: true }),
       });
       
       if (!res.ok) {
         throw new ApiError(res.status, "Streaming request failed");
       }
+
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await res.json();
+        if (data.content) {
+          onChunk?.(data.content);
+        }
+        return data;
+      }
       
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let fullContent = "";
+      let citations: any[] = [];
+      let rawBody = "";
       
       if (reader) {
         while (true) {
@@ -351,18 +376,19 @@ export const api = {
           if (done) break;
           
           const chunk = decoder.decode(value, { stream: true });
+          rawBody += chunk;
           const lines = chunk.split("\n");
           
           for (const line of lines) {
             if (line.startsWith("data: ")) {
-              const data = line.slice(6);
+              const data = line.slice(6).trim();
               if (data === "[DONE]") {
                 return {
                   id: `msg-${Date.now()}`,
                   case_id: caseId,
                   role: "assistant",
                   content: fullContent,
-                  citations: [],
+                  citations,
                   created_at: new Date().toISOString(),
                 };
               }
@@ -372,6 +398,9 @@ export const api = {
                 if (parsed.content) {
                   fullContent += parsed.content;
                   onChunk?.(parsed.content);
+                }
+                if (parsed.citations && Array.isArray(parsed.citations)) {
+                  citations = parsed.citations;
                 }
                 if (parsed.error) {
                   throw new Error(parsed.error);
@@ -384,12 +413,24 @@ export const api = {
         }
       }
       
+      if (!fullContent && rawBody.trim()) {
+        try {
+          const parsed = JSON.parse(rawBody.trim());
+          if (parsed.content) {
+            onChunk?.(parsed.content);
+          }
+          return parsed;
+        } catch {
+          // not json
+        }
+      }
+
       return {
         id: `msg-${Date.now()}`,
         case_id: caseId,
         role: "assistant",
         content: fullContent,
-        citations: [],
+        citations,
         created_at: new Date().toISOString(),
       };
     } catch {

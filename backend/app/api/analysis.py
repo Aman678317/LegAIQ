@@ -156,6 +156,7 @@ async def generate_streaming_response(
     prompt: str,
     task: str,
     model: Optional[str],
+    citations: Optional[list[dict]] = None,
     temperature: float = 0.2
 ) -> AsyncGenerator[str, None]:
     """Generate streaming response from LLM."""
@@ -189,6 +190,8 @@ async def generate_streaming_response(
                                     yield f"data: {json.dumps({'content': content})}\n\n"
                             except json.JSONDecodeError:
                                 pass
+                    if citations:
+                        yield f"data: {json.dumps({'citations': citations})}\n\n"
                     yield "data: [DONE]\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
@@ -206,6 +209,8 @@ async def generate_streaming_response(
         for i in range(0, len(words), 5):
             chunk = " ".join(words[i:i+5])
             yield f"data: {json.dumps({'content': chunk + ' '})}\n\n"
+        if citations:
+            yield f"data: {json.dumps({'citations': citations})}\n\n"
         yield "data: [DONE]\n\n"
 
 
@@ -243,6 +248,7 @@ async def ask_question(case_id: str, body: QuestionRequest, _=Depends(get_case_a
                 prompt_content,
                 "chat",
                 body.model,
+                citations=citations,
             ),
             media_type="text/event-stream",
             headers={
