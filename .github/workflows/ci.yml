@@ -26,7 +26,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+          sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+          sudo sed -i 's|mirror+file:/etc/apt/apt-mirrors.txt|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
           sudo apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout="15" -o Acquire::https::Timeout="15"
           sudo apt-get install -y --no-install-recommends \
             tesseract-ocr \
