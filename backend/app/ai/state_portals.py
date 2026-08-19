@@ -144,17 +144,17 @@ class BasePortalConnector(ABC):
     def _create_mock_record(self, survey_number: str, district: str, taluk: str, village: str) -> LandRecord:
         """Create a mock land record for development/testing."""
         import random
-        # nosec: B311 - Mock data generation, not cryptographic use
+        # nosec B311 - Mock data generation, not cryptographic use
         return LandRecord(
             state=self.state,
             survey_number=survey_number,
             district=district,
             taluk=taluk,
             village=village,
-            owner_names=[f"Mock Owner {random.randint(1, 100)}", f"Co-owner {random.randint(1, 100)}"],
-            area_sqm=random.uniform(1000, 10000),
-            area_formatted=f"{random.randint(1, 5)} Acre(s) {random.randint(0, 39)} Gunta(s)",
-            land_type="Agricultural" if random.random() > 0.3 else "Non-Agricultural",
+            owner_names=[f"Mock Owner {random.randint(1, 100)}", f"Co-owner {random.randint(1, 100)}"],  # nosec B311
+            area_sqm=random.uniform(1000, 10000),  # nosec B311
+            area_formatted=f"{random.randint(1, 5)} Acre(s) {random.randint(0, 39)} Gunta(s)",  # nosec B311
+            land_type="Agricultural" if random.random() > 0.3 else "Non-Agricultural",  # nosec B311
             tenure="Bhumidhari with transferable rights",
             document_type="RTC" if self.state == PortalState.KARNATAKA else "7/12 Extract",
             document_reference=f"DOC/{random.randint(1000, 9999)}/{datetime.now().year}",
@@ -164,7 +164,7 @@ class BasePortalConnector(ABC):
             ],
             encumbrances=[
                 {"type": "Mortgage", "bank": "State Bank of India", "amount": "50,00,000", "date": "2021-06-10"},
-            ] if random.random() > 0.5 else [],
+            ] if random.random() > 0.5 else [],  # nosec B311
             raw_data={"mock": True},
             confidence=0.75,
         )

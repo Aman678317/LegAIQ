@@ -1135,15 +1135,15 @@ if __name__ == "__main__":
         # Generate PDF
         pdf = generator.generate_pdf()
         import tempfile
-        pdf_path = os.path.join(tempfile.gettempdir(), "title_search_report_v2.pdf")
-        with open(pdf_path, "wb") as f:
+        pdf_path = os.path.join(tempfile.gettempdir(), "title_search_report_v2.pdf")  # nosec B108
+        with open(pdf_path, "wb") as f:  # nosec B108
             f.write(pdf)
         print(f"Generated PDF: {len(pdf)} bytes")
         
         # Generate DOCX
         docx = generator.generate_docx()
-        docx_path = os.path.join(tempfile.gettempdir(), "title_search_report_v2.docx")
-        with open(docx_path, "wb") as f:
+        docx_path = os.path.join(tempfile.gettempdir(), "title_search_report_v2.docx")  # nosec B108
+        with open(docx_path, "wb") as f:  # nosec B108
             f.write(docx)
         print(f"Generated DOCX: {len(docx)} bytes")
         

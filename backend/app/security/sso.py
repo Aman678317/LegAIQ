@@ -120,8 +120,8 @@ def _safe_get(url: str, allowed_domains: Optional[set[str]] = None, timeout: int
         return None
     
     try:
-        # nosec: B113 - URL validated by _validate_url before request (SSRF protection)
-        response = requests.get(url, timeout=timeout, allow_redirects=True)
+        # nosec B113 - URL validated by _validate_url before request (SSRF protection)
+        response = requests.get(url, timeout=timeout, allow_redirects=False)  # nosec B113
         response.raise_for_status()
         return response
     except Exception:
@@ -145,8 +145,8 @@ def _safe_post(url: str, data: dict, allowed_domains: Optional[set[str]] = None,
         return None
     
     try:
-        # nosec: B113 - URL validated by _validate_url before request (SSRF protection)
-        response = requests.post(url, data=data, timeout=timeout, allow_redirects=True)
+        # nosec B113 - URL validated by _validate_url before request (SSRF protection)
+        response = requests.post(url, data=data, timeout=timeout, allow_redirects=False)  # nosec B113
         response.raise_for_status()
         return response
     except Exception:

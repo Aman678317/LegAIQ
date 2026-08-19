@@ -41,8 +41,8 @@ class TestSSOProviderConfig:
             provider_type=SSOProviderType.OIDC,
             display_name="Test OIDC",
             oidc_issuer_url="https://accounts.google.com",
-            oidc_client_id="test-client-id",
-            oidc_client_secret="test-client-secret",
+            oidc_client_id="test-client-id",  # nosec B108
+            oidc_client_secret="test-client-secret",  # nosec B108
         )
         assert config.provider_id == "test-oidc"
         assert config.provider_type == SSOProviderType.OIDC
@@ -150,8 +150,8 @@ class TestOIDCAuthenticator:
             provider_type=SSOProviderType.OIDC,
             display_name="Test OIDC",
             oidc_issuer_url="https://accounts.google.com",
-            oidc_client_id="test-client-id",
-            oidc_client_secret="test-client-secret",
+            oidc_client_id="test-client-id",  # nosec B108
+            oidc_client_secret="test-client-secret",  # nosec B108
             oidc_discovery_url="https://accounts.google.com/.well-known/openid-configuration",
         )
     

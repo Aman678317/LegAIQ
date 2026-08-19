@@ -24,8 +24,6 @@
     "react-dropzone": "^20.1.0",
     "react-hot-toast": "^2.6.0",
     "tailwind-merge": "^3.6.0",
-    "workbox-cli": "^7.4.1",
-    "workbox-window": "^7.4.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
@@ -38,9 +36,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
-    "happy-dom": "^15.11.0",
+    "happy-dom": "^20.11.2",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.11"
   }
 }
