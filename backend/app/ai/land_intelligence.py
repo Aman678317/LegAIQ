@@ -167,27 +167,27 @@ class IndianLandExtractor:
     """Extracts specialized Indian revenue and property entities."""
 
     SURVEY_PATTERNS = [
-        (r"(?:Survey|Sy\.?|S\.No\.?|Survey\s*No\.?)\s*[:#-]?\s*([\d]+[/-][\d\w/-]+|\d+)", "survey_number"),
-        (r"(?:Gat|Gut|Gat\s*No\.?)\s*[:#-]?\s*([\d]+[/-][\d\w/-]+|\d+)", "gat_number"),
-        (r"(?:Khasra|Khesra|Khasra\s*No\.?)\s*[:#-]?\s*([\d]+[/-][\d\w/-]+|\d+)", "khasra_number"),
-        (r"(?:Khata|Khatauni|Katha)\s*(?:No\.?)?\s*[:#-]?\s*([\d/-]+)", "khata_number"),
-        (r"(?:CTS|City\s*Survey)\s*(?:No\.?)?\s*[:#-]?\s*([\d/\w-]+)", "cts_number"),
-        (r"(?:Hissa|Hisse|Sub-division)\s*(?:No\.?)?\s*[:#-]?\s*([\d/\w]+)", "hissa"),
-        (r"(?:Plot|Site)\s*(?:No\.?)?\s*[:#-]?\s*([\d/\w-]+)", "plot_number"),
-        (r"(?:Doc|Document|Reg\.?\s*No\.?)\s*[:#-]?\s*([\d/\w-]+)", "registration_number"),
+        (r"\b(?:Survey\s*(?:No\.?|Number)?|Sy\.?\s*No\.?|Sy\.?|S\.No\.?)\b\s*[:#-]?\s*([\d]+[/-][\d\w/-]+|\d+)", "survey_number"),
+        (r"\b(?:Gat\s*(?:No\.?|Number)?|Gat|Gut)\b\s*[:#-]?\s*([\d]+[/-][\d\w/-]+|\d+)", "gat_number"),
+        (r"\b(?:Khasra\s*(?:No\.?|Number)?|Khasra|Khesra)\b\s*[:#-]?\s*([\d]+[/-][\d\w/-]+|\d+)", "khasra_number"),
+        (r"\b(?:Khatauni|Khata|Katha)\s*(?:No\.?|Number)?\b\s*[:#-]?\s*([\d/-]+)", "khata_number"),
+        (r"\b(?:City\s*Survey|CTS)\s*(?:No\.?|Number)?\b\s*[:#-]?\s*([\d/\w-]+)", "cts_number"),
+        (r"\b(?:Sub-division|Hissa|Hisse)\s*(?:No\.?|Number)?\b\s*[:#-]?\s*([\d/\w]+)", "hissa"),
+        (r"\b(?:Plot|Site)\s*(?:No\.?|Number)?\b\s*[:#-]?\s*([\d/\w-]+)", "plot_number"),
+        (r"\b(?:Document|Doc|Reg\.?\s*No\.?)\b\s*[:#-]?\s*([\d/\w-]+)", "registration_number"),
     ]
 
     LOCATION_PATTERNS = [
-        (r"(?:Village|Mauza|Grama|Gao)\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "village"),
-        (r"(?:Taluk|Taluka|Tehsil|Hobli)\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "taluk"),
-        (r"(?:District|Dist\.?|Jilha)\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "district"),
+        (r"\b(?:Village|Mauza|Grama|Gao)\b\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "village"),
+        (r"\b(?:Taluka|Taluk|Tehsil|Hobli)\b\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "taluk"),
+        (r"\b(?:District|Dist\b\.?|Jilha)\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "district"),
     ]
 
     BOUNDARY_PATTERNS = [
-        (r"(?:East\s*by|East\s*[:-])\s*([^\n;.,]+)", "east"),
-        (r"(?:West\s*by|West\s*[:-])\s*([^\n;.,]+)", "west"),
-        (r"(?:North\s*by|North\s*[:-])\s*([^\n;.,]+)", "north"),
-        (r"(?:South\s*by|South\s*[:-])\s*([^\n;.,]+)", "south"),
+        (r"\b(?:East\s+side\s+by|East\s+by|East\s*[:-])\s*([^\n;.,]+)", "east"),
+        (r"\b(?:West\s+side\s+by|West\s+by|West\s*[:-])\s*([^\n;.,]+)", "west"),
+        (r"\b(?:North\s+side\s+by|North\s+by|North\s*[:-])\s*([^\n;.,]+)", "north"),
+        (r"\b(?:South\s+side\s+by|South\s+by|South\s*[:-])\s*([^\n;.,]+)", "south"),
     ]
 
     def extract_from_text(self, text: str, page_number: int = 1) -> List[Dict[str, Any]]:

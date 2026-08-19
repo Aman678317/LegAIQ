@@ -85,3 +85,28 @@ def test_generate_lawyer_questions():
     assert len(questions) >= 4
     assert any("Survey Number Mismatch" in q for q in questions)
     assert any("Mortgage / Charge Noted" in q for q in questions)
+
+
+def test_land_extractor_location_and_survey_variations():
+    # Test Taluk, Taluka, Tehsil, Hobli and variations
+    text1 = "Taluk: Mulshi, Village: Hinjawadi, District: Pune, Survey No: 124/3"
+    e1 = {e["entity_type"]: e["value"] for e in land_extractor.extract_from_text(text1)}
+    assert e1["taluk"] == "Mulshi"
+    assert e1["village"] == "Hinjawadi"
+    assert e1["district"] == "Pune"
+    assert e1["survey_number"] == "124/3"
+
+    text2 = "Tehsil: Haveli, Mauza: Wakad, Dist.: Pune, Gat Number: 55/1"
+    e2 = {e["entity_type"]: e["value"] for e in land_extractor.extract_from_text(text2)}
+    assert e2["taluk"] == "Haveli"
+    assert e2["village"] == "Wakad"
+    assert e2["district"] == "Pune"
+    assert e2["gat_number"] == "55/1"
+
+    text3 = "Hobli: Kasaba, Grama: Kadugodi, Dist: Bengaluru, Khasra No: 88"
+    e3 = {e["entity_type"]: e["value"] for e in land_extractor.extract_from_text(text3)}
+    assert e3["taluk"] == "Kasaba"
+    assert e3["village"] == "Kadugodi"
+    assert e3["district"] == "Bengaluru"
+    assert e3["khasra_number"] == "88"
+
