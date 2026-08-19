@@ -26,7 +26,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          sudo apt-get update
+          sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+          sudo apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout="15" -o Acquire::https::Timeout="15"
           sudo apt-get install -y --no-install-recommends \
             tesseract-ocr \
             poppler-utils \
