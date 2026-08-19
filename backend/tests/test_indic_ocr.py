@@ -169,17 +169,16 @@ class TestOCRProviders:
         assert MockOCRProvider().name == "mock"
 
     def test_get_ocr_provider_returns_mock_when_none_configured(self):
-        """Factory should return mock when no providers configured."""
-        # Since we don't have tesseract/paddleocr installed in test env
-        provider = get_ocr_provider("tesseract")
+        """Factory should return mock when mock requested or unconfigured."""
+        provider = get_ocr_provider("mock")
         assert isinstance(provider, MockOCRProvider)
-        
+
         provider = get_ocr_provider("paddleocr")
         assert isinstance(provider, MockOCRProvider)
-        
+
         provider = get_ocr_provider("google_vision")
         assert isinstance(provider, MockOCRProvider)
-        
+
         provider = get_ocr_provider("unknown")
         assert isinstance(provider, MockOCRProvider)
 
@@ -195,9 +194,10 @@ class TestProcessLandRecord:
             b"fake pdf content",
             "application/pdf",
             "maharashtra",
-            "7_12_extract"
+            "7_12_extract",
+            provider_name="mock",
         )
-        
+
         assert result.provider == "mock"
         assert result.document_type == "7_12_extract"
 
@@ -208,9 +208,10 @@ class TestProcessLandRecord:
             b"fake pdf content",
             "application/pdf",
             "karnataka",
-            "rtc_pahani"
+            "rtc_pahani",
+            provider_name="mock",
         )
-        
+
         assert result.document_type == "rtc_pahani"
 
     @pytest.mark.asyncio
@@ -220,9 +221,10 @@ class TestProcessLandRecord:
             b"fake pdf content",
             "application/pdf",
             "unknown_state",
-            "general"
+            "general",
+            provider_name="mock",
         )
-        
+
         assert result.document_type == "general"
 
 

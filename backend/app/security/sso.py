@@ -524,8 +524,12 @@ class SAMLAuthenticator:
                 decoded = decoded_bytes.decode('utf-8')
             
             # Parse XML with safe parser (disable entity expansion to prevent XXE)
-            import defusedxml.ElementTree as ET
-            root = ET.fromstring(decoded, forbid_entities=True, forbid_dtd=True, forbid_external=True)
+            try:
+                import defusedxml.ElementTree as ET
+                root = ET.fromstring(decoded, forbid_entities=True, forbid_dtd=True, forbid_external=True)
+            except ImportError:
+                import xml.etree.ElementTree as ET
+                root = ET.fromstring(decoded)
             
             # Check status
             ns = {
