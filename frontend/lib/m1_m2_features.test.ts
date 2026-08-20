@@ -75,6 +75,6 @@ describe("Milestone 2 (R2): Secure Matter Vault & Indic Document Intelligence", 
 
     const surveyComp = diff.field_comparisons.find((f: any) => f.field_name === "survey_number");
     expect(surveyComp).toBeDefined();
-    expect(surveyComp.verdict).toBe("MISMATCH");
+    expect(surveyComp?.verdict).toBe("MISMATCH");
   });
 });

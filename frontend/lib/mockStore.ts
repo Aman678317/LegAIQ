@@ -61,6 +61,9 @@ export interface DemoDocument {
   ocr_confidence: number;
   status: string;
   language: string;
+  document_type?: string;
+  badge_label?: string;
+  badge_color?: string;
   created_at: string;
   updated_at: string;
 }
@@ -728,7 +731,8 @@ export async function askDemoQuestion(
   question: string,
   language = "en",
   model?: string,
-  onChunk?: (chunk: string) => void
+  onChunk?: (chunk: string) => void,
+  options?: { mode?: string; india_context?: boolean; document_ids?: string[] }
 ) {
   const ctx = getContext(caseId);
   const history = getDemoChatHistory(caseId);

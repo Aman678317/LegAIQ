@@ -154,9 +154,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       }
 
       if (caseMatch) {
-        const { data: c } = await supabase
-          .from("cases").select("name").eq("id", caseMatch[1]).single();
-        setCaseName(c?.name || "Case");
+        try {
+          const supabase = createClient();
+          const { data: c } = await supabase
+            .from("cases").select("name").eq("id", caseMatch[1]).single();
+          setCaseName(c?.name || "Case");
+        } catch {
+          const c = mockStore.getOrCreateDemoCase(caseMatch[1]);
+          setCaseName(c?.name || "Case");
+        }
       } else {
         setCaseName(null);
       }

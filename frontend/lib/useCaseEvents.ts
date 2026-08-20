@@ -21,6 +21,8 @@ export interface DocumentEvent {
   page_count: number | null;
   ocr_confidence: number | null;
   error_message: string | null;
+  badge_label?: string | null;
+  badge_color?: string | null;
   updated_at: string;
 }
 

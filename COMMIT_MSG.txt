@@ -13,6 +13,12 @@ feat: Harvey-Class Legal AI Expansion & NVIDIA NIM Integration
   - Added NvidiaProvider supporting DeepSeek-R1 (reasoning/research) and Llama 3.3 70B (chat/drafting/extraction).
   - Wired ModelRouter with NVIDIA priority, embedding support (nv-embedqa-e5-v5), and frontend direct chat completions.
 - Fixes:
+  - Resolved all TypeScript compilation errors (`tsc --noEmit`):
+    - Added `badge_label` and `badge_color` to `DocumentEvent` in `frontend/lib/useCaseEvents.ts`.
+    - Fixed `supabase` client scope in `frontend/app/(app)/layout.tsx`.
+    - Added `options` parameter to `askDemoQuestion` in `frontend/lib/mockStore.ts`.
+    - Added `document_type`, `badge_label`, and `badge_color` to `DemoDocument` in `frontend/lib/mockStore.ts`.
+    - Added optional chaining to `surveyComp` in `frontend/lib/m1_m2_features.test.ts`.
   - Aligned legal domain classification in `frontend/lib/aiEngine.ts` to respect case type priority and prevent keyword collisions.
   - Aligned property risk categories in `frontend/lib/aiEngine.ts` to standard schema (`DOCUMENT`, `REGISTRATION`, `OWNERSHIP`).
   - Fixed default case initialization in `frontend/lib/mockStore.ts` to standard Property due diligence model.
@@ -26,4 +32,4 @@ feat: Harvey-Class Legal AI Expansion & NVIDIA NIM Integration
   - Resolved `NameError: name 'get_auth_context' is not defined` in `app/api/research.py`.
   - Added explicit `pyjwt`, `requests`, and `cryptography` dependencies to `backend/requirements.txt`.
   - Added complete typing imports across all backend router modules.
-- Verification: 163+ hermetic tests passing across 4 tiers + 26 frontend Vitest tests passing with 100% genuine assertions.
+- Verification: 163+ hermetic tests passing across 4 tiers + 26 frontend Vitest tests + 0 TypeScript errors.
