@@ -181,9 +181,10 @@ class RiskAuditorAgent(BaseAgent):
         return {
             "agent_type": "risk_auditor_agent",
             "case_id": case_id,
+            "risks_created": created or len(new_risks),
             "risks_audited": len(existing_risks) + len(new_risks),
             "new_risks_found": len(new_risks),
-            "risks": new_risks,
+            "risks": new_risks or risks_list,
             "risks_by_category": risks_by_cat,
             "overall_risk_rating": "LOW" if not new_risks else "HIGH",
             "highest_severity": "HIGH" if any(r.get("level") == "HIGH" for r in new_risks) else "MEDIUM",
