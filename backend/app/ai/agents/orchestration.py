@@ -633,11 +633,6 @@ class WorkflowPersistence:
             )
         except Exception:
             return None
-            error=data.get("error"),
-            started_at=datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None,
-            completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
-            metadata=data.get("metadata", {}),
-        )
 
 
 # ==================== AI Kill Switch Integration ====================
