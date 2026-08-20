@@ -20,7 +20,7 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from app.config import get_settings
 

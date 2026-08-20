@@ -13,7 +13,7 @@ from supabase import create_client
 
 from app.ai.provider import LLMRequest, generate_embedding, router as llm_router
 from app.config import get_settings
-from app.security.auth import get_case_access, resource_case_access
+from app.security.auth import AuthContext, get_auth_context, get_case_access, resource_case_access
 
 settings = get_settings()
 router = APIRouter(tags=["analysis"])
