@@ -200,8 +200,8 @@ export default function QuestionsPage() {
   const renderMessageContent = (content: string, citations?: any[]) => {
     if (!content) return null;
 
-    // Pattern matching [Doc: filename, Pg: N] or [Doc: filename, Page: N]
-    const citationRegex = /\[Doc:\s*([^,\]]+),\s*(?:Pg|Page):\s*([0-9]+)\]/gi;
+    // Pattern matching [Doc: filename, Pg: N], [Doc: filename, Page: N], or [Document: filename, Page: N]
+    const citationRegex = /\[(?:Doc|Document):\s*([^,\]]+),\s*(?:Pg|Page):\s*([0-9]+)\]/gi;
     const parts = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
@@ -228,8 +228,7 @@ export default function QuestionsPage() {
           title={`Click to inspect evidence in ${docName}, Page ${pageNum}`}
         >
           <FileText size={11} className="shrink-0 text-primary" />
-          <span>{docName}</span>
-          <span className="rounded bg-primary/30 px-1 py-0.2 text-[10px] text-blue-200">p.{pageNum}</span>
+          <span>{docName} · p.{pageNum}</span>
         </button>
       );
       lastIndex = matchIndex + match[0].length;
@@ -480,7 +479,7 @@ export default function QuestionsPage() {
                                 <FileText size={14} className="mt-0.5 shrink-0 text-primary" />
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center justify-between">
-                                    <span className="font-semibold text-white truncate">{c.document_name}</span>
+                                    <span className="font-semibold text-white truncate">{c.document_name} · p.{c.page_number}</span>
                                     <span className="rounded bg-primary/20 px-1.5 py-0.2 text-[10px] font-medium text-blue-300">
                                       Page {c.page_number}
                                     </span>
@@ -554,7 +553,7 @@ export default function QuestionsPage() {
                 ? "Instruct drafting: e.g., 'Draft an Interim Injunction application under CPC Order XXXIX Rules 1 & 2'…"
                 : mode === "analyze"
                 ? "Request deep analysis: e.g., 'Analyze the 13-year title chain and highlight break risks'…"
-                : "Ask anything: e.g., 'What are the survey number mismatches across the uploaded deeds?'…"
+                : "Ask about parties, survey numbers, boundaries, title chain or legal risks…"
             }
             className="w-full rounded-xl border border-border bg-bg-surface px-4 py-3 text-sm text-white placeholder-text-muted outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary shadow-sm"
           />
