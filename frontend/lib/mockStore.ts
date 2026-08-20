@@ -749,7 +749,7 @@ export async function askDemoQuestion(
   }
 
   const userMsg = { id: `msg-${Date.now()}-user`, role: "user", content: question, created_at: new Date().toISOString() };
-  const botMsg = { id: `msg-${Date.now()}-bot`, role: "assistant", content: answer.content, citations: answer.citations, created_at: new Date().toISOString() };
+  const botMsg = { id: `msg-${Date.now()}-bot`, role: "assistant", content: answer.content, citations: answer.citations, model, created_at: new Date().toISOString() };
 
   history.push(userMsg, botMsg);
   setStorage(`chat_${caseId}`, history);

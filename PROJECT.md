@@ -37,6 +37,7 @@
 | 26 | BSA 2023 Evidence Certification | Section 63 compliance hash generator, audit log, and 65B/63 certificate PDF | M7 | DONE |
 | 27 | Indian Kanoon Legal Research | Integrated case law search with citation graph & judgment summaries | M7 | DONE |
 | 28 | Comprehensive Zero-Regression Tests | Hermetic pytest, vitest, and E2E test suites with 100% pass rate | M8 | DONE |
+| 29 | Rajora AI Private LLM Sovereign Infrastructure | Self-hosted inference provider, database schema & RLS, timing-safe key verification, admin key management, and sovereign frontend UI | M9 | DONE |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
@@ -49,3 +50,4 @@
 | M6 | Shared Spaces, Command Center & PII | Features 20-23: Expiring links, watermarking, cost analytics, Indian PII redaction | M2 | DONE |
 | M7 | India Property Moat & BSA 2023 | Features 24-27: 5 state portals, 13-30 yr ownership DAG, BSA 2023 cert, Kanoon search | M2 | DONE |
 | M8 | E2E Testing & Verification Hardening | Feature 28: Full test runner, 4-tier test cases, coverage verification, zero regressions | M1-M7 | DONE |
+| M9 | Rajora AI Private LLM Integration | Features 29: Backend provider, DB migration 014, internal key verification, admin APIs, frontend client & health proxy, sovereign model selectors, settings card, and hermetic tests | M1-M8 | DONE |

@@ -318,6 +318,90 @@ class OllamaProvider(BaseLLMProvider):
             )
 
 
+class RajoraProvider(BaseLLMProvider):
+    """Rajora AI Private LLM provider for self-hosted inference."""
+
+    name = "rajora"
+
+    def is_configured(self) -> bool:
+        return bool(settings.RAJORA_BASE_URL and settings.RAJORA_SERVICE_API_KEY)
+
+    async def list_models(self) -> list[str]:
+        return [settings.RAJORA_DEFAULT_MODEL or "rajora-private-v1"]
+
+    async def complete(self, request: LLMRequest) -> LLMResponse:
+        if not self.is_configured():
+            raise RuntimeError(
+                "Rajora Private LLM provider is not configured (missing RAJORA_BASE_URL or RAJORA_SERVICE_API_KEY)"
+            )
+
+        model = request.model or settings.RAJORA_DEFAULT_MODEL or "rajora-private-v1"
+        start = time.monotonic()
+        base_url = settings.RAJORA_BASE_URL.rstrip("/")
+        timeout = getattr(settings, "RAJORA_TIMEOUT_SECONDS", 120) or 120
+
+        prompt = f"{request.system}\n\n{request.prompt}".strip() if request.system else request.prompt
+        payload = {
+            "prompt": prompt,
+            "max_tokens": request.max_tokens,
+            "temperature": request.temperature,
+        }
+        if request.model:
+            payload["model"] = request.model
+
+        headers = {
+            "X-API-Key": settings.RAJORA_SERVICE_API_KEY,
+            "Content-Type": "application/json",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                resp = await client.post(
+                    f"{base_url}/generate",
+                    headers=headers,
+                    json=payload,
+                )
+                resp.raise_for_status()
+                data = resp.json()
+        except httpx.HTTPStatusError as e:
+            raise RuntimeError(f"Rajora LLM error {e.response.status_code}: {e.response.text}") from e
+        except httpx.RequestError as e:
+            raise RuntimeError(f"Rajora LLM connection error: {str(e)}") from e
+        except Exception as e:
+            raise RuntimeError(f"Rajora LLM request failed: {str(e)}") from e
+
+        if isinstance(data, dict):
+            content = (
+                data.get("text")
+                or data.get("content")
+                or data.get("response")
+                or data.get("output")
+                or data.get("completion")
+                or ""
+            )
+            if not content and "choices" in data and len(data["choices"]) > 0:
+                choice = data["choices"][0]
+                if isinstance(choice, dict):
+                    content = choice.get("text") or choice.get("message", {}).get("content", "")
+            usage = data.get("usage", {})
+            prompt_tokens = data.get("prompt_tokens") or usage.get("prompt_tokens", 0)
+            completion_tokens = data.get("completion_tokens") or usage.get("completion_tokens", 0)
+        else:
+            content = str(data)
+            prompt_tokens = 0
+            completion_tokens = 0
+
+        return LLMResponse(
+            content=content,
+            provider=self.name,
+            model=model,
+            latency_ms=int((time.monotonic() - start) * 1000),
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            estimated_cost_usd=0.0,
+        )
+
+
 class MockLLMProvider(BaseLLMProvider):
     """Deterministic fallback used when no real provider keys are configured.
 
@@ -344,6 +428,7 @@ class MockLLMProvider(BaseLLMProvider):
 
 
 _PROVIDERS: dict[str, BaseLLMProvider] = {
+    "rajora": RajoraProvider(),
     "nvidia": NvidiaProvider(),
     "ollama": OllamaProvider(),
     "openai": OpenAIProvider(),

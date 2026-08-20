@@ -4,6 +4,9 @@ Every endpoint requires profiles.is_platform_admin, enforced server-side via
 the service-role client. Secret values (API keys) are NEVER returned — only
 boolean configured/not-configured status.
 """
+from datetime import datetime, timezone
+import hashlib
+import secrets
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -66,6 +69,7 @@ async def overview(ctx: AuthContext = Depends(require_platform_admin)):
     providers = {
         "openai": bool(settings.OPENAI_API_KEY),
         "anthropic": bool(settings.ANTHROPIC_API_KEY),
+        "rajora": bool(settings.RAJORA_BASE_URL and settings.RAJORA_SERVICE_API_KEY),
         "web_search": bool(settings.SEARCH_API_KEY),
         "ocr_provider": settings.OCR_PROVIDER,
         "stt": "browser+server" if settings.STT_API_KEY else "browser-only",
@@ -318,3 +322,142 @@ async def list_audit_events(
 async def audit_action_types(ctx: AuthContext = Depends(require_platform_admin)):
     rows = svc().table("audit_events").select("action").limit(50000).execute().data or []
     return {"actions": sorted({r["action"] for r in rows})}
+
+
+class CreateRajoraKeyRequest(BaseModel):
+    org_id: str
+    user_id: Optional[str] = None
+    label: Optional[str] = "Default Rajora LLM Key"
+
+
+@router.post("/rajora-keys")
+async def create_rajora_key(
+    body: CreateRajoraKeyRequest,
+    ctx: AuthContext = Depends(require_platform_admin),
+):
+    """Generate a new Rajora LLM API key for self-hosted instance access."""
+    db = svc()
+    if not db:
+        raise HTTPException(500, "Database connection unavailable")
+
+    # Verify organization exists
+    org = db.table("organizations").select("id").eq("id", body.org_id).execute().data
+    if not org:
+        raise HTTPException(404, "Organization not found")
+
+    # Generate raw key: rj_live_<48-hex>
+    raw_key = f"rj_live_{secrets.token_hex(24)}"
+    key_prefix = raw_key[:12]
+    key_hash = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    row = {
+        "org_id": body.org_id,
+        "user_id": body.user_id,
+        "key_hash": key_hash,
+        "key_prefix": key_prefix,
+        "label": body.label or "Rajora Key",
+        "active": True,
+        "created_at": now_iso,
+    }
+
+    inserted_rows = db.table("rajora_llm_keys").insert(row).execute().data
+    if not inserted_rows:
+        raise HTTPException(500, "Failed to create Rajora LLM key")
+    inserted = inserted_rows[0]
+
+    record_audit(
+        action="admin.rajora_key_created",
+        actor_id=ctx.user_id,
+        resource_type="rajora_llm_key",
+        resource_id=inserted["id"],
+        organization_id=body.org_id,
+        metadata={"key_prefix": key_prefix, "label": body.label},
+    )
+
+    return {
+        "id": inserted["id"],
+        "org_id": inserted["org_id"],
+        "user_id": inserted.get("user_id"),
+        "key_prefix": key_prefix,
+        "label": inserted.get("label"),
+        "active": True,
+        "api_key": raw_key,  # Returned only once upon creation
+        "created_at": inserted.get("created_at"),
+    }
+
+
+@router.post("/rajora-keys/{key_id}/revoke")
+async def revoke_rajora_key(
+    key_id: str,
+    ctx: AuthContext = Depends(require_platform_admin),
+):
+    """Revoke an active Rajora LLM API key."""
+    db = svc()
+    if not db:
+        raise HTTPException(500, "Database connection unavailable")
+
+    existing = db.table("rajora_llm_keys").select("*").eq("id", key_id).execute().data
+    if not existing:
+        raise HTTPException(404, "Rajora key not found")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    updated = db.table("rajora_llm_keys").update({
+        "active": False,
+        "revoked_at": now_iso,
+    }).eq("id", key_id).execute().data
+
+    if not updated:
+        raise HTTPException(500, "Failed to revoke Rajora key")
+
+    record_audit(
+        action="admin.rajora_key_revoked",
+        actor_id=ctx.user_id,
+        resource_type="rajora_llm_key",
+        resource_id=key_id,
+        organization_id=updated[0].get("org_id"),
+        metadata={"key_prefix": updated[0].get("key_prefix")},
+    )
+
+    return {
+        "id": updated[0]["id"],
+        "org_id": updated[0].get("org_id"),
+        "key_prefix": updated[0].get("key_prefix"),
+        "label": updated[0].get("label"),
+        "active": False,
+        "revoked_at": updated[0].get("revoked_at"),
+    }
+
+
+@router.get("/rajora-keys")
+async def list_rajora_keys(
+    org_id: Optional[str] = None,
+    active: Optional[bool] = None,
+    limit: int = Query(default=50, le=200),
+    offset: int = 0,
+    ctx: AuthContext = Depends(require_platform_admin),
+):
+    """List Rajora LLM keys without exposing key hashes or secret values."""
+    db = svc()
+    if not db:
+        raise HTTPException(500, "Database connection unavailable")
+
+    query = db.table("rajora_llm_keys").select(
+        "id, org_id, user_id, key_prefix, label, active, created_at, last_used_at, revoked_at"
+    ).order("created_at", desc=True)
+
+    if org_id:
+        query = query.eq("org_id", org_id)
+    if active is not None:
+        query = query.eq("active", active)
+
+    rows = query.range(offset, offset + limit - 1).execute().data or []
+    total_q = db.table("rajora_llm_keys").select("id", count="exact")
+    if org_id:
+        total_q = total_q.eq("org_id", org_id)
+    if active is not None:
+        total_q = total_q.eq("active", active)
+    total = total_q.execute().count or len(rows)
+
+    return {"items": rows, "total": total, "offset": offset, "limit": limit}
+

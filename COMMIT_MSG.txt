@@ -1,36 +1,33 @@
-feat: Harvey-Class Legal AI Expansion & NVIDIA NIM Integration
+feat: Rajora AI Private LLM Integration & Sovereign Infrastructure
 
-- Full Harvey-Class Enterprise Legal Workspaces:
-  - 3-Mode Assistant Studio (Ask, Analyze with FIRAC, Draft) with real-time SSE streaming & inline citation chips [Doc: name, Pg: N].
-  - 6-Level Hierarchical Matter Vaults with multi-format ingestion & land record normalization.
-  - Natural-Language Review Tables with cell evidence linking and formula-injection-safe XLSX/CSV export.
-  - Multi-Agent Orchestration & No-Code Visual Workflow Builder with DAG cycle detection.
-  - 35+ Legal Clause Extractors, 0-100 Contract Risk Scoring & Side-by-Side Redline Diff Visualizer.
-  - Precedent Clause Library with Standard/Fallback/Walkaway tiers & Negotiation Playbooks.
-  - Enterprise Security: SAML/OIDC SSO, SCIM, Verhoeff D5 Indian PII Redaction (Aadhaar/PAN/GSTIN/IFSC), Dynamic Watermarking.
-  - India-First Moats: 5 State Land Portals, 13-30 Yr Ownership Chain Graph, BSA 2023 Section 63/94/97 Digital Certificates, and 13 Indic OCR Scripts.
-- NVIDIA NIM AI Integration:
-  - Added NvidiaProvider supporting DeepSeek-R1 (reasoning/research) and Llama 3.3 70B (chat/drafting/extraction).
-  - Wired ModelRouter with NVIDIA priority, embedding support (nv-embedqa-e5-v5), and frontend direct chat completions.
+- Rajora AI Private LLM Integration (RAJORA-SOP-AI-2026-04):
+  - Backend Provider (backend/app/ai/provider.py):
+    - Added RajoraProvider(BaseLLMProvider) with is_configured() and complete().
+    - Integrated with _PROVIDERS registry and zero per-token cost reporting (estimated_cost_usd = 0.0).
+  - Configuration (backend/app/config.py & .env.example):
+    - Added RAJORA_BASE_URL, RAJORA_SERVICE_API_KEY, RAJORA_DEFAULT_MODEL, RAJORA_TIMEOUT_SECONDS, and RAJORA_INTERNAL_SECRET.
+  - Database Schema & RLS Migration (supabase/migrations/014_rajora_llm_keys.sql):
+    - Created public.rajora_llm_keys table with SHA-256 key hash, prefix, and active status tracking.
+    - Added RLS policies for user read isolation (user_id = auth.uid()) and organization management (public.can_manage_org(org_id)).
+  - Internal Key Verification & Health API (backend/app/api/rajora.py):
+    - Added POST /internal/rajora/verify-key with timing-safe HMAC check (hmac.compare_digest) and SHA-256 lookup.
+    - Added GET /rajora/health backend endpoint.
+  - Admin Key Management API (backend/app/api/admin.py):
+    - Added POST /api/admin/rajora-keys for single-reveal key creation (rj_live_...) with audit logging.
+    - Added POST /api/admin/rajora-keys/{id}/revoke and GET /api/admin/rajora-keys.
+  - Frontend Client & UI:
+    - Added frontend/lib/rajora.ts client helpers (checkRajoraStatus, isRajoraModel, getRajoraBadge).
+    - Added frontend/app/api/rajora/health/route.ts Next.js proxy route.
+    - Added rajora-private model option with "Private · Zero Third-Party" badge to frontend/lib/aiEngine.ts.
+    - Added Private LLM status card and latency monitor to frontend/app/(app)/settings/page.tsx.
+  - Documentation & Infrastructure Runbooks:
+    - Added docs/rajora_deployment_guide.md covering GPU VM setup, vLLM deployment, VPC isolation, and systemd supervision.
+    - Updated PROJECT.md Feature 29 & Milestone M9 as DONE.
+    - Updated TEST_INFRA.md with Supabase RLS negative testing procedures.
+  - Test Suites:
+    - Added backend/tests/test_rajora_provider.py (unit tests).
+    - Added backend/tests/test_rajora_api.py (API & admin integration tests).
+    - Added backend/tests/test_rajora_adversarial.py (security & boundary tests).
+    - Added frontend/lib/rajora.test.ts (Vitest frontend tests).
 - Fixes:
-  - Resolved all TypeScript compilation errors (`tsc --noEmit`):
-    - Added `import * as mockStore from "@/lib/mockStore"` to `frontend/app/(app)/layout.tsx`.
-    - Added `badge_label` and `badge_color` to `DocumentEvent` in `frontend/lib/useCaseEvents.ts`.
-    - Fixed `supabase` client scope in `frontend/app/(app)/layout.tsx`.
-    - Added `options` parameter to `askDemoQuestion` in `frontend/lib/mockStore.ts`.
-    - Added `document_type`, `badge_label`, and `badge_color` to `DemoDocument` in `frontend/lib/mockStore.ts`.
-    - Added optional chaining to `surveyComp` in `frontend/lib/m1_m2_features.test.ts`.
-  - Aligned legal domain classification in `frontend/lib/aiEngine.ts` to respect case type priority and prevent keyword collisions.
-  - Aligned property risk categories in `frontend/lib/aiEngine.ts` to standard schema (`DOCUMENT`, `REGISTRATION`, `OWNERSHIP`).
-  - Fixed default case initialization in `frontend/lib/mockStore.ts` to standard Property due diligence model.
-  - Added `title` field to timeline items in `frontend/lib/aiEngine.ts`.
-  - Added `Section 27` to statutory references in `frontend/lib/mockStore.ts`.
-  - Added safe error suppression for offline Ollama client in `frontend/lib/ollama.ts`.
-  - Exported `PlaybookEvaluator` alias in `app.ai.playbooks`.
-  - Exported `STREAMING_SYSTEM` in `app.api.analysis`.
-  - Exported `DEFAULT_LEGAL_COLUMNS` in `app.ai.review_tables`.
-  - Resolved `NameError: name 'Tuple' is not defined` in `app/api/analysis.py` for uvicorn runtime.
-  - Resolved `NameError: name 'get_auth_context' is not defined` in `app/api/research.py`.
-  - Added explicit `pyjwt`, `requests`, and `cryptography` dependencies to `backend/requirements.txt`.
-  - Added complete typing imports across all backend router modules.
-- Verification: 163+ hermetic tests passing across 4 tiers + 26 frontend Vitest tests + 0 TypeScript errors.
+  - Fixed TypeScript error TS2322 in frontend/components/workflows/ExecutionStreamModal.tsx by correcting button variant from "outline" to "secondary".

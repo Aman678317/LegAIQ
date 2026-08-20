@@ -1,112 +1,56 @@
 # Original User Request
 
-## Initial Request — 2026-08-20T02:17:59+05:30
+## 2026-08-20T15:53:42Z
 
-Transform LegAIQ / Jurisiva AI into an enterprise-grade legal intelligence platform with Harvey-class capabilities (Assistant, Vault, Review Tables, Workflow Agents, Workflow Builder, Knowledge, Contract Intelligence, Clause Library, Playbooks, Shared Spaces, and Command Center) while preserving and strengthening its India-first moats (28+ state land portals, 12+ Indic languages, 15+ regional land record formats, and Bharatiya Sakshya Act compliance).
+Integrate the Rajora AI Private LLM (self-hosted inference per RAJORA-SOP-AI-2026-04) into LegAIQ / Jurisiva AI as a first-class provider across backend, Supabase database, admin API, and Next.js frontend without breaking existing providers.
 
 Working directory: c:\Users\acer\OneDrive\inga legal
 Integrity mode: development
 
 ## Requirements
 
-### R1. Assistant & Chat Workspace
-Implement a unified legal Assistant workspace supporting Ask, Analyze, and Draft modes with streaming output, inline clickable citations [Doc: name, Pg: N], multi-model selection (Ollama 70B, Claude 3.5, GPT-4o, DeepSeek R1), and an India Context toggle for state-specific terminology and statutory reasoning.
+### R1. Backend Provider Implementation (Phase 1)
+- Extend `backend/app/config.py` with `RAJORA_BASE_URL`, `RAJORA_SERVICE_API_KEY`, `RAJORA_DEFAULT_MODEL`, `RAJORA_TIMEOUT_SECONDS`, and `RAJORA_INTERNAL_SECRET`.
+- Implement `RajoraProvider(BaseLLMProvider)` in `backend/app/ai/provider.py` implementing `is_configured()` and `complete()`.
+- Send requests to `POST {RAJORA_BASE_URL}/generate` with `X-API-Key: {RAJORA_SERVICE_API_KEY}` header and body `{"prompt": str, "max_tokens": int, "temperature": float}`.
+- Map errors to raised exceptions. Set `estimated_cost_usd=0.0` and `provider="rajora"` on `LLMResponse`.
+- Register `rajora` in `_PROVIDERS` registry.
+- Update `.env.example` with matching configuration keys and comments.
 
-### R2. Secure Matter Vault & Document Intelligence
-Implement a matter-centric document intelligence Vault supporting bulk uploads (PDF, DOCX, XLSX, images), dual-pass OCR (Tesseract + PaddleOCR with 12+ Indic languages), historical deed preprocessing, automatic classification (Sale Deed, Partition, 7/12, RTC, Mutation, Court Orders), entity extraction, and version comparison.
+### R2. Database Schema & Row-Level Security Migration (Phase 2)
+- Create `supabase/migrations/014_rajora_llm_keys.sql` creating `rajora_llm_keys` (`id uuid pk`, `org_id uuid fk->organizations`, `user_id uuid fk->auth.users`, `key_hash text unique`, `key_prefix text`, `label text`, `active boolean default true`, `created_at`, `last_used_at`, `revoked_at`).
+- Add indexes on `org_id`, `user_id`, and `key_hash where active`.
+- Enable RLS with a policy for users to select their own keys (`user_id = auth.uid()`) and org admins to manage keys (using `public.can_manage_org(org_id)` or checking `memberships` with role in `('OWNER', 'ADMIN')` matching the schema in `001_auth_and_orgs.sql`).
 
-### R3. Spreadsheet-Style Review Tables
-Implement an interactive Review Table workspace for bulk structured extraction across matter documents with customizable prompt-driven extraction columns, cell-level evidence linking, confidence scores, and CSV/Excel export.
+### R3. Internal Key-Verification Endpoint & Admin Key Management (Phases 3 & 4)
+- Create `backend/app/api/rajora.py` exposing `POST /internal/rajora/verify-key`, secured by header `X-Internal-Secret` matching `settings.RAJORA_INTERNAL_SECRET`.
+- Hash incoming `X-API-Key` with SHA-256 and look up active key in `rajora_llm_keys`; touch `last_used_at` and return `{org_id, user_id}` on hit, 401 on miss. Register router in `backend/app/main.py`.
+- In `backend/app/api/admin.py`, implement admin-role-gated endpoints:
+  - `POST /api/admin/rajora-keys`: generate raw key (`rj_live_...`), store SHA-256 hash + 12-char prefix + org/user IDs, and return raw key once in response body.
+  - `POST /api/admin/rajora-keys/{id}/revoke`: set `active = false` and `revoked_at = now()`.
 
-### R4. Multi-Agent Orchestration & Workflow Builder
-Implement an agent orchestration layer with specialist agents (Legal Research, Contract Review, Due Diligence, Title Search, Citation Auditor) and a no-code visual Workflow Builder with triggers, step templates, test runs, and execution logs.
+### R4. Frontend Client, Health Proxy & Model Selection UI (Phase 5)
+- Implement `frontend/lib/rajora.ts` with `checkRajoraStatus()` returning `{online, latency_ms}`.
+- Create `frontend/app/api/rajora/health/route.ts` proxying to `${process.env.BACKEND_URL}/api/rajora/health` (with backend health route).
+- Add `rajora-private` ("Rajora Private LLM", provider: "rajora", badge: "Private · Zero Third-Party") to model selectors in `frontend/lib/aiEngine.ts` and relevant chat/drafting selectors.
+- Update `frontend/app/(app)/settings/page.tsx` with a read-only status card showing Rajora connection state and admin link.
 
-### R5. Contract Intelligence, Clause Library & Playbooks
-Implement contract analysis with 29+ clause types extraction, risk scoring (0-100), playbook deviation detection, redline side-by-side diffing, a searchable Clause Library with fallback language guidelines, and negotiation Playbooks.
-
-### R6. Shared Spaces, Command Center & Enterprise Controls
-Implement matter-level Shared Spaces with collaborator permissions, watermarking, and expiring links; Command Center analytics for AI costs, token usage, and turnaround velocity; and PII auto-redaction for Indian identifiers (Aadhaar, PAN, GST, IFSC).
-
-### R7. India-First Property & Legal Moat
-Preserve and extend connectors for 5+ major state land portals (Mahabhulekh, Bhoomi, TNREGINET, Dharani, AnyROR), 13–30 year property ownership chain graph generation, Bharatiya Sakshya Adhiniyam 2023 evidence rules, and Indian Kanoon research.
-
-## Acceptance Criteria
-
-### Assistant & Streaming
-- [ ] Assistant streams responses in real time with model selection and reasoning depth.
-- [ ] All legal assertions contain source grounding and citations.
-
-### Review Tables & Extraction
-- [ ] Users can create custom columns, define extraction prompts, and extract structured data across multiple documents.
-- [ ] Every cell displays extracted value, confidence score, and clickable source snippet evidence.
-
-### Agents & Workflows
-- [ ] Specialist agents execute multi-step legal tasks with transparent tool call logs.
-- [ ] Workflow builder allows assembling and executing multi-step legal pipelines.
-
-### Contract Intelligence & Redlining
-- [ ] Contract review extracts clauses, scores risks, and flags missing/deviating clauses against playbooks.
-- [ ] Redline engine generates tracked changes between contract versions.
-
-### Quality & Regression
-- [ ] All existing backend (pytest) and frontend (vitest / Playwright) test suites continue to pass without regression.
-- [ ] Responsive UI/UX with PWA offline service worker and mobile compatibility.
-
-## Follow-up — 2026-08-20T10:27:21+05:30
-
-Expand the existing LegAIQ / Jurisiva AI production codebase into an enterprise-grade, Harvey-class legal AI platform tailored for the Indian legal market, preserving all existing capabilities and strengthening India-first moats (land records, Indic OCR, title graphs, DPDP, Bharatiya Sakshya).
-
-Working directory: c:\Users\acer\OneDrive\inga legal
-Integrity mode: demo
-
-## Requirements
-
-### R1. Harvey-Class Core Workspaces (Assistant, Vault, Review Tables, Agents & Workflows)
-- Enhance and unify the Assistant workspace supporting 3 primary modes (Ask, Analyze, Draft) with multi-model routing, reasoning depth control, inline clickable citation chips `[Doc: name, Pg: N]`, and an evidence panel.
-- Expand Matter Vaults into a hierarchical intelligence system (Organization → Matter → Vault → Folder → Document → Version → Analysis) supporting bulk multi-format ingestion (PDF, DOCX, XLSX, scans), OCR classification, duplicate detection, and source provenance.
-- Deliver Review Tables for spreadsheet-style natural-language batch field extraction across large document sets, storing cell-level confidence, bounding box / character offsets, model versions, and reviewer status with XLSX/CSV export.
-- Implement an Agent Orchestration framework with durable state transitions (Planner → Task Graph → Specialist Agents → Tools → Evidence Store → Reviewer/Validator → Final Composer) featuring specialist agents (Legal Research, Contract Review, Due Diligence, Title Search, Drafting, Translation, Evidence Validator, Citation Auditor, PII Redaction).
-- Build a no-code Workflow Builder supporting trigger-to-export automation templates, versioning, DAG validation, approval checkpoints, and execution history.
-
-### R2. Contract Intelligence, Clause Library & Knowledge Systems
-- Expand Contract Intelligence to extract 29+ legal clause types, compute 0–100 risk scores, identify missing/unusual clauses, detect playbook deviations, generate side-by-side redline diffs, and suggest fallback language.
-- Build a searchable Clause Library & Playbook Builder with exact and semantic search, fallback tiers, risk ratings, and versioned precedent management.
-- Implement a first-class Indian Legal Knowledge repository organizing Supreme Court judgments, High Courts, Central/State statutes, circulars, and tribunal decisions with citation validation.
-
-### R3. Enterprise Security, Governance, Integrations & India Moat Superpowers
-- Implement enterprise security and governance: SAML/OIDC SSO, SCIM provisioning, RBAC, tenant isolation, immutable audit logging, dynamic watermarking, and multi-mode PII auto-redaction (display, export, AI-context, permanent) for Indian identifiers (Aadhaar, PAN, GSTIN, IFSC).
-- Build Shared Spaces with external collaborator isolation, access expiration, download restrictions, and audit logs.
-- Provide a Command Center analytics dashboard tracking usage KPIs, matter costs, model routing metrics, turnaround times, and citation acceptance rates without exposing sensitive content.
-- Build public REST/WebSocket/SSE APIs, Webhook event notification system, and connectors framework (Word, Outlook, Google Drive, SharePoint, DMS).
-- Deepen India differentiation: 28+ state land portal connectors, 13 Indic language OCR/transliteration, 13–30 year ownership chain graph reconstruction, mutation analysis, and Bharatiya Sakshya Act (BSA 2023) Section 63/94/97 digital evidence certification.
-
-## Verification Resources
-
-- Existing test suite located in `backend/tests/` comprising 4 verification tiers:
-  - Tier 1: Isolated feature coverage across all 27 core capabilities (`test_tier1_*.py`)
-  - Tier 2: Boundary value analysis, 0-byte uploads, bad PII, cyclic DAGs, and tenant isolation (`test_tier2_boundaries.py`)
-  - Tier 3: Multi-stage pipeline interactions (`test_tier3_interactions.py`)
-  - Tier 4: Real-world enterprise workload scenarios (`test_tier4_workloads.py`)
-- Frontend unit/store test specs (`frontend/src/**/*.test.ts`, `tier_comprehensive.test.ts`).
+### R5. Documentation & Project Tracking (Phase 6)
+- Update `PROJECT.md` feature table with the private-LLM provider milestone marked as DONE.
+- Document deployment notes and manual infra setup steps outside the repo.
 
 ## Acceptance Criteria
 
-### Platform Integrity & Backward Compatibility
-- [ ] No existing backend models, API routes, or frontend components are deleted or replaced with stubbed code.
-- [ ] Existing functionality (authentication, case management, RAG pipeline, billing, PWA) remains fully operational.
-- [ ] The existing 4-tier hermetic test suite (`backend/tests/`) continues to pass with 100% genuine assertions.
+### Automated Backend Tests
+- [ ] `pytest backend/tests -k rajora` passes with tests for `is_configured()`, mocked httpx success response mapping to `LLMResponse`, and error status handling.
+- [ ] Full backend test suite passes with zero regressions.
 
-### Core Workspace Capabilities
-- [ ] Assistant executes Ask/Analyze/Draft flows with streamed responses and verifiable citation chips linked to evidence snippets.
-- [ ] Vault correctly ingests, categorizes, and indexes multi-format documents and land records with full provenance metadata.
-- [ ] Review Tables successfully extract dynamic prompt-defined columns across document batches, displaying cell confidence and source offsets.
-- [ ] Agent Orchestrator manages task graphs across specialist agents with tool permissions, budget limits, and audit history.
-- [ ] Workflow Builder correctly creates, validates (DAG cycle check), executes, and versions multi-step legal automations.
+### Automated Frontend Tests
+- [ ] `frontend/lib/rajora.test.ts` passes for online and offline cases.
+- [ ] Model selector tests verify `rajora-private` entry presence and proper request payload generation with `provider: "rajora"`.
+- [ ] Frontend test suite (`vitest` / unit tests) passes with zero regressions.
 
-### Contract, Knowledge & Enterprise Governance
-- [ ] Contract Intelligence extracts clauses, computes risk scores (0–100), detects playbook deviations, and generates redline diffs.
-- [ ] Clause Library enables exact and semantic search across clauses with fallback tiers.
-- [ ] Indian PII engine automatically redacts Aadhaar, PAN, and GSTIN across AI-context and export modes.
-- [ ] 13–30 year property ownership chain graph reconstructs transaction timelines and produces BSA Section 63 compliance certificates.
-- [ ] Command Center displays aggregated telemetry and usage metrics without leaking raw client documents.
-
+### Security & Integrity Guardrails
+- [ ] No API keys, secrets, or raw employee keys are hardcoded in source files or committed fixtures.
+- [ ] All database RLS policies enforce tenant isolation based on `organization_id` and `auth.uid()`.
+- [ ] Existing provider behavior (NVIDIA, Ollama, OpenAI, Anthropic, Mock) remains fully intact and unmodified.

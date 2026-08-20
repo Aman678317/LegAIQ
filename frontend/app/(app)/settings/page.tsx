@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, UserPlus, Trash2, ShieldCheck, CreditCard, Cpu, RefreshCw, CheckCircle2, XCircle, Terminal, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Loader2, UserPlus, Trash2, ShieldCheck, CreditCard, Cpu, RefreshCw, CheckCircle2, XCircle, Terminal, Sparkles, Lock } from "lucide-react";
 import { api } from "@/lib/api";
 import { getUserOrgs } from "@/lib/auth";
 import { Button, Card, Badge } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { checkOllamaStatus, queryLocalOllama, getOllamaBaseUrl, OllamaStatus } from "@/lib/ollama";
+import { checkRajoraStatus, formatRajoraLatency, RAJORA_PRIVATE_MODEL, RajoraStatus } from "@/lib/rajora";
 
 const ROLES = ["OWNER", "ADMIN", "LAWYER", "REVIEWER", "STAFF", "CLIENT"];
 
@@ -17,6 +19,12 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [billing, setBilling] = useState<any>(null);
+
+  // Rajora state
+  const [rajoraStatus, setRajoraStatus] = useState<RajoraStatus>({
+    online: false,
+  });
+  const [checkingRajora, setCheckingRajora] = useState(false);
 
   // Ollama states
   const [ollamaUrl, setOllamaUrl] = useState("");
@@ -33,6 +41,18 @@ export default function SettingsPage() {
   const [role, setRole] = useState("LAWYER");
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+
+  async function loadRajora() {
+    setCheckingRajora(true);
+    try {
+      const status = await checkRajoraStatus();
+      setRajoraStatus(status);
+    } catch {
+      setRajoraStatus({ online: false, error: "Failed to connect to Rajora health proxy" });
+    } finally {
+      setCheckingRajora(false);
+    }
+  }
 
   async function loadOllama(urlToTest?: string) {
     setTestingOllama(true);
@@ -101,6 +121,7 @@ export default function SettingsPage() {
       const defaultUrl = getOllamaBaseUrl();
       setOllamaUrl(defaultUrl);
       loadOllama(defaultUrl);
+      loadRajora();
       setLoading(false);
     }
     init();
@@ -164,6 +185,105 @@ export default function SettingsPage() {
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div>
       )}
+
+      {/* Rajora AI Private LLM Sovereign Inference Card */}
+      <Card className="p-6">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">
+              <ShieldCheck size={22} />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-semibold text-white">Rajora Private LLM</h2>
+                <Badge className="border-indigo-500/30 bg-indigo-500/15 text-indigo-300">
+                  {RAJORA_PRIVATE_MODEL.badge}
+                </Badge>
+                <Badge
+                  className={
+                    rajoraStatus.online
+                      ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
+                      : "border-amber-500/30 bg-amber-500/15 text-amber-400"
+                  }
+                >
+                  {rajoraStatus.online ? (
+                    <span className="flex items-center gap-1">
+                      <CheckCircle2 size={12} /> Connected
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <XCircle size={12} /> Offline / Standby
+                    </span>
+                  )}
+                </Badge>
+              </div>
+              <p className="text-xs text-text-muted">
+                Self-hosted sovereign LLM inference architecture compliant with RAJORA-SOP-AI-2026-04. Zero third-party data egress.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={checkingRajora}
+              onClick={loadRajora}
+            >
+              <RefreshCw size={13} className={checkingRajora ? "animate-spin" : ""} />
+              Refresh Status
+            </Button>
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-bg-elevated px-3 py-1.5 text-xs font-medium text-white transition-colors hover:border-primary/60 hover:bg-primary/20"
+            >
+              Admin Console &rarr;
+            </Link>
+          </div>
+        </div>
+
+        {/* Read-Only Status & Telemetry Grid */}
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-border bg-bg p-3.5">
+            <div className="text-[11px] font-medium uppercase tracking-wider text-text-muted">Connection State</div>
+            <div className="mt-1 flex items-center gap-2">
+              <div className={`h-2 w-2 rounded-full ${rajoraStatus.online ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+              <span className="text-sm font-semibold text-white">
+                {rajoraStatus.online ? "Online & Active" : "Unreachable / Standby"}
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-bg p-3.5">
+            <div className="text-[11px] font-medium uppercase tracking-wider text-text-muted">Inference Latency</div>
+            <div className="mt-1 text-sm font-mono font-semibold text-white">
+              {formatRajoraLatency(rajoraStatus.latency_ms)}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-bg p-3.5">
+            <div className="text-[11px] font-medium uppercase tracking-wider text-text-muted">Active Sovereign Model</div>
+            <div className="mt-1 text-sm font-mono font-semibold text-indigo-300">
+              {rajoraStatus.model || RAJORA_PRIVATE_MODEL.id}
+            </div>
+          </div>
+        </div>
+
+        {rajoraStatus.error && !rajoraStatus.online && (
+          <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-300">
+            <span className="font-semibold">Notice:</span> {rajoraStatus.error}
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-bg p-3 text-xs text-text-muted">
+          <span>
+            Platform administrators can provision, rotate, and revoke private inference keys in the Admin Console.
+          </span>
+          <Link href="/admin" className="font-medium text-primary hover:underline ml-2 whitespace-nowrap">
+            Manage Keys &rarr;
+          </Link>
+        </div>
+      </Card>
 
       {/* Ollama Local AI Card */}
       <Card className="p-6">

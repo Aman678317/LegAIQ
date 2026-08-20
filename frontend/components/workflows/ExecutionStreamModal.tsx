@@ -675,7 +675,7 @@ export function ExecutionStreamModal({
             {status === "completed" && (
               <Button
                 onClick={handleCopyResults}
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 className="text-xs"
               >

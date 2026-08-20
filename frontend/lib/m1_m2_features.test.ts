@@ -43,6 +43,12 @@ describe("Milestone 1 (R1): Assistant & Chat Workspace", () => {
     const draftRes = await mockStore.askDemoQuestion(caseId, "Draft legal notice for possession", "en", "deepseek-r1");
     expect(draftRes.role).toBe("assistant");
     expect(draftRes.content).toBeTruthy();
+
+    // Rajora Private LLM mode
+    const rajoraRes = await mockStore.askDemoQuestion(caseId, "What was the Vodafone dispute?", "en", "rajora-private");
+    expect(rajoraRes.role).toBe("assistant");
+    expect(rajoraRes.content).toBeTruthy();
+    expect(rajoraRes.citations).toBeDefined();
   });
 
   it("correctly extracts inline citations from text with [Doc: name, Pg: N]", () => {
