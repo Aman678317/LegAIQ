@@ -42,9 +42,11 @@ class RiskAuditorAgent(BaseAgent):
     Uses the LLM only to phrase findings; every risk must quote tool-retrieved
     evidence or it is not written.
     """
+    AGENT_TYPE = "risk_auditor_agent"
     name = "risk_auditor_agent"
     description = "Identify, categorize, and register document risks with evidence citations"
     default_permissions = (Permission.READ_GRAPH, Permission.READ_ENTITIES, Permission.WRITE_RISKS)
+    DEFAULT_PERMISSIONS = [Permission.READ_GRAPH, Permission.READ_ENTITIES, Permission.WRITE_RISKS]
 
     async def run(self, task: dict[str, Any]) -> dict:
         case_id = self.ctx.case_id
@@ -139,12 +141,17 @@ RiskAgent = RiskAuditorAgent
 
 class DueDiligenceAgent(BaseAgent):
     """Conducts full due diligence across property/corporate matter documents."""
+    AGENT_TYPE = "due_diligence_agent"
     name = "due_diligence_agent"
     description = "Holistic due diligence: title continuity, party identity, boundary consistency, encumbrance verification"
     default_permissions = (
         Permission.READ_CASE, Permission.READ_DOCUMENTS, Permission.READ_ENTITIES,
         Permission.READ_GRAPH, Permission.WRITE_FINDINGS, Permission.WRITE_RISKS,
     )
+    DEFAULT_PERMISSIONS = [
+        Permission.READ_CASE, Permission.READ_DOCUMENTS, Permission.READ_ENTITIES,
+        Permission.READ_GRAPH, Permission.WRITE_FINDINGS, Permission.WRITE_RISKS,
+    ]
 
     async def run(self, task: dict[str, Any]) -> dict:
         case_id = self.ctx.case_id
@@ -199,12 +206,17 @@ class DueDiligenceAgent(BaseAgent):
 
 class TitleExaminerAgent(BaseAgent):
     """Examines 13-30 year root of title, mutations, and identifies chain breaks."""
+    AGENT_TYPE = "title_examiner_agent"
     name = "title_examiner_agent"
     description = "Examine 13-30 year ownership chain, detect broken title links, survey number shifts, and mutation gaps"
     default_permissions = (
         Permission.READ_CASE, Permission.READ_DOCUMENTS, Permission.READ_GRAPH,
         Permission.READ_ENTITIES, Permission.WRITE_FINDINGS,
     )
+    DEFAULT_PERMISSIONS = [
+        Permission.READ_CASE, Permission.READ_DOCUMENTS, Permission.READ_GRAPH,
+        Permission.READ_ENTITIES, Permission.WRITE_FINDINGS,
+    ]
 
     async def run(self, task: dict[str, Any]) -> dict:
         case_id = self.ctx.case_id
@@ -261,12 +273,17 @@ class TitleExaminerAgent(BaseAgent):
 
 class LitigationStrategistAgent(BaseAgent):
     """Formulates Indian litigation strategy, causes of action, and limitation periods."""
+    AGENT_TYPE = "litigation_strategist_agent"
     name = "litigation_strategist_agent"
     description = "Indian litigation strategy formulation: causes of action (CPC/CrPC/BNS), limitation periods, and relief prayer drafting"
     default_permissions = (
         Permission.READ_CASE, Permission.READ_DOCUMENTS, Permission.READ_ENTITIES,
         Permission.WEB_SEARCH, Permission.WRITE_DRAFTS,
     )
+    DEFAULT_PERMISSIONS = [
+        Permission.READ_CASE, Permission.READ_DOCUMENTS, Permission.READ_ENTITIES,
+        Permission.WEB_SEARCH, Permission.WRITE_DRAFTS,
+    ]
 
     async def run(self, task: dict[str, Any]) -> dict:
         case_id = self.ctx.case_id
@@ -335,12 +352,17 @@ class LitigationStrategistAgent(BaseAgent):
 
 class ContractReviewerAgent(BaseAgent):
     """Reviews commercial and Indian contracts, scores risks, and suggests redlines."""
+    AGENT_TYPE = "contract_reviewer_agent"
     name = "contract_reviewer_agent"
     description = "Contract intelligence: 29+ clause extraction, playbook deviation analysis, risk scoring 0-100, and redline suggestions"
     default_permissions = (
         Permission.READ_DOCUMENTS, Permission.READ_ENTITIES, Permission.WRITE_FINDINGS,
         Permission.WRITE_DRAFTS,
     )
+    DEFAULT_PERMISSIONS = [
+        Permission.READ_DOCUMENTS, Permission.READ_ENTITIES, Permission.WRITE_FINDINGS,
+        Permission.WRITE_DRAFTS,
+    ]
 
     async def run(self, task: dict[str, Any]) -> dict:
         contract_text = task.get("contract_text", "")
@@ -404,11 +426,15 @@ class ContractReviewerAgent(BaseAgent):
 
 class BSAComplianceAgent(BaseAgent):
     """Certifies electronic evidence under Bharatiya Sakshya Adhiniyam, 2023."""
+    AGENT_TYPE = "bsa_compliance_agent"
     name = "bsa_compliance_agent"
     description = "BSA 2023 Evidence Certification: Section 63 cryptographic hashing, Section 94 ancient doc audit, and DPDP compliance"
     default_permissions = (
         Permission.READ_DOCUMENTS, Permission.READ_ENTITIES, Permission.WRITE_REPORTS,
     )
+    DEFAULT_PERMISSIONS = [
+        Permission.READ_DOCUMENTS, Permission.READ_ENTITIES, Permission.WRITE_REPORTS,
+    ]
 
     async def run(self, task: dict[str, Any]) -> dict:
         case_id = self.ctx.case_id

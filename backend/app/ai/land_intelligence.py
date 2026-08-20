@@ -206,11 +206,11 @@ def are_land_areas_equivalent(area_str_a: str, area_str_b: str, tolerance_ratio:
     norm_a = parse_and_normalize_area(area_str_a, state)
     norm_b = parse_and_normalize_area(area_str_b, state)
 
+    if norm_a.sq_meters == 0.0 and norm_b.sq_meters == 0.0:
+        return True, "Both areas are zero"
+
     if norm_a.sq_meters == 0.0 or norm_b.sq_meters == 0.0:
-        # Fallback to string equality check
-        clean_a = re.sub(r"[^\w]", "", area_str_a.lower())
-        clean_b = re.sub(r"[^\w]", "", area_str_b.lower())
-        return (clean_a == clean_b), f"Literal match: {clean_a == clean_b}"
+        return False, "Area mismatch: one area is zero while the other is non-zero"
 
     diff = abs(norm_a.sq_meters - norm_b.sq_meters)
     avg = (norm_a.sq_meters + norm_b.sq_meters) / 2.0

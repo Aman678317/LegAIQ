@@ -177,7 +177,9 @@ class ContractDocument:
 # Clause Extraction Patterns
 # ============================================================================
 
-# More flexible patterns - match clause headers in various formats
+# More flexible patterns - match clause headers in various formats including numbered sections
+PREFIX = r"(?:^|\n)(?:\d+[\.\)]\s*|(?:Section|Clause|Article)\s+\d+[\.:\s]\s*)?"
+
 CLAUSE_PATTERNS = {
     ClauseType.PARTIES: [
         r"(?:^|\n)(?:PARTIES|PARTY|BETWEEN)\b(?:\s*:|\s*\n)",
@@ -188,135 +190,135 @@ CLAUSE_PATTERNS = {
         r"(?:^|\n)WHEREAS\b",
     ],
     ClauseType.DEFINITIONS: [
-        r"(?:^|\n)(?:DEFINITIONS|INTERPRETATION|DEFINED TERMS)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:DEFINITIONS|INTERPRETATION|DEFINED TERMS)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:\"[A-Z][a-z]+\"\s+means)\b",
     ],
     ClauseType.SCOPE: [
-        r"(?:^|\n)(?:SCOPE|SERVICES|WORK|DELIVERABLES)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:SCOPE|SERVICES|SCOPE OF SERVICES|WORK|DELIVERABLES)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Scope of (?:Work|Services|Agreement))\b(?:\s*:|\s*\n)",
     ],
     ClauseType.TERM: [
-        r"(?:^|\n)(?:TERM|DURATION|PERIOD)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:TERM|TERM AND TERMINATION|DURATION|PERIOD)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Term of (?:Agreement|Contract))\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:This Agreement (?:commences|starts|begins))\b",
     ],
     ClauseType.TERMINATION: [
-        r"(?:^|\n)(?:TERMINATION|TERMINATE|END)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:TERMINATION|TERMINATE|END)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Either party may terminate)\b",
         r"(?:^|\n)(?:Termination (?:for|without) cause)\b(?:\s*:|\s*\n)",
     ],
     ClauseType.PAYMENT: [
-        r"(?:^|\n)(?:PAYMENT|COMPENSATION|FEES|CONSIDERATION|PRICE)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:PAYMENT|PAYMENT TERMS|COMPENSATION|FEES|CONSIDERATION|PRICE)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Payment (?:Terms|Schedule|Conditions))\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:In consideration (?:of|for))\b",
     ],
     ClauseType.CONFIDENTIALITY: [
-        r"(?:^|\n)(?:CONFIDENTIALITY|NON-DISCLOSURE|CONFIDENTIAL INFORMATION)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:CONFIDENTIALITY|NON-DISCLOSURE|CONFIDENTIAL INFORMATION)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Confidential Information (?:means|includes))\b",
     ],
     ClauseType.INTELLECTUAL_PROPERTY: [
-        r"(?:^|\n)(?:INTELLECTUAL PROPERTY|IP RIGHTS|OWNERSHIP)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:INTELLECTUAL PROPERTY|IP RIGHTS|OWNERSHIP)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Intellectual Property Rights)\b(?:\s*:|\s*\n)",
     ],
     ClauseType.INDEMNITY: [
-        r"(?:^|\n)(?:INDEMNITY|INDEMNIFICATION|HOLD HARMLESS)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:INDEMNITY|INDEMNIFICATION|HOLD HARMLESS)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:shall indemnify (?:and hold harmless)?)\b",
     ],
     ClauseType.LIMITATION_OF_LIABILITY: [
-        r"(?:^|\n)(?:LIMITATION OF LIABILITY|LIABILITY CAP|EXCLUSION OF LIABILITY)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:LIMITATION OF LIABILITY|LIABILITY CAP|EXCLUSION OF LIABILITY)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:In no event (?:shall|will) (?:either party|we|you) be liable)\b",
     ],
     ClauseType.FORCE_MAJEURE: [
-        r"(?:^|\n)(?:FORCE MAJEURE|ACT OF GOD)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:FORCE MAJEURE|ACT OF GOD)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Force Majeure (?:Event|Clause))\b(?:\s*:|\s*\n)",
     ],
     ClauseType.GOVERNING_LAW: [
-        r"(?:^|\n)(?:GOVERNING LAW|APPLICABLE LAW|CHOICE OF LAW)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:GOVERNING LAW|GOVERNING LAW AND JURISDICTION|APPLICABLE LAW|CHOICE OF LAW)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:This Agreement shall be governed by)\b",
     ],
     ClauseType.DISPUTE_RESOLUTION: [
-        r"(?:^|\n)(?:DISPUTE RESOLUTION|ARBITRATION|MEDIATION|JURISDICTION)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:DISPUTE RESOLUTION|ARBITRATION|MEDIATION|JURISDICTION)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Any dispute (?:arising|relating) (?:out of|from|to))\b",
     ],
     ClauseType.ASSIGNMENT: [
-        r"(?:^|\n)(?:ASSIGNMENT|ASSIGN|TRANSFER)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:ASSIGNMENT|ASSIGN|TRANSFER)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Neither party (?:shall|may) assign)\b",
     ],
     ClauseType.NON_COMPETE: [
-        r"(?:^|\n)(?:NON-COMPETE|NON COMPETE|RESTRICTIVE COVENANT)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:NON-COMPETE|NON COMPETE|RESTRICTIVE COVENANT)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:shall not compete)\b",
     ],
     ClauseType.NON_SOLICITATION: [
-        r"(?:^|\n)(?:NON-SOLICITATION|NON SOLICITATION|SOLICITATION)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:NON-SOLICITATION|NON SOLICITATION|SOLICITATION)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:shall not solicit)\b",
     ],
     ClauseType.WARRANTIES: [
-        r"(?:^|\n)(?:WARRANTIES|WARRANTY|REPRESENTATIONS AND WARRANTIES)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:WARRANTIES|WARRANTY|REPRESENTATIONS AND WARRANTIES)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:represents and warrants)\b",
     ],
     ClauseType.REPRESENTATIONS: [
-        r"(?:^|\n)(?:REPRESENTATIONS|REPRESENTATION)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:REPRESENTATIONS|REPRESENTATION)\b(?:\s*:|\s*\n)",
     ],
     ClauseType.CONDITIONS_PRECEDENT: [
-        r"(?:^|\n)(?:CONDITIONS PRECEDENT|CONDITIONS PRECEDENT TO)\b(?:\s*:|\s*\n)",
-        r"(?:^|\n)(?:Condition Precedent)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:CONDITIONS PRECEDENT|CONDITIONS PRECEDENT TO)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:Condition Precedent)\b(?:\s*:|\s*\n)",
     ],
     ClauseType.CONDITIONS_SUBSEQUENT: [
-        r"(?:^|\n)(?:CONDITIONS SUBSEQUENT|CONDITION SUBSEQUENT)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:CONDITIONS SUBSEQUENT|CONDITION SUBSEQUENT)\b(?:\s*:|\s*\n)",
     ],
     ClauseType.AMENDMENT: [
-        r"(?:^|\n)(?:AMENDMENT|MODIFICATION|VARIATION)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:AMENDMENT|MODIFICATION|VARIATION)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:This Agreement may (?:only )?be amended)\b",
     ],
     ClauseType.WAIVER: [
-        r"(?:^|\n)(?:WAIVER|NO WAIVER)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:WAIVER|NO WAIVER)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:No waiver (?:of|by))\b",
     ],
     ClauseType.SEVERABILITY: [
-        r"(?:^|\n)(?:SEVERABILITY|INVALIDITY)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:SEVERABILITY|INVALIDITY)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:If any provision (?:is|shall be) (?:invalid|unenforceable|void))\b",
     ],
     ClauseType.ENTIRE_AGREEMENT: [
-        r"(?:^|\n)(?:ENTIRE AGREEMENT|WHOLE AGREEMENT|COMPLETE AGREEMENT)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:ENTIRE AGREEMENT|WHOLE AGREEMENT|COMPLETE AGREEMENT)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:This Agreement constitutes the entire)\b",
     ],
     ClauseType.NOTICES: [
-        r"(?:^|\n)(?:NOTICES|NOTICE)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:NOTICES|NOTICE)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:All notices (?:shall|must|will) be)\b",
     ],
     ClauseType.COUNTERPARTS: [
-        r"(?:^|\n)(?:COUNTERPARTS|COUNTERPART)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:COUNTERPARTS|COUNTERPART)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:This Agreement may be executed in counterparts)\b",
     ],
     ClauseType.SIGNATURE: [
-        r"(?:^|\n)(?:IN WITNESS WHEREOF|SIGNED|EXECUTED)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:IN WITNESS WHEREOF|SIGNED|EXECUTED)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Signature|Signed by)\b",
     ],
     ClauseType.SCHEDULES: [
-        r"(?:^|\n)(?:SCHEDULES|SCHEDULE|ANNEXURES|ANNEXURE|EXHIBITS|EXHIBIT)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:SCHEDULES|SCHEDULE|ANNEXURES|ANNEXURE|EXHIBITS|EXHIBIT)\b(?:\s*:|\s*\n)",
     ],
     ClauseType.ANNEXURES: [
-        r"(?:^|\n)(?:ANNEXURES|ANNEXURE|APPENDIX|APPENDICES)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:ANNEXURES|ANNEXURE|APPENDIX|APPENDICES)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Annexure [A-Z])\b",
     ],
     ClauseType.STAMP_DUTY: [
-        r"(?:^|\n)(?:STAMP DUTY|STAMP ACT|REGISTRATION CHARGES)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:STAMP DUTY|STAMP ACT|REGISTRATION CHARGES)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:stamp duty (?:shall be paid|payable|borne))\b",
     ],
     ClauseType.JURISDICTION: [
-        r"(?:^|\n)(?:JURISDICTION|COURTS|VENUE|FORUM)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:JURISDICTION|COURTS|VENUE|FORUM)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:The courts at [A-Z][a-zA-Z\s]+ shall have exclusive jurisdiction)\b",
     ],
     ClauseType.DATA_PROTECTION: [
-        r"(?:^|\n)(?:DATA PROTECTION|PRIVACY|DATA PRIVACY|DPDP)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:DATA PROTECTION|PRIVACY|DATA PRIVACY|DPDP)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Digital Personal Data Protection Act|personal data processing)\b",
     ],
     ClauseType.TAXATION: [
-        r"(?:^|\n)(?:TAXES|TAXATION|GST|WITHHOLDING TAX|TDS)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:TAXES|TAXATION|GST|WITHHOLDING TAX|TDS)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:All taxes|Goods and Services Tax|Section 194)\b",
     ],
     ClauseType.ANTI_BRIBERY: [
-        r"(?:^|\n)(?:ANTI-BRIBERY|ANTI CORRUPTION|CORRUPT PRACTICES|FCPA)\b(?:\s*:|\s*\n)",
+        rf"{PREFIX}(?:ANTI-BRIBERY|ANTI CORRUPTION|CORRUPT PRACTICES|FCPA)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Prevention of Corruption Act|anti-bribery laws)\b",
     ],
 }
@@ -327,7 +329,7 @@ RISK_KEYWORDS = {
     RiskLevel.CRITICAL: [
         "unlimited liability", "unlimited indemnity", "indemnify and hold harmless",
         "gross negligence exclusion", "wilful misconduct", "no limitation",
-        "perpetual", "irrevocable", "absolute discretion", "sole discretion",
+        "perpetual", "irrevocable",
         "terminate without cause", "terminate immediately", "material breach",
         "liquidated damages", "penalty clause", "joint and several liability",
     ],
@@ -335,7 +337,7 @@ RISK_KEYWORDS = {
         "broad indemnity", "uncapped liability", "consequential damages",
         "indirect damages", "loss of profits", "loss of revenue",
         "terminate for convenience", "change of control", "assignment without consent",
-        "non-compete", "restrictive covenant", "exclusive", "sole source",
+        "restrictive covenant", "exclusive", "sole source",
         "most favored nation", "price escalation", "automatic renewal",
     ],
     RiskLevel.MEDIUM: [
@@ -345,7 +347,7 @@ RISK_KEYWORDS = {
         "audit right", "inspection right", "insurance", "compliance",
     ],
     RiskLevel.LOW: [
-        "notice", "governing law", "jurisdiction", "counterparts",
+        "governing law", "jurisdiction", "counterparts",
         "severability", "waiver", "amendment", "assignment with consent",
         "headings", "interpretation", "definitions",
     ],
@@ -491,13 +493,35 @@ class ContractIntelligenceEngine:
         content_lower = content.lower()
         risk_factors = []
 
-        # Check critical risk keywords
+        # 1. Statutory & Rule Specific Checks First
+        if clause_type == ClauseType.NON_COMPETE or "compete" in content_lower or "non-compete" in content_lower:
+            post_term_terms = [
+                "post-termination", "post termination", "after termination",
+                "following termination", "upon termination", "cessation of services",
+                "departure", "disassociation", "subsequent to", "following departure",
+                "months", "years", "year", "restraint", "covenants not to engage",
+            ]
+            if any(term in content_lower for term in post_term_terms):
+                risk_factors.append("Critical: Section 27 Indian Contract Act 1872 void restraint of trade (post-termination non-compete is void ab initio)")
+                return RiskLevel.CRITICAL, risk_factors
+
+        if clause_type == ClauseType.DISPUTE_RESOLUTION:
+            if any(term in content_lower for term in ["sole discretion to appoint", "unilateral appointment", "exclusive right to appoint arbitrator", "appointed at the sole discretion"]):
+                risk_factors.append("High: Unilateral arbitrator appointment invalid under Arbitration Act 1996 §12(5) (Perkins Eastman)")
+                return RiskLevel.HIGH, risk_factors
+
+        if clause_type == ClauseType.TERMINATION:
+            if any(term in content_lower for term in ["without cause", "convenience", "immediately"]):
+                risk_factors.append("High: Immediate termination without cause or notice triggers high risk warning")
+                return RiskLevel.HIGH, risk_factors
+
+        # 2. Check critical risk keywords
         for keyword in RISK_KEYWORDS[RiskLevel.CRITICAL]:
             if keyword in content_lower:
                 risk_factors.append(f"Critical: '{keyword}'")
                 return RiskLevel.CRITICAL, risk_factors
 
-        # Check high risk keywords
+        # 3. Check high risk keywords
         for keyword in RISK_KEYWORDS[RiskLevel.HIGH]:
             if keyword in content_lower:
                 risk_factors.append(f"High: '{keyword}'")
@@ -505,7 +529,7 @@ class ContractIntelligenceEngine:
         if risk_factors:
             return RiskLevel.HIGH, risk_factors
 
-        # Check medium risk keywords
+        # 4. Check medium risk keywords
         for keyword in RISK_KEYWORDS[RiskLevel.MEDIUM]:
             if keyword in content_lower:
                 risk_factors.append(f"Medium: '{keyword}'")
@@ -513,33 +537,13 @@ class ContractIntelligenceEngine:
         if risk_factors:
             return RiskLevel.MEDIUM, risk_factors
 
-        # Check low risk keywords
+        # 5. Check low risk keywords
         for keyword in RISK_KEYWORDS[RiskLevel.LOW]:
             if keyword in content_lower:
                 risk_factors.append(f"Low: '{keyword}'")
 
         if risk_factors:
             return RiskLevel.LOW, risk_factors
-
-        # Indian Statutory Risk Specific Checks
-        if clause_type == ClauseType.NON_COMPETE:
-            post_term_terms = [
-                "post-termination", "post termination", "after termination",
-                "following termination", "following termination of employment",
-                "upon termination", "upon cessation of services", "cessation of services",
-                "following departure", "after departure", "subsequent to disassociation",
-                "post disassociation", "post employment", "after employment", "post-employment",
-                "months post-termination", "years post-termination",
-                "following departure from", "subsequent to resignation",
-            ]
-            if any(term in content_lower for term in post_term_terms):
-                risk_factors.append("Critical: Section 27 Indian Contract Act 1872 void restraint of trade (post-termination non-compete is void ab initio)")
-                return RiskLevel.CRITICAL, risk_factors
-
-        if clause_type == ClauseType.DISPUTE_RESOLUTION:
-            if any(term in content_lower for term in ["unilateral appointment", "sole discretion to appoint", "exclusive right to appoint arbitrator"]):
-                risk_factors.append("High: Unilateral arbitrator appointment invalid under Arbitration Act 1996 §12(5) (Perkins Eastman)")
-                return RiskLevel.HIGH, risk_factors
 
         # Clause-type specific defaults
         type_risk_defaults = {
@@ -637,10 +641,14 @@ class ContractIntelligenceEngine:
                     except:
                         pass
 
+                final_ob_type = ob_type
+                if clause.clause_type == ClauseType.PAYMENT or any(k in description.lower() for k in ["pay", "inr", "fees", "consideration", "price", "remit"]):
+                    final_ob_type = ObligationType.PAYMENT
+
                 obl_id = f"{contract_id}-OBL-{len(obligations)+1:03d}"
                 obligations.append(ContractObligation(
                     obligation_id=obl_id,
-                    obligation_type=ob_type,
+                    obligation_type=final_ob_type,
                     description=description,
                     responsible_party=responsible,
                     beneficiary_party=parties[1] if len(parties) > 1 else "Counterparty",
@@ -657,25 +665,20 @@ class ContractIntelligenceEngine:
         return []
 
     def _extract_parties(self, text: str) -> List[Dict[str, str]]:
-        """Extract party names from contract text."""
+        """Extract party information from contract text."""
         parties = []
+        # Pattern for parties in preamble: "Between X and Y"
+        between_match = re.search(r"BETWEEN:\s*([^.\n]+(?:\n[^.\n]+)*?)\s*AND\s*([^.\n]+(?:\n[^.\n]+)*)", text, re.IGNORECASE)
+        if between_match:
+            party1 = between_match.group(1).strip()
+            party2 = between_match.group(2).strip()
+            parties.append({"name": re.sub(r'[\(\"\)]', '', party1.split('\n')[0]).strip(), "role": "Party 1"})
+            parties.append({"name": re.sub(r'[\(\"\)]', '', party2.split('\n')[0]).strip(), "role": "Party 2"})
 
-        # Look for party definitions
-        patterns = [
-            r"(?:Party|PARTY)\s+([A-Z])\s*[:\-]\s*([^\n,]+)",
-            r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*\(?(?:\"[A-Z]\")?\)?",
-        ]
-
-        for pattern in patterns:
-            for match in re.finditer(pattern, text):
-                name = match.group(2) if match.lastindex >= 2 else match.group(1)
-                if name and len(name) > 2:
-                    parties.append({"name": name.strip()})
-
-        return parties[:5]  # Limit
+        return parties
 
     def _parse_date(self, date_str: str) -> datetime:
-        """Parse date string in various formats."""
+        """Parse date string into timezone-aware datetime."""
         formats = [
             "%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y",
             "%d/%m/%y", "%d-%m-%y", "%d.%m.%y",
@@ -738,13 +741,16 @@ class ContractIntelligenceEngine:
         total_score = sum(risk_weights.get(r, 0) for r in clause_risks.values())
         risk_score = min(100, total_score)
 
-        if risk_score >= 70:
-            overall_risk = RiskLevel.CRITICAL
-        elif risk_score >= 50:
+        has_critical = any(r == RiskLevel.CRITICAL for r in clause_risks.values())
+        has_high = any(r == RiskLevel.HIGH for r in clause_risks.values())
+
+        if has_critical or risk_score >= 60:
+            overall_risk = RiskLevel.CRITICAL if (has_critical and has_high) or risk_score >= 60 else RiskLevel.HIGH
+        elif has_high or risk_score >= 35:
             overall_risk = RiskLevel.HIGH
-        elif risk_score >= 30:
+        elif risk_score >= 20:
             overall_risk = RiskLevel.MEDIUM
-        elif risk_score >= 15:
+        elif risk_score >= 10:
             overall_risk = RiskLevel.LOW
         else:
             overall_risk = RiskLevel.NEGLIGIBLE
@@ -776,46 +782,42 @@ class ContractIntelligenceEngine:
         original: ContractDocument,
         modified: ContractDocument,
     ) -> List[RedlineChange]:
-        """Compare two contract versions and generate redline changes."""
+        """Compare two contracts and generate redline changes."""
         changes = []
+        orig_text = original.full_text
+        mod_text = modified.full_text
 
-        # Simple diff-based comparison
-        # In production, use difflib or specialized diff library
-        orig_clauses = {c.clause_id: c for c in original.clauses}
-        mod_clauses = {c.clause_id: c for c in modified.clauses}
+        # Simple diff - in production would use diff-match-patch or similar
+        orig_lines = orig_text.split("\n")
+        mod_lines = mod_text.split("\n")
 
-        all_ids = set(orig_clauses.keys()) | set(mod_clauses.keys())
+        import difflib
+        matcher = difflib.SequenceMatcher(None, orig_lines, mod_lines)
 
-        for cid in all_ids:
-            orig = orig_clauses.get(cid)
-            mod = mod_clauses.get(cid)
-
-            if orig and not mod:
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+            if tag == "replace":
                 changes.append(RedlineChange(
-                    change_id=f"DEL-{cid}",
-                    change_type="deletion",
-                    original_text=orig.content,
-                    modified_text="",
-                    clause_id=cid,
-                    position=orig.start_position,
+                    change_id=f"ch-{len(changes)+1}",
+                    change_type="modification",
+                    original_text="\n".join(orig_lines[i1:i2]),
+                    modified_text="\n".join(mod_lines[j1:j2]),
+                    position=i1,
                 ))
-            elif mod and not orig:
+            elif tag == "delete":
                 changes.append(RedlineChange(
-                    change_id=f"INS-{cid}",
+                    change_id=f"ch-{len(changes)+1}",
+                    change_type="deletion",
+                    original_text="\n".join(orig_lines[i1:i2]),
+                    modified_text="",
+                    position=i1,
+                ))
+            elif tag == "insert":
+                changes.append(RedlineChange(
+                    change_id=f"ch-{len(changes)+1}",
                     change_type="insertion",
                     original_text="",
-                    modified_text=mod.content,
-                    clause_id=cid,
-                    position=mod.start_position,
-                ))
-            elif orig and mod and orig.content != mod.content:
-                changes.append(RedlineChange(
-                    change_id=f"MOD-{cid}",
-                    change_type="modification",
-                    original_text=orig.content,
-                    modified_text=mod.content,
-                    clause_id=cid,
-                    position=orig.start_position,
+                    modified_text="\n".join(mod_lines[j1:j2]),
+                    position=i1,
                 ))
 
         return changes
@@ -827,10 +829,8 @@ class ContractIntelligenceEngine:
         changes: List[RedlineChange],
     ) -> str:
         """Generate redline document showing changes."""
-        # This would generate a formatted document with track changes
-        # For now, return a summary
         lines = [
-            f"REDLINE COMPARISON: {original.title} vs {modified.title}",
+            f"REDLINE COMPARISON REPORT: {original.title} vs {modified.title}",
             f"Original Contract ID: {original.contract_id}",
             f"Modified Contract ID: {modified.contract_id}",
             f"Comparison Date: {datetime.now(timezone.utc).isoformat()}",

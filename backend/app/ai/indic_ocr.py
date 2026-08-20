@@ -579,20 +579,18 @@ def get_ocr_provider(provider_name: Optional[str] = None) -> BaseOCRProvider:
 async def process_land_record(
     file_bytes: bytes,
     file_type: str,
-    state: str,
-    document_type: str,
-    provider_name: Optional[str] = None
+    state_or_doc_type: Optional[str] = None,
+    document_type: Optional[str] = None,
+    provider_name: Optional[str] = None,
+    state: Optional[str] = None,
+    doc_type: Optional[str] = None,
+    provider: Any = None,
+    **kwargs,
 ) -> OCRDocumentResult:
-    """Process Indian land record with state-specific language prioritization.
+    """Process Indian land record with state-specific language prioritization."""
+    state_val = state or ("" if state_or_doc_type and ("_" in state_or_doc_type or state_or_doc_type in DOCUMENT_LANGUAGE_PRIORITIES) else (state_or_doc_type or ""))
+    doc_val = doc_type or document_type or (state_or_doc_type if state_or_doc_type and ("_" in state_or_doc_type or state_or_doc_type in DOCUMENT_LANGUAGE_PRIORITIES) else None)
 
-    Args:
-        file_bytes: Document bytes
-        file_type: MIME type
-        state: Indian state name
-        document_type: Type of land record (7_12_extract, rtc_pahani, patta_chitta, etc.)
-        provider_name: Optional override for OCR provider
-    """
-    # Map state to document type if not provided
     state_doc_types = {
         "maharashtra": "7_12_extract",
         "karnataka": "rtc_pahani",
@@ -612,22 +610,40 @@ async def process_land_record(
         "andhra pradesh": "ror_1b",
     }
 
-    doc_type = document_type or state_doc_types.get(state.lower(), "general")
+    final_doc_type = doc_val or state_doc_types.get((state_val or "").lower(), "general")
+    if provider is not None:
+        if hasattr(provider, "process"):
+            return await provider.process(file_bytes, file_type, final_doc_type)
+        return await get_ocr_provider(str(provider)).process(file_bytes, file_type, final_doc_type)
 
-    provider = get_ocr_provider(provider_name)
-    return await provider.process(file_bytes, file_type, doc_type)
+    prov = get_ocr_provider(provider_name)
+    return await prov.process(file_bytes, file_type, final_doc_type)
 
 
 async def process_with_fallback(
     file_bytes: bytes,
     file_type: str,
     document_type: str = "general",
-    providers: Optional[List[str]] = None
+    providers: Optional[List[str]] = None,
+    primary_provider: Any = None,
+    fallback_provider: Any = None,
+    **kwargs,
 ) -> OCRDocumentResult:
     """Process with fallback chain: PaddleOCR -> Tesseract -> Google Vision -> Mock."""
+    if primary_provider is not None:
+        try:
+            res = await primary_provider.process(file_bytes, file_type, document_type)
+            if getattr(res, "mean_confidence", 1.0) > 0.3:
+                return res
+        except Exception:
+            if fallback_provider is not None:
+                return await fallback_provider.process(file_bytes, file_type, document_type)
+            raise
+    if fallback_provider is not None:
+        return await fallback_provider.process(file_bytes, file_type, document_type)
+
     fallback_chain = providers or ["paddleocr", "tesseract", "google_vision", "mock"]
 
-    last_error = None
     for provider_name in fallback_chain:
         provider = get_ocr_provider(provider_name)
         if not provider.is_configured() and provider_name != "mock":
@@ -637,8 +653,7 @@ async def process_with_fallback(
             result = await provider.process(file_bytes, file_type, document_type)
             if result.mean_confidence > 0.3:  # Minimum quality threshold
                 return result
-        except Exception as e:
-            last_error = e
+        except Exception:
             continue
 
     # All providers failed

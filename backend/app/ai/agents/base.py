@@ -48,18 +48,27 @@ class AgentBudget:
     max_cost_usd: float = 0.50
     max_seconds: float = 240.0
     max_iterations: int = 8  # loop prevention on agentic loops
+    max_tokens: Optional[int] = None
+    max_tool_calls: Optional[int] = None
 
 
 @dataclass
 class AgentContext:
     """Everything an agent is allowed to know and touch for one run."""
-    run_id: str
-    agent_name: str
+    run_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    agent_name: str = "generic_agent"
+    agent_type: Optional[str] = None
     case_id: Optional[str] = None
     organization_id: Optional[str] = None
     user_id: Optional[str] = None
     permissions: set[Permission] = field(default_factory=set)
     budget: AgentBudget = field(default_factory=AgentBudget)
+
+    def __post_init__(self):
+        if self.agent_type and (not self.agent_name or self.agent_name == "generic_agent"):
+            self.agent_name = self.agent_type
+        elif self.agent_name and not self.agent_type:
+            self.agent_type = self.agent_name
 
     def has_permission(self, perm: Permission) -> bool:
         return perm in self.permissions
@@ -169,20 +178,42 @@ class BaseAgent:
 
 
 def new_agent_context(
-    agent: type["BaseAgent"],
-    case_id: str | None,
+    agent: Any = None,
+    case_id: str | None = None,
     organization_id: str | None = None,
     user_id: str | None = None,
     budget: AgentBudget | None = None,
-    extra_permissions: tuple[Permission, ...] = (),
+    extra_permissions: Any = (),
+    permissions: Any = None,
+    **kwargs,
 ) -> AgentContext:
+    if isinstance(agent, str) and case_id is None:
+        case_id = agent
+        agent = None
+    agent_name = "generic_agent"
+    perms = set()
+    if agent is not None:
+        agent_name = getattr(agent, "name", getattr(agent, "AGENT_TYPE", "generic_agent"))
+        if hasattr(agent, "default_permissions"):
+            perms.update(agent.default_permissions)
+        if hasattr(agent, "DEFAULT_PERMISSIONS"):
+            perms.update(agent.DEFAULT_PERMISSIONS)
+    elif "agent_type" in kwargs:
+        agent_name = kwargs["agent_type"]
+    
+    if permissions is not None:
+        perms.update(permissions)
+    if extra_permissions:
+        perms.update(extra_permissions)
+        
     return AgentContext(
         run_id=str(uuid.uuid4()),
-        agent_name=agent.name,
+        agent_name=agent_name,
+        agent_type=agent_name,
         case_id=case_id,
         organization_id=organization_id,
         user_id=user_id,
-        permissions=set(agent.default_permissions) | set(extra_permissions),
+        permissions=perms,
         budget=budget or AgentBudget(),
     )
 

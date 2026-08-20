@@ -243,7 +243,7 @@ STANDARD_PLAYBOOKS: List[ContractPlaybook] = [
                     "In accordance with Section 27 of the Indian Contract Act, 1872, no post-termination restraint on trade shall apply."
                 ),
                 guidance_notes="Under Supreme Court precedent (Percept D'Mark v. Zaheer Khan), post-employment non-competes are void in India.",
-                statutory_reference="Indian Contract Act, 1872 §27; Percept D'Mark (2006) 4 SCC 227",
+                statutory_reference="Indian Contract Act, 1872 Section 27 (§27); Percept D'Mark (2006) 4 SCC 227",
             ),
             PlaybookRule(
                 rule_id="RULE-EMP-NONSOLICIT",
@@ -421,7 +421,7 @@ class PlaybookDeviationEngine:
                             current_text=c_content[:200],
                             issue_description="CRITICAL STATUTORY VIOLATION: Post-termination non-compete is void ab initio under Section 27 of Indian Contract Act, 1872.",
                             recommended_redline=rule.recommended_redline,
-                            statutory_reference="Indian Contract Act, 1872 §27; Percept D'Mark v. Zaheer Khan (2006)",
+                            statutory_reference="Indian Contract Act, 1872 Section 27 (§27); Percept D'Mark v. Zaheer Khan (2006)",
                         )
                         deviations.append(dev)
                         total_score_deduction += rule.risk_weight

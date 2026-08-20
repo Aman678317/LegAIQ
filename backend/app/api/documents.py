@@ -1,7 +1,8 @@
 """Document upload, listing, and processing pipeline API."""
 import mimetypes
+import re
 import uuid
-from typing import Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel

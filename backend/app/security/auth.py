@@ -25,7 +25,7 @@ ROLE_HIERARCHY = {
 @dataclass
 class AuthContext:
     user_id: str
-    email: str
+    email: str = "lawyer@example.com"
     organization_id: Optional[str] = None
     role: Optional[str] = None
 

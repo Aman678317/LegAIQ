@@ -100,8 +100,25 @@ class TitleSearchReport:
 class TitleSearchReportGenerator:
     """Generates professional Title Search Reports."""
 
-    def __init__(self, report: TitleSearchReport):
+    def __init__(self, report: Optional[TitleSearchReport] = None):
         self.report = report
+
+    def generate_text_report(self, report: Optional[TitleSearchReport] = None) -> str:
+        rep = report or self.report
+        if not rep:
+            return "TITLE SEARCH REPORT\n\nNo report data provided."
+        lines = [
+            f"TITLE SEARCH REPORT: {rep.title}",
+            f"Property Address: {rep.property_address}",
+            f"Survey Number: {rep.survey_number}",
+            f"District: {rep.district}, Taluk: {rep.taluk}, Village: {rep.village}",
+            f"Prepared By: {rep.prepared_by} on {rep.prepared_on}",
+            f"Search Period: {rep.search_period_years} years",
+            "\nCHAIN OF TITLE:",
+        ]
+        for item in (rep.chain_of_title or []):
+            lines.append(f"- Year: {item.get('year')} | Event: {item.get('event')} | Owner: {item.get('owner') or item.get('to_owner')}")
+        return "\n".join(lines)
 
     def generate_pdf(self) -> bytes:
         """Generate professional PDF report."""

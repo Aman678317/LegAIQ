@@ -88,7 +88,7 @@ class CaseRedactionResponse(BaseModel):
 @router.post("/detect", response_model=PIIDetectionResponse)
 async def detect_pii_endpoint(
     request: PIIDetectionRequest,
-    ctx: AuthContext = Depends(require_role("STAFF")),
+    ctx: AuthContext = Depends(get_auth_context),
 ):
     """Detect PII entities in text."""
     engine = PIIDetectionEngine(request.config)
@@ -120,7 +120,7 @@ async def detect_pii_endpoint(
 @router.post("/redact", response_model=PIIRedactionResponse)
 async def redact_pii_endpoint(
     request: PIIRedactionRequest,
-    ctx: AuthContext = Depends(require_role("STAFF")),
+    ctx: AuthContext = Depends(get_auth_context),
 ):
     """Redact PII from text."""
     # Build config

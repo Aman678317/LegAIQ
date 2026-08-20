@@ -671,10 +671,22 @@ def redact_document(document: dict, config: Optional[RedactionConfig] = None) ->
 class PIIRedactionPipeline:
     """Pipeline for redacting PII from documents during ingestion."""
     
-    def __init__(self, config: Optional[RedactionConfig] = None):
-        self.config = config or RedactionConfig()
-        self.engine = PIIDetectionEngine(self.config)
-    
+    def redact(self, text: str, strategy: Optional[RedactionStrategy] = None) -> RedactionResult:
+        """Redact text using configured or specified strategy."""
+        cfg = self.config
+        if strategy:
+            cfg = RedactionConfig(
+                strategy=strategy,
+                mask_char=self.config.mask_char,
+                preserve_length=self.config.preserve_length,
+                enabled_entity_types=self.config.enabled_entity_types,
+                min_confidence=self.config.min_confidence,
+                custom_replacements=self.config.custom_replacements,
+                indian_context=self.config.indian_context,
+                legal_context=self.config.legal_context,
+            )
+        return self.engine.redact_text(text, cfg)
+
     def process_document(self, document: dict, config: Optional[RedactionConfig] = None) -> dict:
         """Process a single document for PII redaction."""
         cfg = config or self.config

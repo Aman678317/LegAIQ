@@ -629,17 +629,29 @@ class AIKillSwitch:
     
     _enabled = False
     
+    def __init__(self):
+        pass
+    
     @classmethod
     def is_enabled(cls) -> bool:
         return cls._enabled
     
+    def is_activated(self) -> bool:
+        return self._enabled
+    
     @classmethod
     def enable(cls):
         cls._enabled = True
+
+    def activate(self):
+        AIKillSwitch._enabled = True
     
     @classmethod
     def disable(cls):
         cls._enabled = False
+
+    def deactivate(self):
+        AIKillSwitch._enabled = False
     
     @classmethod
     async def check_and_raise(cls):

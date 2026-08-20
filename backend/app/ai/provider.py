@@ -14,28 +14,28 @@ from app.config import get_settings
 
 settings = get_settings()
 
-# Task to model mapping with NVIDIA NIM as primary when configured
+# Task to model mapping
 TASK_MODEL_MAP = {
-    "extraction": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "classification": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "reasoning": ("nvidia", "deepseek-ai/deepseek-r1"),
-    "research": ("nvidia", "deepseek-ai/deepseek-r1"),
-    "translation": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "drafting": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "summarization": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "chat": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "extraction": ("ollama", "llama3.1:8b"),
+    "classification": ("ollama", "llama3.1:8b"),
+    "reasoning": ("ollama", "llama3.1:70b"),
+    "research": ("ollama", "llama3.1:70b"),
+    "translation": ("ollama", "llama3.1:8b"),
+    "drafting": ("ollama", "llama3.1:70b"),
+    "summarization": ("ollama", "llama3.1:8b"),
+    "chat": ("ollama", "llama3.1:70b"),
 }
 
 # Fallback cloud models
 CLOUD_FALLBACK_MAP = {
-    "extraction": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "classification": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "reasoning": ("nvidia", "deepseek-ai/deepseek-r1"),
-    "research": ("nvidia", "deepseek-ai/deepseek-r1"),
-    "translation": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "drafting": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "summarization": ("nvidia", "meta/llama-3.3-70b-instruct"),
-    "chat": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "extraction": ("openai", "gpt-4o-mini"),
+    "classification": ("openai", "gpt-4o-mini"),
+    "reasoning": ("anthropic", "claude-sonnet-4-20250514"),
+    "research": ("anthropic", "claude-sonnet-4-20250514"),
+    "translation": ("openai", "gpt-4o-mini"),
+    "drafting": ("anthropic", "claude-sonnet-4-20250514"),
+    "summarization": ("openai", "gpt-4o-mini"),
+    "chat": ("anthropic", "claude-sonnet-4-20250514"),
 }
 
 

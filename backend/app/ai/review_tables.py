@@ -62,15 +62,17 @@ class ReviewTableExtractionEngine:
     # Built-in heuristic extractors for common legal review prompts
     PROMPT_PATTERNS = {
         "governing_law": [
-            r"(?:governed by|governing law|applicable law|laws of)\s+(?:the\s+)?([A-Z][a-zA-Z\s,]+?)(?:\.|\n|;|$)",
-            r"(?:laws of India|State of [A-Za-z]+|laws of [A-Za-z\s]+)",
+            r"(?:governed by(?: and construed in accordance with)?(?: the)?)\s+(substantive\s+laws\s+of\s+[A-Za-z\s]+|laws\s+of\s+[A-Za-z\s]+|[A-Za-z\s]+)(?:\.|\n|;|,|and\s+subject)",
+            r"(?:governing law(?:\s*:\s*|\s+is\s+))\s*([A-Za-z\s]+?)(?:\.|\n|;|$)",
+            r"(?:laws of India|substantive laws of India|laws of the State of [A-Za-z]+|State of [A-Za-z]+)",
         ],
         "jurisdiction": [
             r"(?:courts (?:at|of|in)|exclusive jurisdiction (?:of|to))\s+([A-Z][a-zA-Z\s,]+?)(?:\.|\n|;|$)",
             r"(?:jurisdiction of the courts in|arbitration seat in)\s+([A-Z][a-zA-Z\s]+)",
         ],
         "indemnity_cap": [
-            r"(?:indemnity|indemnification)\s+(?:shall be|is)?\s*(?:capped at|limited to|not exceed)\s+([^\.\n;]+)",
+            r"(?:indemnity|indemnification|liability)?\s*(?:shall be|is)?\s*(?:capped at|limited to|not exceed)\s+([^\.\n;]+)",
+            r"(?:capped at|limited to)\s+([^\.\n;]+)",
             r"(?:liability under this indemnity|indemnity obligation)\s+([^\.\n;]+)",
             r"(?:unlimited indemnity|no limitation on indemnity)",
         ],
@@ -269,37 +271,54 @@ class ReviewTableExporter:
         output = io.StringIO()
         writer = csv.writer(output)
 
-        # Header row
-        header = ["Document Name"]
-        for col in columns:
-            col_name = col.get("name", "Column")
-            header.append(col_name)
-            header.append(f"{col_name} (Confidence)")
-            header.append(f"{col_name} (Citation / Page)")
-        writer.writerow([ReviewTableExporter._sanitize_csv_cell(h) for h in header])
+        has_extended = any("confidence_score" in c for r in rows for c in r.get("cells", {}).values() if isinstance(c, dict))
 
-        # Data rows
-        for row in rows:
-            doc_name = row.get("document_name", "Untitled Document")
-            cells_by_col = row.get("cells", {})
-            row_data = [ReviewTableExporter._sanitize_csv_cell(doc_name)]
-
+        if has_extended:
+            header = ["Document Name"]
             for col in columns:
-                col_id = col.get("id")
-                cell = cells_by_col.get(col_id, {})
-                val = cell.get("value", "")
-                conf = cell.get("confidence_score")
-                conf_str = f"{int(conf * 100)}%" if conf is not None else ""
-                evidence = cell.get("evidence") or {}
-                pg = evidence.get("page_num", 1) if evidence else ""
-                snip = evidence.get("text_snippet", "") if evidence else ""
-                citation = f"Pg {pg}: {snip[:60]}..." if snip else (f"Pg {pg}" if pg else "")
+                col_name = col.get("name", "Column")
+                header.append(col_name)
+                header.append(f"{col_name} (Confidence)")
+                header.append(f"{col_name} (Citation / Page)")
+            writer.writerow([ReviewTableExporter._sanitize_csv_cell(h) for h in header])
 
-                row_data.append(ReviewTableExporter._sanitize_csv_cell(val))
-                row_data.append(ReviewTableExporter._sanitize_csv_cell(conf_str))
-                row_data.append(ReviewTableExporter._sanitize_csv_cell(citation))
+            for row in rows:
+                doc_name = row.get("document_name", "Untitled Document")
+                cells_by_col = row.get("cells", {})
+                row_data = [ReviewTableExporter._sanitize_csv_cell(doc_name)]
 
-            writer.writerow(row_data)
+                for col in columns:
+                    col_id = col.get("id")
+                    cell = cells_by_col.get(col_id, {})
+                    val = cell.get("value", "") if isinstance(cell, dict) else str(cell)
+                    conf = cell.get("confidence_score") if isinstance(cell, dict) else None
+                    conf_str = f"{int(conf * 100)}%" if conf is not None else ""
+                    evidence = cell.get("evidence") if isinstance(cell, dict) else {}
+                    pg = evidence.get("page_num", 1) if isinstance(evidence, dict) else ""
+                    snip = evidence.get("text_snippet", "") if isinstance(evidence, dict) else ""
+                    citation = f"Pg {pg}: {snip[:60]}..." if snip else (f"Pg {pg}" if pg else "")
+
+                    row_data.append(ReviewTableExporter._sanitize_csv_cell(val))
+                    row_data.append(ReviewTableExporter._sanitize_csv_cell(conf_str))
+                    row_data.append(ReviewTableExporter._sanitize_csv_cell(citation))
+
+                writer.writerow(row_data)
+        else:
+            header = ["Document Name"] + [col.get("name", "Column") for col in columns]
+            writer.writerow([ReviewTableExporter._sanitize_csv_cell(h) for h in header])
+
+            for row in rows:
+                doc_name = row.get("document_name", "Untitled Document")
+                cells_by_col = row.get("cells", {})
+                row_data = [ReviewTableExporter._sanitize_csv_cell(doc_name)]
+
+                for col in columns:
+                    col_id = col.get("id")
+                    cell = cells_by_col.get(col_id, {})
+                    val = cell.get("value", "") if isinstance(cell, dict) else str(cell)
+                    row_data.append(ReviewTableExporter._sanitize_csv_cell(val))
+
+                writer.writerow(row_data)
 
         return output.getvalue()
 

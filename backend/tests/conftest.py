@@ -268,3 +268,61 @@ def admin_api_client(fake, fake_ocr, monkeypatch):
 
     yield SyncWrapper()
     app.dependency_overrides.pop(get_auth_context, None)
+
+
+@pytest.fixture
+async def client(fake, fake_ocr, monkeypatch):
+    """AsyncClient fixture for async HTTP test requests."""
+    from httpx import ASGITransport, AsyncClient
+    from app.main import app
+    from app.security.auth import AuthContext, get_auth_context
+
+    def override():
+        return AuthContext(user_id=USER_ID, email="lawyer@testfirm.com", organization_id=ORG_ID, role="LAWYER")
+
+    app.dependency_overrides[get_auth_context] = override
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+    app.dependency_overrides.pop(get_auth_context, None)
+
+
+@pytest.fixture
+def auth_headers():
+    return {"Authorization": "Bearer test-jwt-token"}
+
+
+@pytest.fixture
+def seed_case(fake):
+    case_data = {
+        "id": "case-test-101",
+        "organization_id": ORG_ID,
+        "name": "Seed Property Due Diligence",
+        "case_type": "PROPERTY",
+        "status": "ACTIVE",
+        "jurisdiction_state": "Karnataka",
+        "created_by": USER_ID,
+    }
+    fake.tables.rows("cases").append(case_data)
+    return case_data
+
+
+@pytest.fixture
+def seed_document(fake):
+    doc_data = {
+        "id": "doc-test-101",
+        "case_id": "case-test-101",
+        "file_name": "Commercial_Lease_Agreement.pdf",
+        "file_type": "application/pdf",
+        "status": "COMPLETED",
+        "page_count": 5,
+        "uploaded_by": USER_ID,
+    }
+    fake.tables.rows("documents").append(doc_data)
+    fake.tables.rows("document_pages").append({
+        "id": "page-test-101",
+        "document_id": "doc-test-101",
+        "page_number": 1,
+        "text": "1. GOVERNING LAW: Governed by the substantive laws of India. Courts at Bengaluru have jurisdiction.",
+    })
+    return doc_data
