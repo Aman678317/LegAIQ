@@ -459,5 +459,20 @@ async def list_rajora_keys(
         total_q = total_q.eq("active", active)
     total = total_q.execute().count or len(rows)
 
-    return {"items": rows, "total": total, "offset": offset, "limit": limit}
+    items = [
+        {
+            "id": r.get("id"),
+            "org_id": r.get("org_id"),
+            "user_id": r.get("user_id"),
+            "key_prefix": r.get("key_prefix"),
+            "label": r.get("label"),
+            "active": r.get("active", True),
+            "created_at": r.get("created_at"),
+            "last_used_at": r.get("last_used_at"),
+            "revoked_at": r.get("revoked_at"),
+        }
+        for r in rows
+    ]
+
+    return {"items": items, "total": total, "offset": offset, "limit": limit}
 

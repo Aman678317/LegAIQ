@@ -118,8 +118,11 @@ class TestRajoraHealth:
             json={"status": "ok"},
             request=httpx.Request("GET", "http://localhost:8080/health"),
         )
-        with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
-            mock_get.return_value = mock_resp
+        mock_client = AsyncMock()
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.get.return_value = mock_resp
+
+        with patch("app.api.rajora.httpx.AsyncClient", return_value=mock_client):
             res = api_client.get(f"{API}/rajora/health")
             assert res.status_code == 200
             data = res.json()
@@ -135,8 +138,11 @@ class TestRajoraHealth:
             json={"status": "ok"},
             request=httpx.Request("GET", "http://localhost:8080/health"),
         )
-        with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
-            mock_get.return_value = mock_resp
+        mock_client = AsyncMock()
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.get.return_value = mock_resp
+
+        with patch("app.api.rajora.httpx.AsyncClient", return_value=mock_client):
             res = api_client.get("/api/rajora/health")
             assert res.status_code == 200
             data = res.json()
@@ -155,8 +161,11 @@ class TestRajoraHealth:
         assert data["status"] == "unconfigured"
 
     def test_health_unreachable(self, api_client, configured_rajora_settings):
-        with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
-            mock_get.side_effect = httpx.ConnectError("Connection refused")
+        mock_client = AsyncMock()
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.get.side_effect = httpx.ConnectError("Connection refused")
+
+        with patch("app.api.rajora.httpx.AsyncClient", return_value=mock_client):
             res = api_client.get(f"{API}/rajora/health")
             assert res.status_code == 200
             data = res.json()

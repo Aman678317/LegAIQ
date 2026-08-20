@@ -362,7 +362,10 @@ class RajoraProvider(BaseLLMProvider):
                     json=payload,
                 )
                 resp.raise_for_status()
-                data = resp.json()
+                try:
+                    data = resp.json()
+                except Exception:
+                    data = resp.text
         except httpx.HTTPStatusError as e:
             raise RuntimeError(f"Rajora LLM error {e.response.status_code}: {e.response.text}") from e
         except httpx.RequestError as e:

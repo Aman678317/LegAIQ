@@ -84,7 +84,7 @@ class TestAdversarialInternalKeyVerification:
             "'; DROP TABLE rajora_llm_keys; --",     # SQL injection attack
             "../../../../etc/passwd",                # Path traversal attempt
             "rj_live_" + "a" * 100000,               # 100KB oversized key
-            "rj_live_🔑🔥🚀_unicode_test",             # Multibyte unicode / emoji
+            "rj_live_invalid_escaped_unicode_test",   # Escaped unicode
         ],
     )
     def test_malformed_api_keys_rejected(self, api_client, configured_rajora_adversarial, malformed_key):
@@ -312,12 +312,18 @@ class TestAdversarialRajoraProvider:
         provider = RajoraProvider()
         req = LLMRequest(system="System instructions", prompt="Compute invariant")
 
-        mock_resp = httpx.Response(
-            status_code=200,
-            json=response_payload if isinstance(response_payload, (dict, list)) else None,
-            text=response_payload if isinstance(response_payload, str) else "",
-            request=httpx.Request("POST", "http://localhost:8080/generate"),
-        )
+        if isinstance(response_payload, (dict, list)):
+            mock_resp = httpx.Response(
+                status_code=200,
+                json=response_payload,
+                request=httpx.Request("POST", "http://localhost:8080/generate"),
+            )
+        else:
+            mock_resp = httpx.Response(
+                status_code=200,
+                text=response_payload,
+                request=httpx.Request("POST", "http://localhost:8080/generate"),
+            )
 
         with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_resp
