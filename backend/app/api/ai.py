@@ -137,6 +137,7 @@ async def get_providers():
     """Return status of all configured AI providers."""
     ollama_status = await get_ollama_status()
     return {
+        "nvidia": bool(settings.NVIDIA_API_KEY),
         "ollama": ollama_status,
         "openai": bool(settings.OPENAI_API_KEY),
         "anthropic": bool(settings.ANTHROPIC_API_KEY),

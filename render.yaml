@@ -26,6 +26,8 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
       - key: SEARCH_API_KEY
         sync: false
       - key: OCR_PROVIDER

@@ -14,28 +14,28 @@ from app.config import get_settings
 
 settings = get_settings()
 
-# Task to model mapping with Ollama local models as primary (free, no API keys)
+# Task to model mapping with NVIDIA NIM as primary when configured
 TASK_MODEL_MAP = {
-    "extraction": ("ollama", "llama3.1:8b"),
-    "classification": ("ollama", "llama3.1:8b"),
-    "reasoning": ("ollama", "llama3.1:70b"),
-    "research": ("ollama", "llama3.1:70b"),
-    "translation": ("ollama", "llama3.1:8b"),
-    "drafting": ("ollama", "llama3.1:70b"),
-    "summarization": ("ollama", "llama3.1:8b"),
-    "chat": ("ollama", "llama3.1:70b"),
+    "extraction": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "classification": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "reasoning": ("nvidia", "deepseek-ai/deepseek-r1"),
+    "research": ("nvidia", "deepseek-ai/deepseek-r1"),
+    "translation": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "drafting": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "summarization": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "chat": ("nvidia", "meta/llama-3.3-70b-instruct"),
 }
 
-# Fallback cloud models when Ollama unavailable
+# Fallback cloud models
 CLOUD_FALLBACK_MAP = {
-    "extraction": ("openai", "gpt-4o-mini"),
-    "classification": ("openai", "gpt-4o-mini"),
-    "reasoning": ("anthropic", "claude-sonnet-4-20250514"),
-    "research": ("anthropic", "claude-sonnet-4-20250514"),
-    "translation": ("openai", "gpt-4o-mini"),
-    "drafting": ("anthropic", "claude-sonnet-4-20250514"),
-    "summarization": ("openai", "gpt-4o-mini"),
-    "chat": ("anthropic", "claude-sonnet-4-20250514"),
+    "extraction": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "classification": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "reasoning": ("nvidia", "deepseek-ai/deepseek-r1"),
+    "research": ("nvidia", "deepseek-ai/deepseek-r1"),
+    "translation": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "drafting": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "summarization": ("nvidia", "meta/llama-3.3-70b-instruct"),
+    "chat": ("nvidia", "meta/llama-3.3-70b-instruct"),
 }
 
 
@@ -73,6 +73,71 @@ class BaseLLMProvider(ABC):
     async def list_models(self) -> list[str]:
         """List available models. Override in subclasses."""
         return []
+
+
+class NvidiaProvider(BaseLLMProvider):
+    name = "nvidia"
+    BASE_URL = settings.NVIDIA_BASE_URL or "https://integrate.api.nvidia.com/v1"
+
+    def is_configured(self) -> bool:
+        return bool(settings.NVIDIA_API_KEY)
+
+    async def list_models(self) -> list[str]:
+        return [
+            "meta/llama-3.3-70b-instruct",
+            "deepseek-ai/deepseek-r1",
+            "meta/llama-3.1-405b-instruct",
+            "meta/llama-3.1-8b-instruct",
+            "mistralai/mixtral-8x22b-instruct-v0.1",
+            "nvidia/llama-3.1-nemotron-70b-instruct",
+        ]
+
+    async def complete(self, request: LLMRequest) -> LLMResponse:
+        model = request.model
+        if not model:
+            if request.task in ("reasoning", "research"):
+                model = "deepseek-ai/deepseek-r1"
+            else:
+                model = settings.NVIDIA_MODEL or "meta/llama-3.3-70b-instruct"
+
+        start = time.monotonic()
+        base_url = (settings.NVIDIA_BASE_URL or "https://integrate.api.nvidia.com/v1").rstrip("/")
+        headers = {
+            "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": request.system},
+                {"role": "user", "content": request.prompt},
+            ],
+            "max_tokens": request.max_tokens,
+            "temperature": request.temperature,
+        }
+        if request.json_mode:
+            payload["response_format"] = {"type": "json_object"}
+
+        async with httpx.AsyncClient(timeout=180) as client:
+            resp = await client.post(
+                f"{base_url}/chat/completions",
+                headers=headers,
+                json=payload,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        usage = data.get("usage", {})
+        content = data["choices"][0]["message"]["content"]
+        return LLMResponse(
+            content=content,
+            provider=self.name,
+            model=model,
+            latency_ms=int((time.monotonic() - start) * 1000),
+            prompt_tokens=usage.get("prompt_tokens", 0),
+            completion_tokens=usage.get("completion_tokens", 0),
+            estimated_cost_usd=0.0,
+        )
 
 
 class OpenAIProvider(BaseLLMProvider):
@@ -279,6 +344,7 @@ class MockLLMProvider(BaseLLMProvider):
 
 
 _PROVIDERS: dict[str, BaseLLMProvider] = {
+    "nvidia": NvidiaProvider(),
     "ollama": OllamaProvider(),
     "openai": OpenAIProvider(),
     "anthropic": AnthropicProvider(),
@@ -287,10 +353,15 @@ _PROVIDERS: dict[str, BaseLLMProvider] = {
 
 
 class ModelRouter:
-    """Routes a task type to the best available provider with Ollama local-first priority."""
+    """Routes a task type to the best available provider with NVIDIA NIM priority when configured."""
 
     def resolve(self, task: str) -> BaseLLMProvider:
-        # Check Ollama first if configured (local-first for free AI)
+        # Check NVIDIA first when configured (user configured NVIDIA API key for all work)
+        nvidia = _PROVIDERS.get("nvidia")
+        if nvidia and nvidia.is_configured():
+            return nvidia
+
+        # Check Ollama if configured
         ollama = _PROVIDERS.get("ollama")
         if ollama and ollama.is_configured():
             return ollama
@@ -310,19 +381,11 @@ class ModelRouter:
         provider = self.resolve(request.task)
         resp = await provider.complete(request)
 
-        # If Ollama was called but returned an error/unreachable, gracefully fall back to cloud providers
-        if provider.name == "ollama" and ("ollama_unavailable" in resp.content or "Ollama service error" in resp.content or "ollama_timeout" in resp.content):
-            # Try cloud fallback for this task
-            fallback_task = CLOUD_FALLBACK_MAP.get(request.task, ("openai", settings.DEFAULT_MODEL))[0]
-            fallback_provider = _PROVIDERS.get(fallback_task)
-            if fallback_provider and fallback_provider.is_configured() and fallback_provider.name != "ollama":
-                try:
-                    return await fallback_provider.complete(request)
-                except Exception:
-                    pass
-            # Try any other configured provider (including mock as last resort)
+        # If primary provider returned an error/unreachable, gracefully fall back
+        if ("unavailable" in resp.content or "error" in resp.content or "timeout" in resp.content):
+            # Try any other configured provider
             for p in _PROVIDERS.values():
-                if p.is_configured() and p.name != "ollama":
+                if p.is_configured() and p.name != provider.name and p.name != "mock":
                     try:
                         return await p.complete(request)
                     except Exception:
@@ -334,7 +397,24 @@ router = ModelRouter()
 
 
 async def generate_embedding(text: str) -> Optional[list[float]]:
-    """Generate an embedding vector using OpenAI or local Ollama, or None when unconfigured."""
+    """Generate an embedding vector using NVIDIA NIM, OpenAI, or local Ollama, or None when unconfigured."""
+    if settings.NVIDIA_API_KEY:
+        try:
+            base_url = (settings.NVIDIA_BASE_URL or "https://integrate.api.nvidia.com/v1").rstrip("/")
+            async with httpx.AsyncClient(timeout=60) as client:
+                resp = await client.post(
+                    f"{base_url}/embeddings",
+                    headers={"Authorization": f"Bearer {settings.NVIDIA_API_KEY}"},
+                    json={"model": "nvidia/nv-embedqa-e5-v5", "input": text[:8000], "input_type": "query"},
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    embs = data.get("data")
+                    if embs and len(embs) > 0:
+                        return embs[0].get("embedding")
+        except Exception:
+            pass
+
     if settings.OPENAI_API_KEY:
         try:
             async with httpx.AsyncClient(timeout=60) as client:

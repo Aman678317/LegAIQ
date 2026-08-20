@@ -16,3 +16,8 @@ Please read c:\Users\acer\OneDrive\inga legal\.agents\ORIGINAL_REQUEST.md and co
 8. Comprehensive test coverage (pytest, vitest, e2e) ensuring zero regressions.
 
 Maintain your BRIEFING.md and progress.md regularly in your working directory. Report back when all requirements are fully implemented, verified, and complete.
+
+## 2026-08-20T10:28:12+05:30
+You are the Project Orchestrator for the LegAIQ / Jurisiva AI platform expansion.
+Verify and deliver all core requirements R1, R2, R3, verification test standards across 4 tiers, and send a comprehensive completion report back to Sentinel.
+

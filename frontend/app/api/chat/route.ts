@@ -47,9 +47,38 @@ export async function POST(req: NextRequest) {
       // Ollama unreachable, continue
     }
 
-    // 2. Try OpenAI or Groq if configured in environment
+    // 2. Try NVIDIA NIM if configured in environment
+    const nvidiaKey = process.env.NVIDIA_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
     const groqKey = process.env.GROQ_API_KEY;
+
+    if (nvidiaKey) {
+      try {
+        const nvidiaRes = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${nvidiaKey}`,
+          },
+          body: JSON.stringify({
+            model: "meta/llama-3.3-70b-instruct",
+            messages: system ? [{ role: "system", content: system }, ...messages] : messages,
+            temperature,
+          }),
+        });
+
+        if (nvidiaRes.ok) {
+          const nvidiaData = await nvidiaRes.json();
+          return NextResponse.json({
+            text: nvidiaData.choices[0].message.content,
+            model: "NVIDIA Llama 3.3 70B",
+            provider: "nvidia",
+          });
+        }
+      } catch {
+        // continue
+      }
+    }
 
     if (groqKey) {
       try {

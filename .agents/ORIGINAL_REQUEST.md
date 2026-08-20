@@ -51,3 +51,62 @@ Preserve and extend connectors for 5+ major state land portals (Mahabhulekh, Bho
 ### Quality & Regression
 - [ ] All existing backend (pytest) and frontend (vitest / Playwright) test suites continue to pass without regression.
 - [ ] Responsive UI/UX with PWA offline service worker and mobile compatibility.
+
+## Follow-up — 2026-08-20T10:27:21+05:30
+
+Expand the existing LegAIQ / Jurisiva AI production codebase into an enterprise-grade, Harvey-class legal AI platform tailored for the Indian legal market, preserving all existing capabilities and strengthening India-first moats (land records, Indic OCR, title graphs, DPDP, Bharatiya Sakshya).
+
+Working directory: c:\Users\acer\OneDrive\inga legal
+Integrity mode: demo
+
+## Requirements
+
+### R1. Harvey-Class Core Workspaces (Assistant, Vault, Review Tables, Agents & Workflows)
+- Enhance and unify the Assistant workspace supporting 3 primary modes (Ask, Analyze, Draft) with multi-model routing, reasoning depth control, inline clickable citation chips `[Doc: name, Pg: N]`, and an evidence panel.
+- Expand Matter Vaults into a hierarchical intelligence system (Organization → Matter → Vault → Folder → Document → Version → Analysis) supporting bulk multi-format ingestion (PDF, DOCX, XLSX, scans), OCR classification, duplicate detection, and source provenance.
+- Deliver Review Tables for spreadsheet-style natural-language batch field extraction across large document sets, storing cell-level confidence, bounding box / character offsets, model versions, and reviewer status with XLSX/CSV export.
+- Implement an Agent Orchestration framework with durable state transitions (Planner → Task Graph → Specialist Agents → Tools → Evidence Store → Reviewer/Validator → Final Composer) featuring specialist agents (Legal Research, Contract Review, Due Diligence, Title Search, Drafting, Translation, Evidence Validator, Citation Auditor, PII Redaction).
+- Build a no-code Workflow Builder supporting trigger-to-export automation templates, versioning, DAG validation, approval checkpoints, and execution history.
+
+### R2. Contract Intelligence, Clause Library & Knowledge Systems
+- Expand Contract Intelligence to extract 29+ legal clause types, compute 0–100 risk scores, identify missing/unusual clauses, detect playbook deviations, generate side-by-side redline diffs, and suggest fallback language.
+- Build a searchable Clause Library & Playbook Builder with exact and semantic search, fallback tiers, risk ratings, and versioned precedent management.
+- Implement a first-class Indian Legal Knowledge repository organizing Supreme Court judgments, High Courts, Central/State statutes, circulars, and tribunal decisions with citation validation.
+
+### R3. Enterprise Security, Governance, Integrations & India Moat Superpowers
+- Implement enterprise security and governance: SAML/OIDC SSO, SCIM provisioning, RBAC, tenant isolation, immutable audit logging, dynamic watermarking, and multi-mode PII auto-redaction (display, export, AI-context, permanent) for Indian identifiers (Aadhaar, PAN, GSTIN, IFSC).
+- Build Shared Spaces with external collaborator isolation, access expiration, download restrictions, and audit logs.
+- Provide a Command Center analytics dashboard tracking usage KPIs, matter costs, model routing metrics, turnaround times, and citation acceptance rates without exposing sensitive content.
+- Build public REST/WebSocket/SSE APIs, Webhook event notification system, and connectors framework (Word, Outlook, Google Drive, SharePoint, DMS).
+- Deepen India differentiation: 28+ state land portal connectors, 13 Indic language OCR/transliteration, 13–30 year ownership chain graph reconstruction, mutation analysis, and Bharatiya Sakshya Act (BSA 2023) Section 63/94/97 digital evidence certification.
+
+## Verification Resources
+
+- Existing test suite located in `backend/tests/` comprising 4 verification tiers:
+  - Tier 1: Isolated feature coverage across all 27 core capabilities (`test_tier1_*.py`)
+  - Tier 2: Boundary value analysis, 0-byte uploads, bad PII, cyclic DAGs, and tenant isolation (`test_tier2_boundaries.py`)
+  - Tier 3: Multi-stage pipeline interactions (`test_tier3_interactions.py`)
+  - Tier 4: Real-world enterprise workload scenarios (`test_tier4_workloads.py`)
+- Frontend unit/store test specs (`frontend/src/**/*.test.ts`, `tier_comprehensive.test.ts`).
+
+## Acceptance Criteria
+
+### Platform Integrity & Backward Compatibility
+- [ ] No existing backend models, API routes, or frontend components are deleted or replaced with stubbed code.
+- [ ] Existing functionality (authentication, case management, RAG pipeline, billing, PWA) remains fully operational.
+- [ ] The existing 4-tier hermetic test suite (`backend/tests/`) continues to pass with 100% genuine assertions.
+
+### Core Workspace Capabilities
+- [ ] Assistant executes Ask/Analyze/Draft flows with streamed responses and verifiable citation chips linked to evidence snippets.
+- [ ] Vault correctly ingests, categorizes, and indexes multi-format documents and land records with full provenance metadata.
+- [ ] Review Tables successfully extract dynamic prompt-defined columns across document batches, displaying cell confidence and source offsets.
+- [ ] Agent Orchestrator manages task graphs across specialist agents with tool permissions, budget limits, and audit history.
+- [ ] Workflow Builder correctly creates, validates (DAG cycle check), executes, and versions multi-step legal automations.
+
+### Contract, Knowledge & Enterprise Governance
+- [ ] Contract Intelligence extracts clauses, computes risk scores (0–100), detects playbook deviations, and generates redline diffs.
+- [ ] Clause Library enables exact and semantic search across clauses with fallback tiers.
+- [ ] Indian PII engine automatically redacts Aadhaar, PAN, and GSTIN across AI-context and export modes.
+- [ ] 13–30 year property ownership chain graph reconstructs transaction timelines and produces BSA Section 63 compliance certificates.
+- [ ] Command Center displays aggregated telemetry and usage metrics without leaking raw client documents.
+
