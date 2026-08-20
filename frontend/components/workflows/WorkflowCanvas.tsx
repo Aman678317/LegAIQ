@@ -323,6 +323,8 @@ export function WorkflowCanvas({ workflow, caseId, onSave }: WorkflowCanvasProps
         onClose={() => setIsStreamOpen(false)}
         executionId={executionId}
         workflowName={workflow?.name || "Legal Intelligence Workflow"}
+        nodes={nodes}
+        caseId={caseId}
       />
     </div>
   );
