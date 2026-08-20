@@ -607,22 +607,22 @@ class ContractIntelligenceEngine:
         # Pattern for obligations - each pattern is (regex, ob_type, group_map)
         # group_map: dict with keys 'responsible', 'description', 'due_date' mapping to group indices
         obligation_patterns = [
-            # "Party shall do X by date"
-            (r"(\w+(?:\s+\w+){0,3})\s+(?:shall|must|will|agrees? to)\s+([^.]+?)(?:\s+by\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))?", ObligationType.PERFORMANCE, {'responsible': 1, 'description': 2, 'due_date': 3}),
+            # "Party shall do X" / "Party shall do X by date"
+            (r"(?:[A-Za-z0-9_]+:\s*)?([A-Za-z0-9_]+(?:\s+[A-Za-z0-9_]+){0,3})\s+(?:shall|must|will|agrees? to)\s+([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))?(?=\.|$)", ObligationType.PERFORMANCE, {'responsible': 1, 'description': 2, 'due_date': 3}),
             # "Payment of X due by date"
-            (r"(?:payment|pay|remit)\s+(?:of\s+)?([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))", ObligationType.PAYMENT, {'description': 1, 'due_date': 2}),
+            (r"(?:payment|pay|remit)\s+(?:of\s+)?([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))(?=\.|$)", ObligationType.PAYMENT, {'description': 1, 'due_date': 2}),
             # "Deliver X by date"
-            (r"(?:deliver|provide|supply|furnish)\s+([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))", ObligationType.DELIVERY, {'description': 1, 'due_date': 2}),
+            (r"(?:deliver|provide|supply|furnish)\s+([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))(?=\.|$)", ObligationType.DELIVERY, {'description': 1, 'due_date': 2}),
             # "Report X by date"
-            (r"(?:report|notify|inform)\s+([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))", ObligationType.REPORTING, {'description': 1, 'due_date': 2}),
+            (r"(?:report|notify|inform)\s+([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))(?=\.|$)", ObligationType.REPORTING, {'description': 1, 'due_date': 2}),
             # Header-based format: "PAYMENT: Company B pays INR 10,00,000 by 31/03/2024"
-            (r"(?:PAYMENT|payment)\s*:\s*(\w+(?:\s+\w+){0,3})\s+(?:pays?|paying)\s+([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))", ObligationType.PAYMENT, {'responsible': 1, 'description': 2, 'due_date': 3}),
+            (r"(?:PAYMENT|payment)\s*:\s*([A-Za-z0-9_]+(?:\s+[A-Za-z0-9_]+){0,3})\s+(?:pays?|paying)\s+([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))(?=\.|$)", ObligationType.PAYMENT, {'responsible': 1, 'description': 2, 'due_date': 3}),
             # Header-based format: "SCOPE: Company A provides consulting"
-            (r"(?:SCOPE|scope)\s*:\s*(\w+(?:\s+\w+){0,3})\s+(?:provides?|providing)\s+([^.]+)", ObligationType.PERFORMANCE, {'responsible': 1, 'description': 2}),
-            # Header-based format: "TERMINATION: 30 days notice" - treated as performance obligation
+            (r"(?:SCOPE|scope)\s*:\s*([A-Za-z0-9_]+(?:\s+[A-Za-z0-9_]+){0,3})\s+(?:provides?|providing)\s+([^.]+)", ObligationType.PERFORMANCE, {'responsible': 1, 'description': 2}),
+            # Header-based format: "TERMINATION: 30 days notice"
             (r"(?:TERMINATION|termination)\s*:\s*([^.]+)", ObligationType.PERFORMANCE, {'description': 1}),
             # Header-based format: "DELIVERY: Company A delivers X by date"
-            (r"(?:DELIVERY|delivery)\s*:\s*(\w+(?:\s+\w+){0,3})\s+(?:delivers?|delivering)\s+([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))", ObligationType.DELIVERY, {'responsible': 1, 'description': 2, 'due_date': 3}),
+            (r"(?:DELIVERY|delivery)\s*:\s*([A-Za-z0-9_]+(?:\s+[A-Za-z0-9_]+){0,3})\s+(?:delivers?|delivering)\s+([^.]+?)(?:\s+(?:by|on|before)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}))(?=\.|$)", ObligationType.DELIVERY, {'responsible': 1, 'description': 2, 'due_date': 3}),
         ]
 
         # Extract party names from contract
@@ -761,14 +761,14 @@ class ContractIntelligenceEngine:
 
         # Overall risk calculation
         risk_weights = {
-            RiskLevel.CRITICAL: 25,
-            RiskLevel.HIGH: 15,
-            RiskLevel.MEDIUM: 8,
-            RiskLevel.LOW: 3,
-            RiskLevel.NEGLIGIBLE: 1,
+            RiskLevel.CRITICAL: 40,
+            RiskLevel.HIGH: 25,
+            RiskLevel.MEDIUM: 15,
+            RiskLevel.LOW: 5,
+            RiskLevel.NEGLIGIBLE: 2,
         }
 
-        total_score = sum(risk_weights.get(r, 0) for r in clause_risks.values())
+        total_score = sum(risk_weights.get(r, 0) for r in clause_risks.values()) + (len(compliance_gaps) * 5)
         risk_score = min(100, total_score)
 
         has_critical = any(r == RiskLevel.CRITICAL for r in clause_risks.values())

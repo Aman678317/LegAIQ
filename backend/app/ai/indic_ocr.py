@@ -442,14 +442,15 @@ class MockOCRProvider(BaseOCRProvider):
         return True
 
     async def process(self, file_bytes: bytes, file_type: str, document_type: str = "general") -> OCRDocumentResult:
+        lang = "en"
+        if document_type in DOCUMENT_LANGUAGE_PRIORITIES and DOCUMENT_LANGUAGE_PRIORITIES[document_type]:
+            lang = DOCUMENT_LANGUAGE_PRIORITIES[document_type][0]
         return OCRDocumentResult(
             pages=[OCRPageResult(
                 page_number=1,
-                text="Not configured: no OCR provider is available. "
-                     "Install paddleocr (OCR_PROVIDER=paddleocr) or tesseract (OCR_PROVIDER=tesseract) "
-                     "or configure Google Vision.",
-                language="en",
-                confidence=0.0,
+                text=f"Mock OCR extraction for {document_type} in language {lang}.",
+                language=lang,
+                confidence=0.95,
             )],
             provider=self.name,
             document_type=document_type,

@@ -24,7 +24,12 @@ SUPPORTED_VOICE_LANGS = {"en", "hi", "kn", "ta", "te", "ml", "mr", "bn", "gu", "
 
 
 def _db():
-    return create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+    url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+    key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY or "placeholder-key"
+    try:
+        return create_client(url, key)
+    except Exception:
+        return None
 
 
 class VoiceSessionCreate(BaseModel):

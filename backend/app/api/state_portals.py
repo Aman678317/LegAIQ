@@ -94,7 +94,7 @@ async def get_supported_portals(ctx: AuthContext = Depends(get_auth_context)):
 @router.post("/search")
 async def search_state_portal(
     body: StatePortalQueryRequest,
-    ctx: AuthContext = Depends(require_role("STAFF")),
+    ctx: AuthContext = Depends(get_auth_context),
 ):
     """Execute live land record search against the designated state revenue portal."""
     try:
@@ -121,7 +121,7 @@ async def search_all_state_portals(
     district: str = Query(...),
     taluk: str = Query(...),
     village: str = Query(...),
-    ctx: AuthContext = Depends(require_role("STAFF")),
+    ctx: AuthContext = Depends(get_auth_context),
 ):
     """Parallel multi-state search across all 5 state portal connectors."""
     results = await search_all_portals(

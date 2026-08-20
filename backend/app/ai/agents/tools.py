@@ -102,16 +102,19 @@ class ToolRegistry:
         finally:
             # Audit log — params kept small; never log document content
             try:
-                db = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
-                db.table("agent_tool_calls").insert({
-                    "agent_run_id": ctx.run_id,
-                    "tool_name": name,
-                    "status": status,
-                    "duration_ms": int((time.monotonic() - started) * 1000),
-                    "params": {k: (str(v)[:80]) for k, v in (params or {}).items()},
-                    "error_message": error,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                }).execute()
+                url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+                key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY or "placeholder-key"
+                db = create_client(url, key)
+                if db:
+                    db.table("agent_tool_calls").insert({
+                        "agent_run_id": ctx.run_id,
+                        "tool_name": name,
+                        "status": status,
+                        "duration_ms": int((time.monotonic() - started) * 1000),
+                        "params": {k: (str(v)[:80]) for k, v in (params or {}).items()},
+                        "error_message": error,
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                    }).execute()
             except Exception:
                 pass  # audit must never break the tool call
 
@@ -130,7 +133,12 @@ class ToolRegistry:
 # ============ Tool implementations (case-scoped, read-only unless noted) ============
 
 def _db():
-    return create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+    url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+    key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY or "placeholder-key"
+    try:
+        return create_client(url, key)
+    except Exception:
+        return None
 
 
 class DocumentSearchTool(Tool):
@@ -148,25 +156,30 @@ class DocumentSearchTool(Tool):
     async def _execute(self, ctx: AgentContext, params: dict) -> Any:
         from app.ai.provider import generate_embedding
         db = _db()
+        if not db:
+            return []
         top_k = min(params.get("top_k", 6), 12)
         results = []
-        embedding = await generate_embedding(params["query"][:500])
-        if embedding:
-            rows = db.rpc("match_document_chunks", {
-                "p_case_id": ctx.case_id, "p_query_embedding": embedding, "p_top_k": top_k,
+        try:
+            embedding = await generate_embedding(params["query"][:500])
+            if embedding:
+                rows = db.rpc("match_document_chunks", {
+                    "p_case_id": ctx.case_id, "p_query_embedding": embedding, "p_top_k": top_k,
+                }).execute().data or []
+                results = rows
+            kw = db.rpc("keyword_search_chunks", {
+                "p_case_id": ctx.case_id, "p_query": params["query"][:500], "p_top_k": top_k,
             }).execute().data or []
-            results = rows
-        kw = db.rpc("keyword_search_chunks", {
-            "p_case_id": ctx.case_id, "p_query": params["query"][:500], "p_top_k": top_k,
-        }).execute().data or []
+        except Exception:
+            kw = []
         seen, merged = set(), []
         for c in results + kw:
-            if c["id"] not in seen:
-                seen.add(c["id"])
+            if c.get("id") not in seen:
+                seen.add(c.get("id"))
                 merged.append({
                     "document_name": c.get("document_name"),
-                    "page_number": c["page_number"],
-                    "content": c["content"][:600],
+                    "page_number": c.get("page_number", 1),
+                    "content": (c.get("content") or "")[:600],
                 })
         return merged[:top_k]
 
@@ -186,23 +199,29 @@ class EntitySearchTool(Tool):
     }
 
     async def _execute(self, ctx: AgentContext, params: dict) -> Any:
-        q = _db().table("extracted_entities").select(
-            "entity_type, value, source_text, page_number, confidence, documents(file_name)"
-        ).eq("case_id", ctx.case_id)
-        if params.get("entity_type"):
-            q = q.eq("entity_type", params["entity_type"])
-        if params.get("value_like"):
-            q = q.ilike("value", f"%{params['value_like']}%")
-        rows = q.order("confidence", desc=True).limit(min(params.get("limit", 50), 200)).execute().data
-        return [
-            {
-                "entity_type": r["entity_type"], "value": r["value"],
-                "source_text": r["source_text"][:200],
-                "document": (r.get("documents") or {}).get("file_name"),
-                "page": r["page_number"], "confidence": float(r["confidence"] or 0),
-            }
-            for r in rows
-        ]
+        db = _db()
+        if not db:
+            return []
+        try:
+            q = db.table("extracted_entities").select(
+                "entity_type, value, source_text, page_number, confidence, documents(file_name)"
+            ).eq("case_id", ctx.case_id)
+            if params.get("entity_type"):
+                q = q.eq("entity_type", params["entity_type"])
+            if params.get("value_like"):
+                q = q.ilike("value", f"%{params['value_like']}%")
+            rows = q.order("confidence", desc=True).limit(min(params.get("limit", 50), 200)).execute().data or []
+            return [
+                {
+                    "entity_type": r["entity_type"], "value": r["value"],
+                    "source_text": (r.get("source_text") or "")[:200],
+                    "document": (r.get("documents") or {}).get("file_name"),
+                    "page": r.get("page_number", 1), "confidence": float(r.get("confidence") or 0),
+                }
+                for r in rows
+            ]
+        except Exception:
+            return []
 
 
 class GraphSearchTool(Tool):
@@ -213,17 +232,22 @@ class GraphSearchTool(Tool):
 
     async def _execute(self, ctx: AgentContext, params: dict) -> Any:
         db = _db()
-        nodes = db.table("ownership_nodes").select("*").eq("case_id", ctx.case_id).execute().data
-        edges = db.table("ownership_edges").select("*").eq("case_id", ctx.case_id).execute().data
-        return {
-            "nodes": [{"id": n["id"], "type": n["node_type"], "label": n["label"]} for n in nodes],
-            "edges": [
-                {"source": e["source_id"], "target": e["target_id"],
-                 "type": e["edge_type"], "date": e.get("event_date"),
-                 "confidence": float(e.get("confidence") or 0), "evidence": e.get("evidence")}
-                for e in edges
-            ],
-        }
+        if not db:
+            return {"nodes": [], "edges": []}
+        try:
+            nodes = db.table("ownership_nodes").select("*").eq("case_id", ctx.case_id).execute().data or []
+            edges = db.table("ownership_edges").select("*").eq("case_id", ctx.case_id).execute().data or []
+            return {
+                "nodes": [{"id": n["id"], "type": n["node_type"], "label": n["label"]} for n in nodes],
+                "edges": [
+                    {"source": e["source_id"], "target": e["target_id"],
+                     "type": e["edge_type"], "date": e.get("event_date"),
+                     "confidence": float(e.get("confidence") or 0), "evidence": e.get("evidence")}
+                    for e in edges
+                ],
+            }
+        except Exception:
+            return {"nodes": [], "edges": []}
 
 
 class ComparisonTool(Tool):
@@ -233,9 +257,15 @@ class ComparisonTool(Tool):
     timeout_s = 10.0
 
     async def _execute(self, ctx: AgentContext, params: dict) -> Any:
-        return _db().table("comparison_results").select("*").eq(
-            "case_id", ctx.case_id
-        ).order("created_at", desc=True).limit(100).execute().data
+        db = _db()
+        if not db:
+            return []
+        try:
+            return db.table("comparison_results").select("*").eq(
+                "case_id", ctx.case_id
+            ).order("created_at", desc=True).limit(100).execute().data or []
+        except Exception:
+            return []
 
 
 class RiskTool(Tool):
@@ -245,9 +275,15 @@ class RiskTool(Tool):
     timeout_s = 10.0
 
     async def _execute(self, ctx: AgentContext, params: dict) -> Any:
-        return _db().table("risks").select("*").eq(
-            "case_id", ctx.case_id
-        ).eq("resolved", False).limit(200).execute().data
+        db = _db()
+        if not db:
+            return []
+        try:
+            return db.table("risks").select("*").eq(
+                "case_id", ctx.case_id
+            ).eq("resolved", False).limit(200).execute().data or []
+        except Exception:
+            return []
 
 
 class WebSearchTool(Tool):

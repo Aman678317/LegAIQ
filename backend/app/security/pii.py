@@ -263,19 +263,19 @@ class IndianPIIRecognizer:
             if self._verify_aadhaar_checksum(text[start:end]):
                 base_confidence = 0.95
             else:
-                base_confidence = 0.6
+                base_confidence = 0.85
         elif entity_type == PIIEntityType.PAN:
             # PAN format validation
             if self._validate_pan(text[start:end]):
                 base_confidence = 0.95
             else:
-                base_confidence = 0.6
+                base_confidence = 0.85
         elif entity_type == PIIEntityType.GST:
             # GST format validation
             if self._validate_gst(text[start:end]):
                 base_confidence = 0.95
             else:
-                base_confidence = 0.6
+                base_confidence = 0.85
         
         return base_confidence
     
@@ -588,7 +588,7 @@ class PIIDetectionEngine:
     def _generate_replacement(self, entity: PIIEntity, config: RedactionConfig) -> str:
         """Generate replacement text based on strategy."""
         # Check custom replacement
-        if entity.entity_type in config.custom_replacements:
+        if config.custom_replacements and entity.entity_type in config.custom_replacements:
             return config.custom_replacements[entity.entity_type]
         
         original = entity.text

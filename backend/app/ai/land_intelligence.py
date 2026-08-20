@@ -219,7 +219,7 @@ def are_land_areas_equivalent(area_str_a: str, area_str_b: str, tolerance_ratio:
     is_equiv = ratio <= tolerance_ratio
     explanation = (
         f"Doc A: {norm_a.formatted_standard} vs Doc B: {norm_b.formatted_standard} "
-        f"(Variance: {round(ratio * 100, 1)}% — {'Consistent within survey tolerance' if is_equiv else 'Significant Area Discrepancy'})"
+        f"(Variance: {round(ratio * 100, 1)}% — {'Equivalent (consistent within survey tolerance)' if is_equiv else 'Significant Area Discrepancy'})"
     )
     return is_equiv, explanation
 

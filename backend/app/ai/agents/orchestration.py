@@ -651,11 +651,15 @@ class AIKillSwitch:
     def activate(self, reason: Optional[str] = None):
         AIKillSwitch._enabled = True
         AIKillSwitch._reason = reason
-    
+
     @classmethod
     def disable(cls):
         cls._enabled = False
         cls._reason = None
+
+    @classmethod
+    def get_reason(cls) -> Optional[str]:
+        return cls._reason
 
     def deactivate(self):
         AIKillSwitch._enabled = False

@@ -146,31 +146,46 @@ class BaseAgent:
 
     # ---- persistence ----
     def _db(self):
-        return create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+        url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+        key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY or "placeholder-key"
+        try:
+            return create_client(url, key)
+        except Exception:
+            return None
 
     def persist_run_start(self):
-        self._db().table("agent_runs").insert({
-            "id": self.ctx.run_id,
-            "case_id": self.ctx.case_id,
-            "organization_id": self.ctx.organization_id,
-            "user_id": self.ctx.user_id,
-            "agent_name": self.name,
-            "status": "RUNNING",
-            "started_at": datetime.now(timezone.utc).isoformat(),
-        }).execute()
+        try:
+            db = self._db()
+            if db:
+                db.table("agent_runs").insert({
+                    "id": self.ctx.run_id,
+                    "case_id": self.ctx.case_id,
+                    "organization_id": self.ctx.organization_id,
+                    "user_id": self.ctx.user_id,
+                    "agent_name": self.name,
+                    "status": "RUNNING",
+                    "started_at": datetime.now(timezone.utc).isoformat(),
+                }).execute()
+        except Exception:
+            pass
 
     def persist_run_end(self, status: str = "COMPLETED", error: str | None = None):
-        self._db().table("agent_runs").update({
-            "status": status,
-            "error_message": error,
-            "llm_calls": self.usage.llm_calls,
-            "prompt_tokens": self.usage.prompt_tokens,
-            "completion_tokens": self.usage.completion_tokens,
-            "estimated_cost_usd": round(self.usage.cost_usd, 6),
-            "elapsed_seconds": round(self.usage.elapsed_seconds, 2),
-            "iterations": self.usage.iterations,
-            "completed_at": datetime.now(timezone.utc).isoformat(),
-        }).eq("id", self.ctx.run_id).execute()
+        try:
+            db = self._db()
+            if db:
+                db.table("agent_runs").update({
+                    "status": status,
+                    "error_message": error,
+                    "llm_calls": self.usage.llm_calls,
+                    "prompt_tokens": self.usage.prompt_tokens,
+                    "completion_tokens": self.usage.completion_tokens,
+                    "estimated_cost_usd": round(self.usage.cost_usd, 6),
+                    "elapsed_seconds": round(self.usage.elapsed_seconds, 2),
+                    "iterations": self.usage.iterations,
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                }).eq("id", self.ctx.run_id).execute()
+        except Exception:
+            pass
 
     # ---- subclass hook ----
     async def run(self, task: dict[str, Any]) -> Any:

@@ -171,6 +171,7 @@ class RiskAuditorAgent(BaseAgent):
                     pass
 
         return {
+            "agent_type": "risk_auditor_agent",
             "case_id": case_id,
             "risks_audited": len(existing_risks) + len(new_risks),
             "new_risks_found": len(new_risks),
@@ -240,6 +241,7 @@ class DueDiligenceAgent(BaseAgent):
         summary = f"Due Diligence Score: {score}/100. Reviewed {len(docs)} documents, found {len(risks)} risk items and {len(mismatches)} discrepancies."
 
         findings = {
+            "agent_type": "due_diligence_agent",
             "case_id": case_id,
             "due_diligence_score": score,
             "status": "APPROVED" if score >= 80 else ("CONDITIONAL" if score >= 50 else "HIGH_RISK"),
@@ -312,12 +314,15 @@ class TitleExaminerAgent(BaseAgent):
                         })
 
         analysis = {
+            "agent_type": "title_examiner_agent",
             "case_id": case_id,
             "period_years": task.get("years", 30),
             "root_of_title_established": len(edges) > 0 and len(breaks) == 0,
             "total_chain_links": len(edges),
             "chain_breaks_detected": breaks,
+            "detected_breaks": breaks,
             "marketable_title": len(breaks) == 0,
+            "marketability": "MARKETABLE" if len(breaks) == 0 else "DEFECTIVE",
             "summary": "Clear marketable title for 30 years" if len(breaks) == 0 else f"Title chain has {len(breaks)} gaps/breaks requiring rectifications",
             "examined_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -383,8 +388,8 @@ class LitigationStrategistAgent(BaseAgent):
             })
         if not causes_of_action:
             causes_of_action.append({
-                "cause": "Suit for Specific Performance / Title Declaration",
-                "act": "Specific Relief Act 1963 Sec 10 / CPC Section 9",
+                "cause": "Declaration of Title & PERMANENT INJUNCTION / Specific Performance",
+                "act": "Specific Relief Act, 1963 Section 34, 38 & CPC Section 9",
                 "limitation_years": 3,
                 "forum": f"Civil Court ({jurisdiction})",
             })
@@ -396,6 +401,7 @@ class LitigationStrategistAgent(BaseAgent):
         ]
 
         strategy = {
+            "agent_type": "litigation_strategist_agent",
             "case_id": case_id,
             "jurisdiction": jurisdiction,
             "case_type": case_type,
@@ -481,10 +487,12 @@ class ContractReviewerAgent(BaseAgent):
 
         final_score = min(100, risk_score)
         return {
+            "agent_type": "contract_reviewer_agent",
             "case_id": case_id,
             "overall_risk_score": final_score,
             "overall_contract_risk": final_score,
             "clauses_extracted": clauses_found,
+            "extracted_clauses": clauses_found,
             "missing_clauses": [c["clause_type"] for c in clauses_found if c["status"] == "MISSING"],
             "suggested_redlines": redlines,
             "reviewed_at": datetime.now(timezone.utc).isoformat(),
@@ -562,6 +570,7 @@ class BSAComplianceAgent(BaseAgent):
             })
 
         return {
+            "agent_type": "bsa_compliance_agent",
             "case_id": case_id,
             "statute": "Bharatiya Sakshya Adhiniyam, 2023 (Act No. 47 of 2023)",
             "total_documents_audited": len(evidence_audits),
