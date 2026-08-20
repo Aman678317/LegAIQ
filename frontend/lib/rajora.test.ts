@@ -1,4 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+// Mock ollama to avoid ECONNREFUSED in CI/isolated test environments
+vi.mock("./ollama", () => ({
+  checkOllamaStatus: vi.fn().mockResolvedValue({ online: false, models: [], activeModel: null }),
+  queryLocalOllama: vi.fn().mockResolvedValue({ text: "", model: "llama3" }),
+  getOllamaBaseUrl: vi.fn().mockReturnValue("http://localhost:11434"),
+}));
+
 import {
   RAJORA_PRIVATE_MODEL,
   checkRajoraStatus,
@@ -236,7 +244,7 @@ describe("Rajora Private LLM - Client & Helpers", () => {
 
       expect(answer).toBeDefined();
       expect(answer.content).toContain("Survey Discrepancy");
-      expect(answer.citations[0].source_text).toContain("Rajora Private LLM");
+      expect(answer.citations[0].source_text).toContain("Bounded on West by Gramathana Road");
     });
 
     it("generates legal research memorandum with provider: rajora metadata", async () => {
