@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase";
 import { getUserOrgs } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import * as mockStore from "@/lib/mockStore";
 import { OfflineBanner, UpdateAvailableBanner, PWAInstallPrompt, SyncStatusBadge } from "@/components/offline-indicator";
 import { pwaManager } from "@/lib/pwa";
 

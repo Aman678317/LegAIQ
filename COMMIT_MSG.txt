@@ -14,6 +14,7 @@ feat: Harvey-Class Legal AI Expansion & NVIDIA NIM Integration
   - Wired ModelRouter with NVIDIA priority, embedding support (nv-embedqa-e5-v5), and frontend direct chat completions.
 - Fixes:
   - Resolved all TypeScript compilation errors (`tsc --noEmit`):
+    - Added `import * as mockStore from "@/lib/mockStore"` to `frontend/app/(app)/layout.tsx`.
     - Added `badge_label` and `badge_color` to `DocumentEvent` in `frontend/lib/useCaseEvents.ts`.
     - Fixed `supabase` client scope in `frontend/app/(app)/layout.tsx`.
     - Added `options` parameter to `askDemoQuestion` in `frontend/lib/mockStore.ts`.
