@@ -23,12 +23,27 @@ class PWAManager {
 
   async initialize(): Promise<ServiceWorkerRegistration | null> {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-      console.log('[PWA] Service Worker not supported');
+      return null;
+    }
+
+    // In local development, unregister any active SW so offline caching does not block dev
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isDev) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+      } catch {
+        // ignore
+      }
       return null;
     }
 
     try {
-      // Register service worker
+      // Register service worker in production
       this.registration = await navigator.serviceWorker.register('/service-worker.js', {
         scope: '/',
       });

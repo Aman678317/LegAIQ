@@ -9,8 +9,18 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1
 export function isDemoMode(caseId?: string): boolean {
   if (typeof window === "undefined") return false;
   if (caseId && caseId.startsWith("demo-case-")) return true;
-  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  const isLocalSupa = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("localhost") || !process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const h = window.location.hostname;
+  const isLocal =
+    h === "localhost" ||
+    h === "127.0.0.1" ||
+    h.startsWith("192.168.") ||
+    h.startsWith("10.") ||
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h) ||
+    h.endsWith(".local");
+  const isLocalSupa =
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("localhost") ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("127.0.0.1") ||
+    !process.env.NEXT_PUBLIC_SUPABASE_URL;
   return isLocal && isLocalSupa;
 }
 
@@ -300,17 +310,31 @@ export const api = {
   },
 
   // Analysis & Chat
-  askQuestion: async (caseId: string, question: string, language = "en", model?: string) => {
+  askQuestion: async (
+    caseId: string,
+    question: string,
+    language = "en",
+    model?: string,
+    options?: { mode?: string; india_context?: boolean; document_ids?: string[] }
+  ) => {
+    const payload = {
+      question,
+      language,
+      model,
+      mode: options?.mode || "ask",
+      india_context: options?.india_context !== false,
+      document_ids: options?.document_ids,
+    };
     if (isDemoMode(caseId)) {
-      return await mockStore.askDemoQuestion(caseId, question, language, model);
+      return await mockStore.askDemoQuestion(caseId, question, language, model, undefined, options);
     }
     try {
       return await request<any>(`/cases/${caseId}/questions`, {
         method: "POST",
-        body: JSON.stringify({ question, language, model }),
+        body: JSON.stringify(payload),
       });
     } catch {
-      return await mockStore.askDemoQuestion(caseId, question, language, model);
+      return await mockStore.askDemoQuestion(caseId, question, language, model, undefined, options);
     }
   },
 
@@ -319,11 +343,20 @@ export const api = {
     question: string,
     language = "en",
     model?: string,
-    onChunk?: (chunk: string) => void
+    onChunk?: (chunk: string) => void,
+    options?: { mode?: string; india_context?: boolean; document_ids?: string[] }
   ) => {
+    const payload = {
+      question,
+      language,
+      model,
+      stream: true,
+      mode: options?.mode || "ask",
+      india_context: options?.india_context !== false,
+      document_ids: options?.document_ids,
+    };
     if (isDemoMode(caseId)) {
-      const result = await mockStore.askDemoQuestion(caseId, question, language, model);
-      onChunk?.(result.content || "");
+      const result = await mockStore.askDemoQuestion(caseId, question, language, model, onChunk, options);
       return result;
     }
     
@@ -348,7 +381,7 @@ export const api = {
       const res = await fetch(safeApiUrl(`/cases/${caseId}/questions`), {
         method: "POST",
         headers,
-        body: JSON.stringify({ question, language, model, stream: true }),
+        body: JSON.stringify(payload),
       });
       
       if (!res.ok) {
@@ -434,7 +467,7 @@ export const api = {
         created_at: new Date().toISOString(),
       };
     } catch {
-      return await mockStore.askDemoQuestion(caseId, question, language, model);
+      return await mockStore.askDemoQuestion(caseId, question, language, model, onChunk);
     }
   },
 
@@ -550,8 +583,120 @@ export const api = {
     }
   },
 
-  // Contract Intelligence (Harvey AI feature parity)
-  analyzeContract: async (caseId: string, body: { full_text: string; title?: string; contract_id?: string }) => {
+  // --- Milestone 3: Spreadsheet Review Tables ---
+  listReviewTables: async (caseId: string) => {
+    if (isDemoMode(caseId)) {
+      return { items: mockStore.listDemoReviewTables(caseId), total: mockStore.listDemoReviewTables(caseId).length };
+    }
+    try {
+      return await request<{ items: any[]; total: number }>(`/cases/${caseId}/review-tables`);
+    } catch {
+      return { items: mockStore.listDemoReviewTables(caseId), total: mockStore.listDemoReviewTables(caseId).length };
+    }
+  },
+
+  getReviewTable: async (caseId: string, tableId: string) => {
+    if (isDemoMode(caseId)) {
+      return mockStore.getDemoReviewTable(caseId, tableId);
+    }
+    try {
+      return await request<any>(`/cases/${caseId}/review-tables/${tableId}`);
+    } catch {
+      return mockStore.getDemoReviewTable(caseId, tableId);
+    }
+  },
+
+  createReviewTable: async (caseId: string, body: { name: string; description?: string; columns?: any[] }) => {
+    if (isDemoMode(caseId)) {
+      return mockStore.createDemoReviewTable(caseId, body);
+    }
+    try {
+      return await request<any>(`/cases/${caseId}/review-tables`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    } catch {
+      return mockStore.createDemoReviewTable(caseId, body);
+    }
+  },
+
+  updateReviewTable: async (caseId: string, tableId: string, body: { name?: string; description?: string }) => {
+    try {
+      return await request<any>(`/cases/${caseId}/review-tables/${tableId}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+    } catch {
+      return { id: tableId, ...body };
+    }
+  },
+
+  deleteReviewTable: async (caseId: string, tableId: string) => {
+    try {
+      return await request<any>(`/cases/${caseId}/review-tables/${tableId}`, { method: "DELETE" });
+    } catch {
+      return { status: "deleted", table_id: tableId };
+    }
+  },
+
+  addReviewColumn: async (caseId: string, tableId: string, body: { name: string; column_type?: string; prompt?: string; model?: string; position?: number }) => {
+    try {
+      return await request<any>(`/cases/${caseId}/review-tables/${tableId}/columns`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    } catch {
+      return { id: `col-${Date.now()}`, table_id: tableId, ...body };
+    }
+  },
+
+  updateReviewColumn: async (caseId: string, tableId: string, columnId: string, body: any) => {
+    try {
+      return await request<any>(`/cases/${caseId}/review-tables/${tableId}/columns/${columnId}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+    } catch {
+      return { id: columnId, ...body };
+    }
+  },
+
+  deleteReviewColumn: async (caseId: string, tableId: string, columnId: string) => {
+    try {
+      return await request<any>(`/cases/${caseId}/review-tables/${tableId}/columns/${columnId}`, { method: "DELETE" });
+    } catch {
+      return { status: "deleted", column_id: columnId };
+    }
+  },
+
+  extractReviewTable: async (caseId: string, tableId: string, body?: { column_ids?: string[]; document_ids?: string[] }) => {
+    try {
+      return await request<any>(`/cases/${caseId}/review-tables/${tableId}/extract`, {
+        method: "POST",
+        body: JSON.stringify(body || {}),
+      });
+    } catch {
+      return { status: "completed", extracted_cells: 5, message: "Extraction complete (demo mode)" };
+    }
+  },
+
+  updateReviewCell: async (caseId: string, tableId: string, cellId: string, body: { value: string; confidence_score?: number; evidence?: any }) => {
+    try {
+      return await request<any>(`/cases/${caseId}/review-tables/${tableId}/cells/${cellId}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+    } catch {
+      return { id: cellId, ...body };
+    }
+  },
+
+  getReviewTableExportUrl: (caseId: string, tableId: string, format: "xlsx" | "csv" = "xlsx") => {
+    return `${API_URL}/cases/${caseId}/review-tables/${tableId}/export?format=${format}`;
+  },
+
+  // --- Milestone 5: Contract Intelligence, Clause Library & Playbooks ---
+  analyzeContract: async (caseId: string, body: { full_text: string; title?: string; contract_id?: string; contract_type?: string }) => {
     try {
       return await request<any>(`/cases/${caseId}/contracts/analyze`, {
         method: "POST",
@@ -561,27 +706,56 @@ export const api = {
       return {
         case_id: caseId,
         contract_id: body.contract_id || "contract-001",
-        title: body.title || "Legal Agreement",
-        clause_count: 5,
+        title: body.title || "Commercial Contract",
+        clause_count: 6,
         clauses: [
-          { clause_id: "CL-001", clause_type: "parties", title: "Parties", content: "This Agreement is entered into by and between Party A and Party B.", risk_level: "negligible", risk_factors: [] },
-          { clause_id: "CL-002", clause_type: "indemnity", title: "Indemnification", content: "Party A shall indemnify and hold harmless Party B against all liabilities.", risk_level: "high", risk_factors: ["High: broad indemnity"] },
-          { clause_id: "CL-003", clause_type: "limitation_of_liability", title: "Limitation of Liability", content: "In no event shall either party be liable for indirect or consequential damages.", risk_level: "medium", risk_factors: ["Medium: consequential damages"] },
-          { clause_id: "CL-004", clause_type: "termination", title: "Termination", content: "Either party may terminate upon 30 days written notice.", risk_level: "medium", risk_factors: ["Medium: termination notice"] },
-          { clause_id: "CL-005", clause_type: "governing_law", title: "Governing Law", content: "Governed by the laws of India and subject to arbitration under the Arbitration and Conciliation Act, 1996.", risk_level: "low", risk_factors: [] },
+          { clause_id: "CL-001", clause_type: "parties", title: "Parties", content: "This Agreement is entered into between TechCorp Solutions Pvt Ltd ('Party A') and DevSoft LLP ('Party B').", risk_level: "negligible", risk_factors: [] },
+          { clause_id: "CL-002", clause_type: "indemnity", title: "Indemnification", content: "Developer shall provide unlimited indemnity and hold harmless Client from any and all liabilities.", risk_level: "critical", risk_factors: ["Critical: 'unlimited indemnity'"] },
+          { clause_id: "CL-003", clause_type: "limitation_of_liability", title: "Limitation of Liability", content: "In no event shall either party be liable for indirect or consequential damages, capped at INR 50,00,000.", risk_level: "medium", risk_factors: ["Medium: consequential damages"] },
+          { clause_id: "CL-004", clause_type: "termination", title: "Termination", content: "Either party may terminate upon 30 days written notice for breach.", risk_level: "medium", risk_factors: ["Medium: termination notice"] },
+          { clause_id: "CL-005", clause_type: "governing_law", title: "Governing Law", content: "Governed by the substantive laws of India and arbitration under Arbitration and Conciliation Act 1996 in Bengaluru.", risk_level: "low", risk_factors: [] },
+          { clause_id: "CL-006", clause_type: "non_compete", title: "Non-Compete Covenant", content: "Developer shall not engage in competing business in India for 1 year following termination.", risk_level: "critical", risk_factors: ["Critical: Section 27 Indian Contract Act 1872 void restraint of trade (post-termination non-compete is void ab initio)"] },
         ],
         obligations: [
-          { obligation_id: "OBL-001", type: "payment", description: "Payment of fees within 30 days of invoice", responsible_party: "Party B", beneficiary_party: "Party A" },
+          { obligation_id: "OBL-001", type: "payment", description: "Payment of fees within 30 days of invoice", responsible_party: "Party A", beneficiary_party: "Party B" },
+          { obligation_id: "OBL-002", type: "delivery", description: "Deliver source code by milestone deadline", responsible_party: "Party B", beneficiary_party: "Party A" },
         ],
         risk_assessment: {
-          overall_risk: "medium",
-          risk_score: 42,
-          critical_issues: [],
-          high_risk_issues: ["Indemnification: High: broad indemnity"],
-          recommendations: ["Negotiate indemnification cap before execution"],
-          compliance_gaps: [],
+          overall_risk: "high",
+          risk_score: 72,
+          critical_issues: [
+            "Indemnification: Critical: 'unlimited indemnity'",
+            "Non-Compete Covenant: Critical: Section 27 Indian Contract Act 1872 void restraint of trade (post-termination non-compete is void ab initio)",
+          ],
+          high_risk_issues: [],
+          recommendations: [
+            "URGENT: Review critical risk clauses with senior counsel",
+            "Replace void post-employment non-compete with enforceable in-term restriction per Section 27 ICA",
+            "Cap indemnity to 12-month trailing fees",
+          ],
+          compliance_gaps: [
+            "Stamp duty clause recommended for this contract type under Indian Stamp Act",
+          ],
         },
+        indian_law_compliance: [
+          "Non-compete clause post-termination is void ab initio under Section 27 of the Indian Contract Act, 1872 (Percept D'Mark v. Zaheer Khan)",
+          "Stamp duty clause recommended under Indian Stamp Act, 1899",
+        ],
       };
+    }
+  },
+
+  getContractHeatmap: async (caseId: string, body: { full_text: string; title?: string; contract_id?: string }) => {
+    if (isDemoMode(caseId)) {
+      return mockStore.getDemoContractHeatmap(caseId);
+    }
+    try {
+      return await request<any>(`/cases/${caseId}/contracts/heatmap`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    } catch {
+      return mockStore.getDemoContractHeatmap(caseId);
     }
   },
 
@@ -596,10 +770,58 @@ export const api = {
         case_id: caseId,
         total_changes: 2,
         changes: [
-          { change_id: "MOD-CL-002", change_type: "modification", clause_id: "CL-002", original_text: body.original_text.slice(0, 100), modified_text: body.modified_text.slice(0, 100) },
+          { change_id: "MOD-CL-002", change_type: "modification", clause_id: "CL-002", original_text: "Developer shall provide unlimited indemnity and hold harmless Client from any and all liabilities.", modified_text: "Developer shall indemnify Client for direct third-party claims, capped at 100% of fees paid in preceding 12 months." },
+          { change_id: "MOD-CL-006", change_type: "modification", clause_id: "CL-006", original_text: "Developer shall not engage in competing business in India for 1 year following termination.", modified_text: "During the active term of this Agreement, Developer shall not compete with Client. Following termination, no post-termination restraint applies per Section 27 ICA." },
         ],
-        summary: "REDLINE COMPARISON: 2 changes detected.",
+        summary: "REDLINE COMPARISON: 2 key changes proposed to resolve critical risk and Section 27 ICA voidness.",
       };
+    }
+  },
+
+  listClauseLibrary: async (params?: { category?: string; clause_type?: string; q?: string }) => {
+    try {
+      const qs = new URLSearchParams(params as any);
+      return await request<{ items: any[]; total: number }>(`/contracts/clause-library?${qs}`);
+    } catch {
+      let items = mockStore.DEMO_CLAUSE_LIBRARY;
+      if (params?.category) items = items.filter((c) => c.category.toLowerCase() === params.category!.toLowerCase());
+      if (params?.clause_type) items = items.filter((c) => c.clause_type.toLowerCase() === params.clause_type!.toLowerCase());
+      if (params?.q) {
+        const q = params.q.toLowerCase();
+        items = items.filter((c) => c.title.toLowerCase().includes(q) || c.standard_language.toLowerCase().includes(q));
+      }
+      return { items, total: items.length };
+    }
+  },
+
+  getClauseLibraryItem: async (clauseId: string) => {
+    try {
+      return await request<any>(`/contracts/clause-library/${clauseId}`);
+    } catch {
+      const item = mockStore.DEMO_CLAUSE_LIBRARY.find((c) => c.clause_id === clauseId) || mockStore.DEMO_CLAUSE_LIBRARY[0];
+      return item;
+    }
+  },
+
+  listPlaybooks: async (caseId: string) => {
+    try {
+      return await request<{ items: any[]; total: number }>(`/cases/${caseId}/contracts/playbooks`);
+    } catch {
+      return { items: mockStore.DEMO_PLAYBOOKS, total: mockStore.DEMO_PLAYBOOKS.length };
+    }
+  },
+
+  evaluatePlaybook: async (caseId: string, body: { playbook_id: string; full_text: string; contract_id?: string; title?: string }) => {
+    if (isDemoMode(caseId)) {
+      return mockStore.evaluateDemoPlaybook(caseId, body);
+    }
+    try {
+      return await request<any>(`/cases/${caseId}/contracts/playbooks/evaluate`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    } catch {
+      return mockStore.evaluateDemoPlaybook(caseId, body);
     }
   },
 
@@ -610,6 +832,59 @@ export const api = {
     }
     try {
       return await request<any>(`/cases/${caseId}/ownership`);
+    } catch {
+      return mockStore.getDemoOwnership(caseId);
+    }
+  },
+
+  getOwnershipChainDAG: async (caseId: string) => {
+    if (isDemoMode(caseId)) {
+      return {
+        case_id: caseId,
+        search_span_years: 30,
+        is_30_year_search_complete: true,
+        nodes: [
+          { id: "node_1", label: "Ramachandra Rao", type: "PERSON" },
+          { id: "node_2", label: "Venkatappa Gowda", type: "PERSON" },
+          { id: "node_3", label: "Narasimha Gowda & Brothers", type: "PERSON" },
+          { id: "node_4", label: "Brigade Enterprises Pvt Ltd", type: "PERSON" },
+        ],
+        edges: [
+          { id: "e1", source_id: "node_1", target_id: "node_2", link_type: "SALE_DEED", event_date: "1994-06-12", confidence: 0.95 },
+          { id: "e2", source_id: "node_2", target_id: "node_3", link_type: "INHERITANCE_MUTATION", event_date: "2005-08-20", confidence: 0.9 },
+          { id: "e3", source_id: "node_3", target_id: "node_4", link_type: "SALE_DEED", event_date: "2018-03-15", confidence: 0.95 },
+        ],
+        gaps: [],
+        title_status: "CLEAR",
+      };
+    }
+    try {
+      return await request<any>(`/cases/${caseId}/ownership-chain`);
+    } catch {
+      return {
+        case_id: caseId,
+        search_span_years: 30,
+        is_30_year_search_complete: true,
+        nodes: [
+          { id: "node_1", label: "Ramachandra Rao", type: "PERSON" },
+          { id: "node_2", label: "Venkatappa Gowda", type: "PERSON" },
+          { id: "node_3", label: "Narasimha Gowda & Brothers", type: "PERSON" },
+          { id: "node_4", label: "Brigade Enterprises Pvt Ltd", type: "PERSON" },
+        ],
+        edges: [
+          { id: "e1", source_id: "node_1", target_id: "node_2", link_type: "SALE_DEED", event_date: "1994-06-12", confidence: 0.95 },
+          { id: "e2", source_id: "node_2", target_id: "node_3", link_type: "INHERITANCE_MUTATION", event_date: "2005-08-20", confidence: 0.9 },
+          { id: "e3", source_id: "node_3", target_id: "node_4", link_type: "SALE_DEED", event_date: "2018-03-15", confidence: 0.95 },
+        ],
+        gaps: [],
+        title_status: "CLEAR",
+      };
+    }
+  },
+
+  getOwnershipChain: async (caseId: string) => {
+    try {
+      return await request<any>(`/cases/${caseId}/ownership-chain`);
     } catch {
       return mockStore.getDemoOwnership(caseId);
     }
@@ -646,6 +921,59 @@ export const api = {
       return await request<any>(`/cases/${caseId}/compare`, { method: "POST", body: JSON.stringify({ document_ids: documentIds }) });
     } catch {
       return mockStore.getDemoComparison(caseId);
+    }
+  },
+
+  compareDocumentsDirect: async (caseId: string, documentIds: string[]) => {
+    if (isDemoMode(caseId)) {
+      return mockStore.compareDemoDocumentsDirect(caseId, documentIds);
+    }
+    try {
+      return await request<any>(`/cases/${caseId}/compare-direct`, { method: "POST", body: JSON.stringify({ document_ids: documentIds }) });
+    } catch {
+      return mockStore.compareDemoDocumentsDirect(caseId, documentIds);
+    }
+  },
+
+  classifyDocument: async (caseId: string, docId: string) => {
+    try {
+      return await request<any>(`/cases/${caseId}/documents/${docId}/classify`, { method: "POST" });
+    } catch {
+      return {
+        document_id: docId,
+        document_type: "sale_deed",
+        badge_label: "Sale Deed",
+        badge_color: "emerald",
+        confidence: 0.95,
+      };
+    }
+  },
+
+  getDocumentOcrView: async (caseId: string, docId: string) => {
+    try {
+      return await request<any>(`/cases/${caseId}/documents/${docId}/ocr-view`);
+    } catch {
+      return {
+        document_id: docId,
+        document_type: "sale_deed",
+        badge_label: "Sale Deed",
+        badge_color: "emerald",
+        classification_confidence: 0.95,
+        total_pages: 2,
+        mean_confidence: 0.94,
+        uncertain_token_count: 0,
+        supported_indic_languages: ["en", "hi", "kn", "ta", "te", "ml", "mr", "bn", "gu", "pa", "ur", "or", "as"],
+        preprocessing: {
+          clahe_contrast_enhancement: true,
+          deskew_correction: true,
+          dual_pass_indic_ocr: true,
+          revenue_stamp_detection: true,
+        },
+        pages: [
+          { page_number: 1, text: "THIS SALE DEED is executed on this 12th day of March 1987...", language: "en", confidence: 0.94, uncertain_tokens: [] },
+          { page_number: 2, text: "SCHEDULE: All that piece and parcel of land bearing Sy. No. 124/3...", language: "en", confidence: 0.96, uncertain_tokens: [] },
+        ],
+      };
     }
   },
 
@@ -1331,5 +1659,264 @@ export const api = {
       return demoActions;
     }
   },
+
+  // ==================== Milestone 4: Workflows & Multi-Agent ====================
+  getAgentLibrary: async () => {
+    try {
+      return await request<{ count: number; agents: any[] }>("/workflows/agents/library");
+    } catch {
+      return {
+        count: 6,
+        agents: [
+          { agent_type: "due_diligence_agent", name: "Due Diligence Specialist", description: "Comprehensive due diligence across deeds, mutations, and boundaries.", category: "Property & Real Estate" },
+          { agent_type: "title_examiner_agent", name: "Title Examiner Specialist", description: "Reconstructs 13-30 year chain of title and detects broken links.", category: "Property & Title" },
+          { agent_type: "risk_auditor_agent", name: "Risk Auditor Specialist", description: "Audits document mismatches and classifies 9 risk categories.", category: "Risk & Compliance" },
+          { agent_type: "litigation_strategist_agent", name: "Litigation Strategist Specialist", description: "Indian court litigation strategies (CPC, BNS, Specific Relief Act).", category: "Litigation & Dispute" },
+          { agent_type: "contract_reviewer_agent", name: "Contract Reviewer Specialist", description: "Extracts 29+ clause types, flags playbook deviations, and suggests redlines.", category: "Contracts & Commercial" },
+          { agent_type: "bsa_compliance_agent", name: "BSA Compliance Specialist", description: "Certifies evidence admissibility under Bharatiya Sakshya Adhiniyam 2023 Section 63.", category: "Evidence & Statutory" },
+        ],
+      };
+    }
+  },
+
+  listWorkflows: async (includeTemplates = true) => {
+    try {
+      return await request<{ total: number; workflows: any[] }>(`/workflows?include_templates=${includeTemplates}`);
+    } catch {
+      return {
+        total: 3,
+        workflows: [
+          {
+            id: "tpl-prop-dd",
+            name: "Comprehensive Property Due Diligence",
+            description: "Full legal chain analysis: OCR → Title Examination → Risk Audit → BSA Evidence Certification → Final Report",
+            category: "Real Estate",
+            version: "2.0",
+            nodes: [
+              { id: "n1", name: "Title Examiner", agent_type: "title_examiner_agent", label: "13-30 Yr Title Examination", dependencies: [] },
+              { id: "n2", name: "Risk Auditor", agent_type: "risk_auditor_agent", label: "9-Category Risk Audit", dependencies: ["n1"] },
+              { id: "n3", name: "BSA Compliance", agent_type: "bsa_compliance_agent", label: "BSA 2023 Sec 63 Certification", dependencies: ["n2"] },
+              { id: "n4", name: "Report Compiler", agent_type: "report_agent", label: "Title Search Report v2", dependencies: ["n3"] },
+            ],
+            tags: ["Property", "Due Diligence", "BSA 2023", "Title"],
+            is_template: true,
+          },
+          {
+            id: "tpl-litigation-strategy",
+            name: "Multi-Agent Litigation Strategy Formulation",
+            description: "Evaluates causes of action under CPC/BNS, searches Indian Kanoon precedents, and drafts court relief prayers.",
+            category: "Litigation",
+            version: "1.0",
+            nodes: [
+              { id: "n1", name: "Litigation Strategist", agent_type: "litigation_strategist_agent", label: "Cause of Action & Limitation Check", dependencies: [] },
+              { id: "n2", name: "Risk Auditor", agent_type: "risk_auditor_agent", label: "Litigation Exposure Assessment", dependencies: ["n1"] },
+            ],
+            tags: ["Litigation", "CPC", "Limitation", "Court Precedent"],
+            is_template: true,
+          },
+          {
+            id: "tpl-contract-review",
+            name: "Commercial Contract Review & Redlining",
+            description: "Extracts 29+ clause types, flags playbook deviations, assesses contract risk score, and suggests redlines.",
+            category: "Contracts",
+            version: "1.0",
+            nodes: [
+              { id: "n1", name: "Contract Reviewer", agent_type: "contract_reviewer_agent", label: "Clause Extraction & Redlining", dependencies: [] },
+            ],
+            tags: ["Contracts", "Redlining", "Risk Scoring"],
+            is_template: true,
+          },
+        ],
+      };
+    }
+  },
+
+  getWorkflow: async (workflowId: string) => {
+    return await request<any>(`/workflows/${workflowId}`);
+  },
+
+  createWorkflow: async (body: any) => {
+    return await request<any>("/workflows", { method: "POST", body: JSON.stringify(body) });
+  },
+
+  updateWorkflow: async (workflowId: string, body: any) => {
+    return await request<any>(`/workflows/${workflowId}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+
+  deleteWorkflow: async (workflowId: string) => {
+    return await request<any>(`/workflows/${workflowId}`, { method: "DELETE" });
+  },
+
+  executeWorkflow: async (workflowId: string, body: { case_id: string; inputs?: any; metadata?: any }) => {
+    return await request<any>(`/workflows/${workflowId}/execute`, { method: "POST", body: JSON.stringify(body) });
+  },
+
+  getWorkflowExecution: async (executionId: string) => {
+    return await request<any>(`/workflows/executions/${executionId}`);
+  },
+
+  // ==================== Milestone 6: Shared Spaces & PII ====================
+  createSharedSpace: async (caseId: string, body: any) => {
+    try {
+      return await request<any>(`/shared-spaces/cases/${caseId}/create`, { method: "POST", body: JSON.stringify(body) });
+    } catch {
+      return {
+        share_id: "demo-share-" + Math.random().toString(36).substring(7),
+        token: "demo_tok_" + Math.random().toString(36).substring(2, 18),
+        share_url: "/shared/demo_token",
+        expires_at: new Date(Date.now() + 86400000).toISOString(),
+        recipient_email: body.recipient_email,
+        role: body.role,
+        has_passcode: !!body.passcode,
+      };
+    }
+  },
+
+  listSharedSpaces: async (caseId: string) => {
+    try {
+      return await request<{ case_id: string; shared_spaces: any[] }>(`/shared-spaces/cases/${caseId}`);
+    } catch {
+      return {
+        case_id: caseId,
+        shared_spaces: [
+          {
+            id: "share-demo-1",
+            name: "Client Property Title Review Space",
+            recipient_email: "client@example.com",
+            recipient_name: "Client Counsel",
+            role: "VIEWER",
+            duration: "24h",
+            expires_at: new Date(Date.now() + 86400000).toISOString(),
+            is_active: true,
+            has_passcode: true,
+            watermark_enabled: true,
+            access_count: 3,
+            last_accessed_at: new Date(Date.now() - 3600000).toISOString(),
+            token: "demo_tok_123",
+          },
+        ],
+      };
+    }
+  },
+
+  getPublicSharedSpace: async (token: string) => {
+    return await request<any>(`/shared-spaces/access/${token}`);
+  },
+
+  verifySharedSpacePasscode: async (token: string, passcode: string) => {
+    return await request<any>(`/shared-spaces/access/${token}/verify`, {
+      method: "POST",
+      body: JSON.stringify({ passcode }),
+    });
+  },
+
+  revokeSharedSpace: async (shareId: string) => {
+    return await request<any>(`/shared-spaces/${shareId}`, { method: "DELETE" });
+  },
+
+  detectPII: async (text: string) => {
+    return await request<any>("/pii/detect", { method: "POST", body: JSON.stringify({ text }) });
+  },
+
+  redactPII: async (body: {
+    text: string;
+    strategy?: string;
+    mask_char?: string;
+    preserve_length?: boolean;
+    enabled_entity_types?: string[];
+  }) => {
+    return await request<any>("/pii/redact", { method: "POST", body: JSON.stringify(body) });
+  },
+
+  getPIIStats: async (caseId: string) => {
+    return await request<any>(`/pii/stats/${caseId}`);
+  },
+
+  // ==================== Milestone 7: India Property Moat & BSA ====================
+  getSupportedPortals: async () => {
+    try {
+      return await request<any>("/property/portals/supported");
+    } catch {
+      return {
+        count: 5,
+        portals: [
+          { state_code: "maharashtra", state_name: "Maharashtra", portal_name: "Mahabhulekh / Satbara", sample_survey: "124/2" },
+          { state_code: "karnataka", state_name: "Karnataka", portal_name: "Bhoomi (RTC / Pahani)", sample_survey: "45/1A" },
+          { state_code: "tamil_nadu", state_name: "Tamil Nadu", portal_name: "TNREGINET / Patta Chitta", sample_survey: "203/2B" },
+          { state_code: "telangana", state_name: "Telangana", portal_name: "Dharani / Maa Bhoomi", sample_survey: "150/3" },
+          { state_code: "gujarat", state_name: "Gujarat", portal_name: "AnyRoR / Bhulekh Gujarat", sample_survey: "456/1" },
+        ],
+      };
+    }
+  },
+
+  searchStatePortal: async (body: {
+    state: string;
+    survey_number: string;
+    district: string;
+    taluk: string;
+    village: string;
+  }) => {
+    return await request<any>("/property/portals/search", { method: "POST", body: JSON.stringify(body) });
+  },
+
+  generateBSACertificate: async (caseId: string, body: { custodian_name: string; custodian_designation?: string; organization_name?: string }) => {
+    return await request<any>(`/bsa/cases/${caseId}/certificate`, { method: "POST", body: JSON.stringify({ case_id: caseId, ...body }) });
+  },
+
+  listBSACertificates: async (caseId: string) => {
+    return await request<any>(`/bsa/cases/${caseId}/certificates`);
+  },
+
+  getBSACertificate: async (certId: string) => {
+    return await request<any>(`/bsa/certificate/${certId}`);
+  },
+
+  searchKanoonJudgments: async (body: { query: string; court?: string; limit?: number }) => {
+    try {
+      return await request<any>("/research/kanoon/search", { method: "POST", body: JSON.stringify(body) });
+    } catch {
+      return {
+        query: body.query,
+        court_filter: body.court || "All Courts",
+        total_found: 2,
+        judgments: [
+          {
+            doc_id: "ik-sc-2023-suraj-lamp",
+            title: "Suraj Lamp & Industries Pvt. Ltd. v. State of Haryana & Anr.",
+            court: "Supreme Court of India",
+            judgment_date: "2011-10-11",
+            citation: "(2012) 1 SCC 656",
+            headline: "SA/GPA/Will transactions do not convey title; Transfer can only be by registered deed.",
+            ratio_decidendi: "A power of attorney is not an instrument of transfer in regard to any right in immovable property.",
+            cited_by_count: 842,
+            precedent_strength: "LANDMARK",
+            key_statutes: ["Transfer of Property Act 1882 Sec 54", "Registration Act 1908 Sec 17"],
+          },
+          {
+            doc_id: "ik-sc-2014-anvar-pv",
+            title: "Anvar P.V. v. P.K. Basheer and Others",
+            court: "Supreme Court of India",
+            judgment_date: "2014-09-18",
+            citation: "(2014) 10 SCC 473",
+            headline: "Mandatory nature of electronic evidence certification under Section 65B (now Section 63 BSA 2023).",
+            ratio_decidendi: "Electronic record cannot be admitted in evidence unless accompanied by certificate under Section 65B/63.",
+            cited_by_count: 2150,
+            precedent_strength: "LANDMARK",
+            key_statutes: ["Bharatiya Sakshya Adhiniyam 2023 Sec 63", "Indian Evidence Act 1872 Sec 65B"],
+          },
+        ],
+      };
+    }
+  },
+
+  getKanoonCitationGraph: async (docId: string) => {
+    return await request<any>(`/research/kanoon/citation-graph/${docId}`);
+  },
 };
+
+export async function getOwnershipChainDAG(caseId: string) {
+  return api.getOwnershipChainDAG(caseId);
+}
+
 

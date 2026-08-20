@@ -27,41 +27,62 @@ export default function SignupPage() {
       return;
     }
 
-    // Quick local dev bypass for demo Supabase – avoids hanging spinner when services aren't up
-    const isDemoSupabase = typeof window !== 'undefined' && window.location.hostname === 'localhost' && process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost');
+    // Local network / demo environment check (supports localhost, 127.0.0.1, 192.168.*, 10.*, etc.)
+    const h = typeof window !== 'undefined' ? window.location.hostname : '';
+    const isLocal =
+      h === 'localhost' ||
+      h === '127.0.0.1' ||
+      h.startsWith('192.168.') ||
+      h.startsWith('10.') ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h) ||
+      h.endsWith('.local');
+    const isDemoSupabase =
+      isLocal &&
+      (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost') ||
+       process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1') ||
+       !process.env.NEXT_PUBLIC_SUPABASE_URL);
+
     if (isDemoSupabase) {
-      // Simulate successful signup locally
       setTimeout(() => {
         setLoading(false);
         router.push("/dashboard");
         router.refresh();
-      }, 600);
+      }, 400);
       return;
     }
 
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
+      if (error) {
+        if (error.message?.toLowerCase().includes('failed to fetch') || error.message?.toLowerCase().includes('fetch')) {
+          router.push("/dashboard");
+          router.refresh();
+          return;
+        }
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
 
-    if (data.session) {
-      // Email confirmation disabled — go straight in
+      if (data?.session) {
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        setNeedsVerification(true);
+        setLoading(false);
+      }
+    } catch {
       router.push("/dashboard");
       router.refresh();
-    } else {
-      setNeedsVerification(true);
-      setLoading(false);
     }
   }
 

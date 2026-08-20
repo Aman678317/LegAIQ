@@ -602,6 +602,27 @@ export function getDemoComparison(caseId: string) {
   ];
 }
 
+export function compareDemoDocumentsDirect(caseId: string, documentIds: string[]) {
+  const ctx = getContext(caseId);
+  const comparisonResults = getDemoComparison(caseId);
+  const docA = ctx.documentNames[0] || "sale_deed_1987.pdf";
+  const docB = ctx.documentNames[1] || "partition_deed_2004.pdf";
+
+  return {
+    case_id: caseId,
+    doc_a: { id: documentIds[0] || "doc-1", name: docA },
+    doc_b: { id: documentIds[1] || "doc-2", name: docB },
+    field_comparisons: comparisonResults,
+    diff_chunks: [
+      { type: "equal", text_a: "THIS SALE DEED is executed on this 12th day of March 1987 at Bengaluru.", text_b: "THIS PARTITION DEED is executed on this 15th day of June 2004 at Bengaluru." },
+      { type: "replace", text_a: "Venkatarama Reddy S/o Late Krishnappa", text_b: "Venkatarama Reddy and Legal Heirs" },
+      { type: "delete", text_a: "absolute sale for Rs. 45,000 consideration", text_b: "" },
+      { type: "insert", text_a: "", text_b: "partition among coparceners with Schedule A & B allotments" },
+      { type: "equal", text_a: "Survey Number 124/3 situated at Whitefield Village", text_b: "Survey Number 124/2 situated at Whitefield Village" },
+    ],
+  };
+}
+
 export function getDemoRisks(caseId: string): DemoRisk[] {
   const ctx = getContext(caseId);
   const risksMap = getStorage<Record<string, DemoRisk[]>>("risks", {});
@@ -701,11 +722,26 @@ export function getDemoChatHistory(caseId: string) {
   return getStorage<any[]>(`chat_${caseId}`, defaultChat);
 }
 
-export async function askDemoQuestion(caseId: string, question: string, language = "en", model?: string) {
+export async function askDemoQuestion(
+  caseId: string,
+  question: string,
+  language = "en",
+  model?: string,
+  onChunk?: (chunk: string) => void
+) {
   const ctx = getContext(caseId);
   const history = getDemoChatHistory(caseId);
 
   const answer = await generateLegalAnswer(ctx, question, language, model);
+
+  if (onChunk && answer.content) {
+    const words = answer.content.split(" ");
+    for (let i = 0; i < words.length; i += 4) {
+      const chunk = words.slice(i, i + 4).join(" ") + (i + 4 < words.length ? " " : "");
+      onChunk(chunk);
+      await new Promise((resolve) => setTimeout(resolve, 15));
+    }
+  }
 
   const userMsg = { id: `msg-${Date.now()}-user`, role: "user", content: question, created_at: new Date().toISOString() };
   const botMsg = { id: `msg-${Date.now()}-bot`, role: "assistant", content: answer.content, citations: answer.citations, created_at: new Date().toISOString() };
@@ -838,4 +874,331 @@ export function getDemoMembers() {
     { id: "mem-1", user_id: "u-1", email: "demo@example.com", full_name: "Demo Counsel", role: "OWNER", created_at: new Date(Date.now() - 30 * 86400000).toISOString() },
     { id: "mem-2", user_id: "u-2", email: "partner@firm.com", full_name: "Senior Partner", role: "ADMIN", created_at: new Date(Date.now() - 20 * 86400000).toISOString() },
   ];
+}
+
+// --- Milestone 3: Review Tables Demo Store ---
+
+export function listDemoReviewTables(caseId: string) {
+  const defaultTables = [
+    {
+      id: `rt-${caseId}-1`,
+      case_id: caseId,
+      name: "Due Diligence Master Review Grid",
+      description: "Structured legal prompts extracted across all matter documents.",
+      column_count: 5,
+      created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: `rt-${caseId}-2`,
+      case_id: caseId,
+      name: "Lease Deed Term & Liability Audit",
+      description: "Commercial lease terms, notice periods, and indemnity caps.",
+      column_count: 4,
+      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+  return getStorage<any[]>(`review_tables_${caseId}`, defaultTables);
+}
+
+export function getDemoReviewTable(caseId: string, tableId: string) {
+  const tables = listDemoReviewTables(caseId);
+  const table = tables.find((t) => t.id === tableId) || tables[0] || {
+    id: tableId,
+    case_id: caseId,
+    name: "Review Table",
+    description: "Spreadsheet Extraction Grid",
+  };
+
+  const columns = [
+    { id: "col-1", table_id: tableId, name: "Governing Law", column_type: "prompt", prompt: "What is the governing law?", position: 0 },
+    { id: "col-2", table_id: tableId, name: "Jurisdiction & Seat", column_type: "prompt", prompt: "Which court has jurisdiction?", position: 1 },
+    { id: "col-3", table_id: tableId, name: "Indemnity Cap", column_type: "prompt", prompt: "Is indemnity capped?", position: 2 },
+    { id: "col-4", table_id: tableId, name: "Termination Notice", column_type: "prompt", prompt: "What is the notice period?", position: 3 },
+    { id: "col-5", table_id: tableId, name: "Stamp Duty Paid", column_type: "prompt", prompt: "What stamp duty is paid?", position: 4 },
+  ];
+
+  const docs = listDemoDocuments(caseId);
+  const rows = docs.map((doc, idx) => ({
+    document_id: doc.id,
+    document_name: doc.file_name,
+    document_type: doc.document_type || "Legal Deed",
+    status: doc.status || "COMPLETED",
+    cells: {
+      "col-1": {
+        id: `cell-${doc.id}-1`,
+        value: "Laws of India (Substantive)",
+        confidence_score: 0.94,
+        status: "completed",
+        evidence: {
+          doc_id: doc.id,
+          doc_name: doc.file_name,
+          page_num: 1,
+          text_snippet: "This Agreement shall be governed by and construed in accordance with the substantive laws of India.",
+          bbox: [0.15, 0.1, 0.25, 0.9],
+        },
+      },
+      "col-2": {
+        id: `cell-${doc.id}-2`,
+        value: "Bengaluru Courts & MCIA Arbitration",
+        confidence_score: 0.89,
+        status: "completed",
+        evidence: {
+          doc_id: doc.id,
+          doc_name: doc.file_name,
+          page_num: 2,
+          text_snippet: "Courts at Bengaluru shall have exclusive jurisdiction. Arbitration seat: Bengaluru.",
+          bbox: [0.2, 0.1, 0.3, 0.85],
+        },
+      },
+      "col-3": {
+        id: `cell-${doc.id}-3`,
+        value: idx % 2 === 0 ? "Capped at 1x 12-Month Fees" : "UNLIMITED (High Risk Flag)",
+        confidence_score: idx % 2 === 0 ? 0.91 : 0.72,
+        status: "completed",
+        evidence: {
+          doc_id: doc.id,
+          doc_name: doc.file_name,
+          page_num: 3,
+          text_snippet: idx % 2 === 0 ? "The aggregate liability under this indemnity shall not exceed 100% of the total fees paid in preceding 12 months." : "Vendor provides unlimited indemnity and holds harmless for any and all losses.",
+          bbox: [0.4, 0.1, 0.5, 0.9],
+        },
+      },
+      "col-4": {
+        id: `cell-${doc.id}-4`,
+        value: "30 Days Written Notice",
+        confidence_score: 0.96,
+        status: "completed",
+        evidence: {
+          doc_id: doc.id,
+          doc_name: doc.file_name,
+          page_num: 2,
+          text_snippet: "Either party may terminate this Agreement by giving 30 days prior written notice.",
+          bbox: [0.6, 0.1, 0.7, 0.9],
+        },
+      },
+      "col-5": {
+        id: `cell-${doc.id}-5`,
+        value: "Rs. 75,000 (Karnataka Stamp Act)",
+        confidence_score: 0.88,
+        status: "completed",
+        evidence: {
+          doc_id: doc.id,
+          doc_name: doc.file_name,
+          page_num: 1,
+          text_snippet: "Duly stamped with stamp duty of Rs. 75,000 before the Sub-Registrar.",
+          bbox: [0.05, 0.1, 0.15, 0.9],
+        },
+      },
+    },
+  }));
+
+  return {
+    ...table,
+    columns,
+    rows,
+    total_documents: rows.length,
+  };
+}
+
+export function createDemoReviewTable(caseId: string, body: any) {
+  const tables = listDemoReviewTables(caseId);
+  const newTable = {
+    id: `rt-${Date.now()}`,
+    case_id: caseId,
+    name: body.name || "New Review Table",
+    description: body.description || "",
+    column_count: body.columns?.length || 5,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  tables.unshift(newTable);
+  setStorage(`review_tables_${caseId}`, tables);
+  return newTable;
+}
+
+// --- Milestone 5: Clause Library & Playbooks Demo Store ---
+
+export const DEMO_CLAUSE_LIBRARY = [
+  {
+    clause_id: "LIB-INDEM-001",
+    clause_type: "indemnity",
+    title: "Mutual Indemnification with Cap",
+    category: "Commercial",
+    standard_language: "Each party agrees to defend and indemnify the other against direct third-party claims arising from gross negligence or IP infringement, capped at 12 months fees.",
+    fallback_tier_1: "Indemnity for direct damages only, capped at 2x contract value.",
+    fallback_tier_2: "Indemnity capped at proceeds of commercial insurance.",
+    walkaway_language: "WALKAWAY: Reject uncapped indemnities or indemnities extending to consequential damages.",
+    guidance_notes: "Sections 124 & 125 of Indian Contract Act 1872 require express conduct linkage.",
+    statutory_reference: "Indian Contract Act, 1872 §124, §125",
+    tags: ["indemnity", "liability", "commercial"],
+  },
+  {
+    clause_id: "LIB-NONCOMP-001",
+    clause_type: "non_compete",
+    title: "Enforceable Restrictive Covenant & Section 27 Compliance",
+    category: "Employment & Services",
+    standard_language: "During the term only, Service Provider shall not compete with Client. Post-termination restrictions are explicitly excluded per Section 27 Indian Contract Act.",
+    fallback_tier_1: "In-term non-compete with 6-month post-termination non-solicitation of active personnel.",
+    fallback_tier_2: "12-month non-solicitation of clients with whom direct interaction occurred.",
+    walkaway_language: "WALKAWAY: Post-termination non-competes are void ab initio in India (Percept D'Mark v. Zaheer Khan).",
+    guidance_notes: "Section 27 voidness is absolute under Indian jurisprudence.",
+    statutory_reference: "Indian Contract Act, 1872 §27; Percept D'Mark (2006)",
+    tags: ["non-compete", "section-27", "restraint-of-trade"],
+  },
+  {
+    clause_id: "LIB-GOVLAW-001",
+    clause_type: "governing_law",
+    title: "Governing Law & Institutional Arbitration (India)",
+    category: "Dispute Resolution",
+    standard_language: "Governed by laws of India. Arbitration administered by MCIA or DIAC in Mumbai/Bengaluru under Arbitration Act 1996.",
+    fallback_tier_1: "Sole arbitrator appointed under Arbitration and Conciliation Act 1996 in New Delhi.",
+    fallback_tier_2: "3-arbitrator panel with 30-day executive mediation period.",
+    walkaway_language: "WALKAWAY: Reject unilateral appointment of arbitrator (Perkins Eastman violation).",
+    guidance_notes: "Seat determines exclusive supervisory court jurisdiction.",
+    statutory_reference: "Arbitration and Conciliation Act, 1996 §7, §12(5)",
+    tags: ["arbitration", "governing-law", "dispute-resolution"],
+  },
+  {
+    clause_id: "LIB-DPDP-001",
+    clause_type: "data_protection",
+    title: "Digital Personal Data Protection (DPDP Act 2023)",
+    category: "Privacy & Compliance",
+    standard_language: "Compliance with DPDP Act 2023, data processor terms, purpose limitation, and 24-hour data breach notification.",
+    fallback_tier_1: "DPDP compliance with 48-hour breach notification.",
+    fallback_tier_2: "Standard data processing with annual SOC2 summary.",
+    walkaway_language: "WALKAWAY: Unrestricted processing of biometric/Aadhaar data without consent.",
+    guidance_notes: "Penalties up to INR 250 Crores under DPDP Act 2023 for data breaches.",
+    statutory_reference: "DPDP Act, 2023 §6, §8",
+    tags: ["dpdp-act", "data-privacy", "personal-data"],
+  },
+];
+
+export const DEMO_PLAYBOOKS = [
+  {
+    playbook_id: "PB-MSA-001",
+    name: "Enterprise Master Services Agreement (MSA) Playbook",
+    description: "Firm standard negotiation guidelines for B2B IT, SaaS, and Professional Services contracts in India.",
+    contract_type: "master_services_agreement",
+    rules_count: 6,
+  },
+  {
+    playbook_id: "PB-EMPLOY-001",
+    name: "Employment & Executive Services (India §27 ICA Compliant)",
+    description: "Indian employment contracts ensuring strict compliance with Section 27 and BSA 2023.",
+    contract_type: "employment_agreement",
+    rules_count: 4,
+  },
+  {
+    playbook_id: "PB-LEASE-001",
+    name: "Commercial Real Estate Lease Deed Playbook",
+    description: "Playbook for commercial leases and licenses under Indian State Stamp Acts & Registration Act.",
+    contract_type: "lease_deed",
+    rules_count: 5,
+  },
+];
+
+export function evaluateDemoPlaybook(caseId: string, body: any) {
+  const isMSA = (body.playbook_id || "").includes("MSA");
+  const isEmployment = (body.playbook_id || "").includes("EMPLOY");
+
+  return {
+    contract_id: body.contract_id || "demo-contract",
+    playbook_id: body.playbook_id || "PB-MSA-001",
+    playbook_name: isEmployment ? "Employment Agreement Playbook" : "Enterprise MSA Playbook",
+    compliance_score: isEmployment ? 55.0 : 78.5,
+    overall_status: isEmployment ? "walkaway_triggered" : "minor_deviations",
+    total_rules_evaluated: 6,
+    passed_rules: isEmployment ? 3 : 4,
+    deviations: isEmployment
+      ? [
+          {
+            deviation_id: "DEV-001",
+            rule_id: "RULE-EMP-NONCOMP",
+            clause_type: "non_compete",
+            severity: "critical",
+            deviation_type: "statutory_violation",
+            current_text: "Employee shall not compete for 1 year following termination in India.",
+            issue_description: "CRITICAL STATUTORY VIOLATION: Post-termination non-compete is void ab initio under Section 27 Indian Contract Act 1872.",
+            recommended_redline: "Employee shall not engage in competing business during the active term of employment only. No post-termination restraint applies per Section 27 ICA.",
+            statutory_reference: "Indian Contract Act, 1872 §27; Percept D'Mark (2006)",
+          },
+        ]
+      : [
+          {
+            deviation_id: "DEV-002",
+            rule_id: "RULE-MSA-INDEM",
+            clause_type: "indemnity",
+            severity: "high",
+            deviation_type: "forbidden_term_detected",
+            current_text: "Developer provides unlimited indemnity against all claims.",
+            issue_description: "Forbidden terms: 'unlimited indemnity'. Playbook mandates 12-month fee cap.",
+            recommended_redline: "Indemnity capped at total fees paid in preceding 12 months for direct damages.",
+            statutory_reference: "Indian Contract Act, 1872 §73, §124",
+          },
+        ],
+    redline_recommendations: [
+      {
+        action: "replace",
+        clause_type: isEmployment ? "non_compete" : "indemnity",
+        suggested_text: isEmployment
+          ? "In accordance with Section 27 of the Indian Contract Act, 1872, no post-termination restraint on trade shall apply."
+          : "Each party's total liability under this indemnity shall not exceed 100% of fees paid in preceding 12 months.",
+        rationale: "Align with firm standard playbook risk controls and Indian statutes.",
+      },
+    ],
+  };
+}
+
+export function getDemoContractHeatmap(caseId: string) {
+  return {
+    contract_id: "demo-contract",
+    overall_score: 58.0,
+    overall_risk: "medium",
+    categories: {
+      "Liability & Indemnity": {
+        score: 75.0,
+        highest_risk: "high",
+        clause_count: 2,
+        clauses: [
+          { clause_id: "CL-002", title: "Indemnification", type: "indemnity", risk_level: "high", risk_factors: ["High: broad indemnity"] },
+          { clause_id: "CL-003", title: "Limitation of Liability", type: "limitation_of_liability", risk_level: "medium", risk_factors: ["Medium: consequential damages"] },
+        ],
+      },
+      "Commercial & Term": {
+        score: 35.0,
+        highest_risk: "medium",
+        clause_count: 3,
+        clauses: [
+          { clause_id: "CL-004", title: "Termination", type: "termination", risk_level: "medium", risk_factors: ["Medium: termination notice"] },
+          { clause_id: "CL-001", title: "Parties", type: "parties", risk_level: "negligible", risk_factors: [] },
+        ],
+      },
+      "Restrictive Covenants": {
+        score: 95.0,
+        highest_risk: "critical",
+        clause_count: 1,
+        clauses: [
+          { clause_id: "CL-006", title: "Non-Compete", type: "non_compete", risk_level: "critical", risk_factors: ["Critical: Section 27 ICA void post-termination non-compete"] },
+        ],
+      },
+      "Compliance & Statutory": {
+        score: 40.0,
+        highest_risk: "medium",
+        clause_count: 2,
+        clauses: [
+          { clause_id: "CL-007", title: "Stamp Duty", type: "stamp_duty", risk_level: "medium", risk_factors: ["Medium: stamp duty compliance"] },
+        ],
+      },
+      "Dispute & Governance": {
+        score: 20.0,
+        highest_risk: "low",
+        clause_count: 1,
+        clauses: [
+          { clause_id: "CL-005", title: "Governing Law", type: "governing_law", risk_level: "low", risk_factors: [] },
+        ],
+      },
+    },
+  };
 }

@@ -12,12 +12,14 @@ import {
   Languages,
   Sparkles,
   BookOpen,
+  Scale,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Card, Badge } from "@/components/ui";
 import { formatDateTime, LANGUAGES } from "@/lib/utils";
 import { checkOllamaStatus, OllamaStatus } from "@/lib/ollama";
 import { downloadDraftFile } from "@/lib/reportExporter";
+import { KanoonSearchPanel } from "@/components/research/KanoonSearchPanel";
 
 const TAX_RESEARCH_PROMPTS = [
   "What is the ratio decidendi in Vodafone International Holdings ((2012) 6 SCC 613)?",
@@ -35,6 +37,7 @@ const PROPERTY_RESEARCH_PROMPTS = [
 
 export default function ResearchPage() {
   const { caseId } = useParams<{ caseId: string }>();
+  const [tab, setTab] = useState<"kanoon" | "assistant">("kanoon");
   const [sessions, setSessions] = useState<any[]>([]);
   const [question, setQuestion] = useState("");
   const [researching, setResearching] = useState(false);
@@ -133,54 +136,30 @@ export default function ResearchPage() {
       {/* Header & Controls */}
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Legal Research Intelligence</h1>
+          <h1 className="text-2xl font-semibold text-white">Legal Research &amp; Kanoon Intelligence</h1>
           <p className="mt-1 text-xs text-text-secondary">
-            AI searches authoritative Indian statutes, Supreme Court rulings, and official repositories with verified citations.
+            Indian Kanoon precedent citation network, Supreme Court ratio decidendi, and verified statutory citations.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Ollama Status */}
-          {ollamaStatus.online ? (
-            <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-400">
-              <Cpu size={13} className="animate-pulse text-emerald-400" />
-              {ollamaStatus.models.length > 1 ? (
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="bg-transparent font-mono text-xs text-emerald-300 outline-none"
-                >
-                  {ollamaStatus.models.map((m) => (
-                    <option key={m} value={m} className="bg-bg text-white">
-                      Ollama: {m}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span className="font-mono text-xs">Ollama: {ollamaStatus.activeModel || "Online"}</span>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-bg-elevated px-2.5 py-1 text-xs text-text-muted">
-              <Cpu size={13} className="text-primary" />
-              <span>Local Research Engine</span>
-            </div>
-          )}
-
-          {/* Language Selector */}
-          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-bg px-2.5 py-1 text-xs text-white">
-            <Languages size={13} className="text-primary" />
-            <select
-              value={selectedLang}
-              onChange={(e) => setSelectedLang(e.target.value)}
-              className="bg-transparent text-xs text-white outline-none"
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-lg border border-border bg-surface p-1">
+            <button
+              onClick={() => setTab("kanoon")}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                tab === "kanoon" ? "bg-primary text-white" : "text-text-secondary hover:text-white"
+              }`}
             >
-              {LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code} className="bg-bg text-white">
-                  {l.label}
-                </option>
-              ))}
-            </select>
+              <Scale size={13} /> Indian Kanoon Network
+            </button>
+            <button
+              onClick={() => setTab("assistant")}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                tab === "assistant" ? "bg-primary text-white" : "text-text-secondary hover:text-white"
+              }`}
+            >
+              <BookOpen size={13} /> Research Memos
+            </button>
           </div>
         </div>
       </div>
@@ -189,139 +168,145 @@ export default function ResearchPage() {
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div>
       )}
 
-      {/* Search Bar */}
-      <form onSubmit={(e) => { e.preventDefault(); runResearch(); }} className="flex gap-3">
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder={
-            isTax
-              ? "e.g., What is the scope of Section 9(1)(i) regarding indirect transfers under Indian Income Tax Act?"
-              : "e.g., What is the limitation period for suit for partition in Karnataka?"
-          }
-          className="flex-1 rounded-xl border border-border bg-bg-surface px-4 py-3.5 text-sm text-white placeholder-text-muted outline-none focus:border-primary"
-        />
-        <Button type="submit" disabled={researching || !question.trim()}>
-          {researching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-          Research with AI
-        </Button>
-      </form>
-
-      {/* Suggested Prompts */}
-      <div className="flex flex-wrap gap-2">
-        {prompts.map((p) => (
-          <button
-            key={p}
-            onClick={() => runResearch(p)}
-            className="rounded-full border border-border/70 bg-bg px-3.5 py-1.5 text-xs text-text-secondary transition-colors hover:border-primary/50 hover:text-white"
-          >
-            <Sparkles size={11} className="mr-1.5 inline text-primary" />
-            {p}
-          </button>
-        ))}
-      </div>
-
-      {/* Research Output Cards */}
-      {loading ? (
-        <div className="flex h-48 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
-      ) : sessions.length === 0 ? (
-        <Card className="flex flex-col items-center p-12 text-center">
-          <BookOpen size={36} className="mb-3 text-text-muted" />
-          <h3 className="text-base font-semibold text-white">No research sessions yet</h3>
-          <p className="mt-2 max-w-md text-xs text-text-secondary">
-            Select a legal prompt above or enter a custom proposition. The research agent analyzes Indian statutes, binding Supreme Court precedents, and provides verifiable citations.
-          </p>
-        </Card>
+      {tab === "kanoon" ? (
+        <KanoonSearchPanel />
       ) : (
-        <div className="space-y-4">
-          {sessions.map((session) => (
-            <Card
-              key={session.id}
-              className="p-6"
-              onMouseEnter={() => session.status === "COMPLETED" && loadSources(session.id)}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-base font-semibold text-white">{session.question}</h3>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-text-muted">
-                    {session.jurisdiction && <span>Jurisdiction: {session.jurisdiction}</span>}
-                    <span>·</span>
-                    <span>{formatDateTime(session.created_at)}</span>
+        <div className="space-y-6">
+          {/* Search Bar */}
+          <form onSubmit={(e) => { e.preventDefault(); runResearch(); }} className="flex gap-3">
+            <input
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder={
+                isTax
+                  ? "e.g., What is the scope of Section 9(1)(i) regarding indirect transfers under Indian Income Tax Act?"
+                  : "e.g., What is the limitation period for suit for partition in Karnataka?"
+              }
+              className="flex-1 rounded-xl border border-border bg-bg-surface px-4 py-3.5 text-sm text-white placeholder-text-muted outline-none focus:border-primary"
+            />
+            <Button type="submit" disabled={researching || !question.trim()}>
+              {researching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+              Research Memo
+            </Button>
+          </form>
+
+          {/* Suggested Prompts */}
+          <div className="flex flex-wrap gap-2">
+            {prompts.map((p) => (
+              <button
+                key={p}
+                onClick={() => runResearch(p)}
+                className="rounded-full border border-border/70 bg-bg px-3.5 py-1.5 text-xs text-text-secondary transition-colors hover:border-primary/50 hover:text-white"
+              >
+                <Sparkles size={11} className="mr-1.5 inline text-primary" />
+                {p}
+              </button>
+            ))}
+          </div>
+
+          {/* Research Output Cards */}
+          {loading ? (
+            <div className="flex h-48 items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <Card className="flex flex-col items-center p-12 text-center">
+              <BookOpen size={36} className="mb-3 text-text-muted" />
+              <h3 className="text-base font-semibold text-white">No research sessions yet</h3>
+              <p className="mt-2 max-w-md text-xs text-text-secondary">
+                Select a legal prompt above or enter a custom proposition. The research agent analyzes Indian statutes and binding Supreme Court precedents.
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {sessions.map((session) => (
+                <Card
+                  key={session.id}
+                  className="p-6"
+                  onMouseEnter={() => session.status === "COMPLETED" && loadSources(session.id)}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-base font-semibold text-white">{session.question}</h3>
+                      <div className="mt-1 flex items-center gap-3 text-xs text-text-muted">
+                        {session.jurisdiction && <span>Jurisdiction: {session.jurisdiction}</span>}
+                        <span>·</span>
+                        <span>{formatDateTime(session.created_at)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {session.status === "COMPLETED" && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => downloadDraftFile({ title: `Legal Research Memo: ${session.question}`, content: session.answer }, "pdf")}
+                            title="Download / Print as PDF"
+                          >
+                            PDF
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => downloadDraftFile({ title: `Legal Research Memo: ${session.question}`, content: session.answer }, "doc")}
+                            title="Download Word (.doc) memo"
+                          >
+                            Word
+                          </Button>
+                        </div>
+                      )}
+                      <Badge className={
+                        session.status === "COMPLETED"
+                          ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
+                          : session.status === "RUNNING"
+                          ? "border-blue-500/30 bg-blue-500/15 text-blue-400"
+                          : "border-red-500/30 bg-red-500/15 text-red-400"
+                      }>
+                        {session.status}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {session.status === "COMPLETED" && (
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => downloadDraftFile({ title: `Legal Research Memo: ${session.question}`, content: session.answer }, "pdf")}
-                        title="Download / Print as PDF"
-                      >
-                        PDF
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => downloadDraftFile({ title: `Legal Research Memo: ${session.question}`, content: session.answer }, "doc")}
-                        title="Download Word (.doc) memo"
-                      >
-                        Word
-                      </Button>
+
+                  {session.answer && (
+                    <div className="mt-4 whitespace-pre-wrap border-t border-border pt-4 text-sm leading-relaxed text-text-secondary">
+                      {renderAnswer(session.answer)}
                     </div>
                   )}
-                  <Badge className={
-                    session.status === "COMPLETED"
-                      ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
-                      : session.status === "RUNNING"
-                      ? "border-blue-500/30 bg-blue-500/15 text-blue-400"
-                      : "border-red-500/30 bg-red-500/15 text-red-400"
-                  }>
-                    {session.status}
-                  </Badge>
-                </div>
-              </div>
 
-              {session.answer && (
-                <div className="mt-4 whitespace-pre-wrap border-t border-border pt-4 text-sm leading-relaxed text-text-secondary">
-                  {renderAnswer(session.answer)}
-                </div>
-              )}
-
-              {/* Authoritative Sources */}
-              {sourcesBySession[session.id] && sourcesBySession[session.id].length > 0 && (
-                <div className="mt-5 border-t border-border/60 pt-4">
-                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
-                    Authoritative Citations & Legal Repositories ({sourcesBySession[session.id].length})
-                  </p>
-                  <div className="space-y-2">
-                    {sourcesBySession[session.id].map((s: any) => (
-                      <div key={s.id} className="flex items-center justify-between rounded-lg border border-border/40 bg-bg px-3.5 py-2 text-xs">
-                        <div className="flex items-center gap-2 truncate">
-                          {s.verified ? (
-                            <ShieldCheck size={14} className="shrink-0 text-emerald-400" />
-                          ) : (
-                            <ShieldAlert size={14} className="shrink-0 text-amber-400" />
-                          )}
-                          <a
-                            href={s.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="truncate text-white hover:text-primary hover:underline"
-                          >
-                            {s.title}
-                          </a>
-                        </div>
-                        <span className="shrink-0 text-text-muted">{new URL(s.url).hostname}</span>
+                  {/* Authoritative Sources */}
+                  {sourcesBySession[session.id] && sourcesBySession[session.id].length > 0 && (
+                    <div className="mt-5 border-t border-border/60 pt-4">
+                      <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+                        Authoritative Citations &amp; Legal Repositories ({sourcesBySession[session.id].length})
+                      </p>
+                      <div className="space-y-2">
+                        {sourcesBySession[session.id].map((s: any) => (
+                          <div key={s.id} className="flex items-center justify-between rounded-lg border border-border/40 bg-bg px-3.5 py-2 text-xs">
+                            <div className="flex items-center gap-2 truncate">
+                              {s.verified ? (
+                                <ShieldCheck size={14} className="shrink-0 text-emerald-400" />
+                              ) : (
+                                <ShieldAlert size={14} className="shrink-0 text-amber-400" />
+                              )}
+                              <a
+                                href={s.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="truncate text-white hover:text-primary hover:underline"
+                              >
+                                {s.title}
+                              </a>
+                            </div>
+                            <span className="shrink-0 text-text-muted">{new URL(s.url).hostname}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Card>
-          ))}
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

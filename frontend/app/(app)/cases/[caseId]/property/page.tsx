@@ -2,10 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Landmark, Loader2, Save, Sparkles, Building2, HelpCircle, Calculator, CheckCircle2, ShieldAlert } from "lucide-react";
+import {
+  Landmark,
+  Loader2,
+  Save,
+  Sparkles,
+  Building2,
+  HelpCircle,
+  Calculator,
+  CheckCircle2,
+  ShieldAlert,
+  Share2,
+  Award,
+  Globe,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Card, Badge } from "@/components/ui";
 import { VERIFICATION_STYLES } from "@/lib/utils";
+import { LandPortalSearch } from "@/components/property/LandPortalSearch";
+import { SharedSpaceModal } from "@/components/shared-spaces/SharedSpaceModal";
+import { BSACertificateModal } from "@/components/property/BSACertificateModal";
 
 const FIELD_LABELS: Record<string, string> = {
   name: "Asset / Property Name",
@@ -41,6 +57,10 @@ export default function PropertyPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  // Modals
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isBSAModalOpen, setIsBSAModalOpen] = useState(false);
+
   // Live Land Area Calculator State
   const [calcInput, setCalcInput] = useState("1 Acre 20 Guntas");
   const [calcResult, setCalcResult] = useState<string | null>(null);
@@ -71,7 +91,6 @@ export default function PropertyPage() {
     setExtracting(true);
     setError(null);
     try {
-      // Clear localStorage cache for this case's property
       if (typeof window !== "undefined") {
         localStorage.removeItem(`jurisiva_demo_property_${caseId}`);
       }
@@ -124,22 +143,28 @@ export default function PropertyPage() {
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
           <h1 className="text-2xl font-semibold text-white">
-            {isTaxOrCorporate ? "Asset & Target Entity Details" : "Property Details"}
+            {isTaxOrCorporate ? "Asset & Target Entity Details" : "Property Details & Land Portals"}
           </h1>
           <p className="mt-1 text-sm text-text-secondary">
             {isTaxOrCorporate
               ? "Underlying corporate shares, registered entity details, and statutory tax identifiers verified from case records."
-              : "Field values are labelled by how they were verified. Jurisiva never claims ownership without document evidence."}
+              : "Reconcile deed data with official state revenue portals and generate BSA Section 63 evidence certificates."}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={() => setIsShareModalOpen(true)} className="flex items-center gap-1.5">
+            <Share2 size={14} className="text-primary" /> Shared Space
+          </Button>
+          <Button variant="secondary" onClick={() => setIsBSAModalOpen(true)} className="flex items-center gap-1.5">
+            <Award size={14} className="text-amber-400" /> BSA Certificate
+          </Button>
           <Button variant="secondary" onClick={handleReExtract} disabled={extracting}>
             {extracting ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} className="text-primary" />}
-            Re-extract with AI
+            Re-extract
           </Button>
           <Button onClick={save} disabled={saving || Object.keys(editValues).length === 0}>
             {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-            {saved ? "Saved" : "Save changes"}
+            {saved ? "Saved" : "Save"}
           </Button>
         </div>
       </div>
@@ -148,6 +173,18 @@ export default function PropertyPage() {
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div>
       )}
 
+      {/* Official 5 State Land Portal Connector */}
+      {!isTaxOrCorporate && (
+        <LandPortalSearch
+          initialSurvey="124/2"
+          initialDistrict="Bangalore Urban"
+          initialTaluk="Bangalore South"
+          initialVillage="Varthur"
+          initialState="karnataka"
+        />
+      )}
+
+      {/* Property Matrix */}
       <Card className="p-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -246,7 +283,7 @@ export default function PropertyPage() {
           </Badge>
         </div>
         <p className="mb-3 text-xs text-text-secondary">
-          Test or reconcile any Indian revenue area measurement unit against metric & imperial standards:
+          Test or reconcile any Indian revenue area measurement unit against metric &amp; imperial standards:
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
@@ -305,6 +342,22 @@ export default function PropertyPage() {
           </div>
         )}
       </Card>
+
+      {/* Shared Space Modal */}
+      <SharedSpaceModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        caseId={caseId}
+        caseName={caseInfo?.name || "Matter Space"}
+      />
+
+      {/* BSA Certificate Modal */}
+      <BSACertificateModal
+        isOpen={isBSAModalOpen}
+        onClose={() => setIsBSAModalOpen(false)}
+        caseId={caseId}
+        caseName={caseInfo?.name || "Matter Space"}
+      />
     </div>
   );
 }

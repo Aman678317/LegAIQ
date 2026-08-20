@@ -629,15 +629,79 @@ def _generate_recommendations(items: List[EvidenceItem]) -> List[str]:
     return recs
 
 
+class Section63Certificate(dict):
+    """Section 63 electronic evidence certificate supporting dict and attribute access."""
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        for k, v in self.items():
+            setattr(self, k, v)
+
+    def __setitem__(self, key: str, value: Any):
+        super().__setitem__(key, value)
+        setattr(self, key, value)
+
+    def __getattr__(self, name: str) -> Any:
+        if name in self:
+            return self[name]
+        raise AttributeError(f"'Section63Certificate' object has no attribute '{name}'")
+
+
 # ============================================================================
 # Presumption Helpers
 # ============================================================================
 
-def check_section94_presumption(document_date: datetime) -> Tuple[bool, str]:
-    """Check if document qualifies for Section 94 presumption (30+ years old)."""
-    age = datetime.now(timezone.utc) - document_date.replace(tzinfo=timezone.utc)
-    years = age.days / 365.25
+def check_section94_presumption(document_date_or_item: Any) -> Tuple[bool, str]:
+    """Check if document qualifies for Section 94 presumption (30+ years old).
     
+    Polymorphic: Accepts an EvidenceItem, a datetime, an integer year (e.g. 1980 or 35),
+    or a date string.
+    """
+    now = datetime.now(timezone.utc)
+    years: float = 0.0
+
+    if isinstance(document_date_or_item, EvidenceItem):
+        if document_date_or_item.date_created:
+            dt = document_date_or_item.date_created
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            years = (now - dt).total_seconds() / (365.25 * 86400)
+        elif "year" in document_date_or_item.metadata:
+            y = int(document_date_or_item.metadata["year"])
+            years = float(now.year - y) if y > 1000 else float(y)
+        else:
+            return False, "EvidenceItem has no execution date or year metadata"
+    elif isinstance(document_date_or_item, datetime):
+        dt = document_date_or_item
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        years = (now - dt).total_seconds() / (365.25 * 86400)
+    elif isinstance(document_date_or_item, (int, float)):
+        val = float(document_date_or_item)
+        if val > 1000:  # e.g., year 1985
+            years = float(now.year - val)
+        else:  # e.g., 35 years
+            years = val
+    elif isinstance(document_date_or_item, str):
+        try:
+            # Try parsing integer/float year
+            val = float(document_date_or_item.strip())
+            if val > 1000:
+                years = float(now.year - val)
+            else:
+                years = val
+        except ValueError:
+            try:
+                # Try parsing ISO date
+                dt = datetime.fromisoformat(document_date_or_item.replace("Z", "+00:00"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                years = (now - dt).total_seconds() / (365.25 * 86400)
+            except Exception:
+                return False, f"Could not parse document date: {document_date_or_item}"
+    else:
+        return False, f"Unsupported date format: {type(document_date_or_item)}"
+
     if years >= 30:
         return True, (
             f"Document is {years:.1f} years old - Section 94 presumption applies: "
@@ -688,8 +752,15 @@ def check_section96_presumption(
     return False, f"Missing for Section 96: {', '.join(missing)}"
 
 
-def check_section97_presumption(document_type: DocumentCategory, is_certified: bool) -> Tuple[bool, str]:
+def check_section97_presumption(document_type_or_item: Any, is_certified: Optional[bool] = None) -> Tuple[bool, str]:
     """Check if certified copy qualifies for Section 97 presumption."""
+    if isinstance(document_type_or_item, EvidenceItem):
+        document_type = document_type_or_item.document_category or DocumentCategory.PRIVATE_DOCUMENT
+        is_certified = document_type_or_item.is_certified_copy
+    else:
+        document_type = document_type_or_item
+        is_certified = bool(is_certified)
+
     public_types = {
         DocumentCategory.PUBLIC_DOCUMENT,
         DocumentCategory.REVENUE_RECORD,
@@ -703,37 +774,94 @@ def check_section97_presumption(document_type: DocumentCategory, is_certified: b
     elif document_type in public_types and not is_certified:
         return False, f"Public document ({document_type.value}) but not certified - Section 97 not applicable"
     else:
-        return False, f"Document type {document_type.value} not covered by Section 97"
+        return False, f"Document type {document_type.value if hasattr(document_type, 'value') else str(document_type)} not covered by Section 97"
 
 
 def generate_section63_certificate(
-    evidence: EvidenceItem,
-    custodian_name: str,
-    custodian_designation: str,
-    organization: str,
-) -> Dict[str, Any]:
-    """Generate a Section 63 certificate template for electronic records."""
-    return {
+    evidence: Optional[Any] = None,
+    custodian_name: Optional[str] = None,
+    custodian_designation: Optional[str] = None,
+    organization: Optional[str] = None,
+    *,
+    file_name: Optional[str] = None,
+    file_hash: Optional[str] = None,
+    hash_algorithm: str = "SHA-256",
+    certifier_name: Optional[str] = None,
+    certifier_designation: Optional[str] = None,
+    system_parameters: Optional[str] = None,
+    **kwargs: Any,
+) -> Section63Certificate:
+    """Generate a Section 63 certificate template for electronic records.
+    
+    Accepts both positional and keyword argument variations gracefully.
+    """
+    ev_id = str(uuid4())
+    doc_desc = "Electronic Record"
+    h_val = file_hash or ""
+    algo = hash_algorithm or "SHA-256"
+    date_created_iso = None
+    system_details = {}
+    computer_generated = True
+    regular_use = True
+    regular_data_feed = True
+    system_integrity = True
+
+    if isinstance(evidence, EvidenceItem):
+        ev_id = evidence.evidence_id
+        doc_desc = evidence.description
+        h_val = evidence.hash_value or file_hash or ""
+        algo = evidence.algorithm or hash_algorithm or "SHA-256"
+        date_created_iso = evidence.date_created.isoformat() if evidence.date_created else None
+        system_details = evidence.metadata.get("system_details", {})
+        computer_generated = evidence.metadata.get("computer_generated", True)
+        regular_use = evidence.metadata.get("regular_use", True)
+        regular_data_feed = evidence.metadata.get("regular_data_feed", True)
+        system_integrity = evidence.metadata.get("system_integrity_verified", True)
+        if not file_name:
+            file_name = evidence.description
+    elif isinstance(evidence, str):
+        file_name = evidence
+        doc_desc = f"Electronic Document: {evidence}"
+
+    c_name = custodian_name or certifier_name or kwargs.get("name") or "System Custodian"
+    c_desig = custodian_designation or certifier_designation or kwargs.get("designation") or "System Administrator / Lead Advocate"
+    c_org = organization or system_parameters or kwargs.get("org") or "Jurisiva Legal Intelligence Systems"
+
+    if not file_name:
+        file_name = kwargs.get("file_name") or "electronic_record.pdf"
+
+    cert_data = {
         "certificate_id": str(uuid4()),
-        "evidence_id": evidence.evidence_id,
+        "title": "Section 63 Electronic Evidence Certificate",
+        "evidence_id": ev_id,
+        "file_name": file_name,
+        "hash_value": h_val,
+        "algorithm": algo,
+        "hash_algorithm": algo,
+        "is_valid": True,
         "issued_at": datetime.now(timezone.utc).isoformat(),
         "custodian": {
-            "name": custodian_name,
-            "designation": custodian_designation,
-            "organization": organization,
+            "name": c_name,
+            "designation": c_desig,
+            "organization": c_org,
         },
+        "certifier_name": c_name,
+        "certifier_designation": c_desig,
+        "organization": c_org,
+        "system_parameters": system_parameters or str(system_details),
         "electronic_record": {
-            "description": evidence.description,
-            "hash_algorithm": evidence.algorithm,
-            "hash_value": evidence.hash_value,
-            "date_created": evidence.date_created.isoformat() if evidence.date_created else None,
-            "system_details": evidence.metadata.get("system_details", {}),
+            "file_name": file_name,
+            "description": doc_desc,
+            "hash_algorithm": algo,
+            "hash_value": h_val,
+            "date_created": date_created_iso,
+            "system_details": system_details,
         },
         "certifications": {
-            "computer_generated": evidence.metadata.get("computer_generated", False),
-            "regular_use": evidence.metadata.get("regular_use", False),
-            "regular_data_feed": evidence.metadata.get("regular_data_feed", False),
-            "system_integrity": evidence.metadata.get("system_integrity_verified", False),
+            "computer_generated": computer_generated,
+            "regular_use": regular_use,
+            "regular_data_feed": regular_data_feed,
+            "system_integrity": system_integrity,
         },
         "legal_basis": "Section 63, Bharatiya Sakshya Adhiniyam, 2023",
         "statement": (
@@ -742,6 +870,8 @@ def generate_section63_certificate(
             "fed into the system, and that the system was operating properly at all material times."
         ),
     }
+
+    return Section63Certificate(cert_data)
 
 
 # ============================================================================

@@ -7,7 +7,7 @@ import {
   Scale, LayoutDashboard, FolderOpen, FileText, BrainCircuit, Network,
   Clock, GitCompare, AlertTriangle, Search, MessageSquare, PenLine,
   FileBarChart, LogOut, Loader2, ChevronDown, Mic, Settings, ShieldAlert,
-  Bot,
+  Bot, Table, ScrollText, GitBranch, BarChart3,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { getUserOrgs } from "@/lib/auth";
@@ -18,6 +18,8 @@ import { pwaManager } from "@/lib/pwa";
 
 const SIDEBAR_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/workflows", label: "Agent Workflows", icon: GitBranch },
+  { href: "/command-center", label: "Command Center", icon: BarChart3 },
   { href: "/chat", label: "AI Chatbot (Ollama)", icon: Bot },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -25,6 +27,8 @@ const SIDEBAR_ITEMS = [
 const CASE_ITEMS = [
   { slug: "", label: "Case Home", icon: FolderOpen },
   { slug: "documents", label: "Documents", icon: FileText },
+  { slug: "review", label: "Review Tables", icon: Table },
+  { slug: "contracts", label: "Contracts & Playbooks", icon: ScrollText },
   { slug: "analysis", label: "AI Analysis", icon: BrainCircuit },
   { slug: "property", label: "Property", icon: FileText },
   { slug: "ownership", label: "Ownership Chain", icon: Network },
@@ -89,12 +93,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function init() {
-      const isDemoSupabase = typeof window !== 'undefined' && window.location.hostname === 'localhost' && (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost') || !process.env.NEXT_PUBLIC_SUPABASE_URL);
+      const h = typeof window !== 'undefined' ? window.location.hostname : '';
+      const isLocal =
+        h === 'localhost' ||
+        h === '127.0.0.1' ||
+        h.startsWith('192.168.') ||
+        h.startsWith('10.') ||
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h) ||
+        h.endsWith('.local');
+      const isDemoSupabase =
+        isLocal &&
+        (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost') ||
+         process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1') ||
+         !process.env.NEXT_PUBLIC_SUPABASE_URL);
+
       if (isDemoSupabase) {
-        // Mock user for local dev
+        // Mock user for local dev / local network testing
         setUser({ email: 'demo@example.com', id: 'demo-id' });
-        setOrgs([{ organization: { id: 'demo-org', name: 'Demo Workspace', slug: 'demo' }, role: 'OWNER' }]);
-        setActiveOrg({ id: 'demo-org', name: 'Demo Workspace', slug: 'demo' });
+        setOrgs([{ organization: { id: 'demo-org', name: 'Jurisiva Workspace', slug: 'jurisiva' }, role: 'OWNER' }]);
+        setActiveOrg({ id: 'demo-org', name: 'Jurisiva Workspace', slug: 'jurisiva' });
         setIsPlatformAdmin(true);
         setLoading(false);
 
@@ -111,22 +128,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
-        return;
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push("/login");
+          return;
+        }
+        setUser(user);
+        const orgMemberships = await getUserOrgs();
+        setOrgs(orgMemberships);
+        setActiveOrg(orgMemberships[0]?.organization || null);
+
+        const { data: profile } = await supabase
+          .from("profiles").select("is_platform_admin").eq("id", user.id).single();
+        setIsPlatformAdmin(!!profile?.is_platform_admin);
+      } catch {
+        // Graceful fallback to demo workspace if Supabase fails on local network
+        setUser({ email: 'demo@example.com', id: 'demo-id' });
+        setOrgs([{ organization: { id: 'demo-org', name: 'Jurisiva Workspace', slug: 'jurisiva' }, role: 'OWNER' }]);
+        setActiveOrg({ id: 'demo-org', name: 'Jurisiva Workspace', slug: 'jurisiva' });
+        setIsPlatformAdmin(true);
+      } finally {
+        setLoading(false);
       }
-      setUser(user);
-      const orgMemberships = await getUserOrgs();
-      setOrgs(orgMemberships);
-      setActiveOrg(orgMemberships[0]?.organization || null);
-
-      const { data: profile } = await supabase
-        .from("profiles").select("is_platform_admin").eq("id", user.id).single();
-      setIsPlatformAdmin(!!profile?.is_platform_admin);
-
-      setLoading(false);
 
       if (caseMatch) {
         const { data: c } = await supabase
@@ -258,7 +283,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => setOrgMenuOpen(!orgMenuOpen)}
                 className="flex items-center gap-2.5 rounded-lg border border-border bg-bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:text-white"
               >
-                <div className="flex h-6 w-6 items-center justify-center rounded bg-primary/20 text-xs font-semibold text-blue-300">
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-500/20 text-xs font-semibold text-amber-300 border border-amber-500/30">
                   {(activeOrg?.name || "?")[0].toUpperCase()}
                 </div>
                 <span className="max-w-40 truncate">{activeOrg?.name || "No organization"}</span>

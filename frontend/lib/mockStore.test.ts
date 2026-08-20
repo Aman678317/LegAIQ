@@ -102,4 +102,36 @@ describe("mockStore localStorage integration", () => {
     // Includes 3 default documents + 2 uploaded = 5
     expect(docs.length).toBe(5);
   });
+
+  it("manages demo review tables and columns", async () => {
+    const mockStore = await import("./mockStore");
+    const tables = mockStore.listDemoReviewTables("demo-case-rt");
+    expect(tables.length).toBeGreaterThanOrEqual(1);
+
+    const fullTable = mockStore.getDemoReviewTable("demo-case-rt", tables[0].id);
+    expect(fullTable.columns.length).toBeGreaterThanOrEqual(4);
+    expect(fullTable.rows.length).toBeGreaterThanOrEqual(1);
+    expect(fullTable.rows[0].cells["col-1"]).toBeDefined();
+    expect(fullTable.rows[0].cells["col-1"].confidence_score).toBeGreaterThan(0.8);
+  });
+
+  it("provides clause library and evaluates contract playbooks", async () => {
+    const mockStore = await import("./mockStore");
+    expect(mockStore.DEMO_CLAUSE_LIBRARY.length).toBeGreaterThanOrEqual(4);
+    expect(mockStore.DEMO_PLAYBOOKS.length).toBeGreaterThanOrEqual(3);
+
+    // Evaluate Employment Playbook
+    const empResult = mockStore.evaluateDemoPlaybook("demo-case-pb", {
+      playbook_id: "PB-EMPLOY-001",
+      full_text: "Non-compete post termination 1 year.",
+    });
+    expect(empResult.overall_status).toBe("walkaway_triggered");
+    expect(empResult.deviations.length).toBeGreaterThanOrEqual(1);
+    expect(empResult.deviations[0].statutory_reference).toContain("Section 27");
+
+    // Heatmap
+    const heatmap = mockStore.getDemoContractHeatmap("demo-case-pb");
+    expect(heatmap.categories["Liability & Indemnity"]).toBeDefined();
+    expect(heatmap.categories["Restrictive Covenants"].highest_risk).toBe("critical");
+  });
 });

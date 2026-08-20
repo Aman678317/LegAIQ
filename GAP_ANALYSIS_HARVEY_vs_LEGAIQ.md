@@ -26,11 +26,11 @@
 |---------|-----------|--------|-----|----------|
 | **Proprietary LLM** | Yes (Harvey-tuned) | No (uses Ollama: Llama3, Mistral, etc.) | Harvey leads | Medium |
 | **Local/Offline LLM** | No (cloud only) | **Yes (Ollama - 100% private, free)** | **LegAIQ WINS** | High |
-| **Model Selection** | Fixed | Configurable per task | LegAIQ flexible | Low |
+| **Model Selection** | Fixed | **Configurable (UI Selector: Ollama 70B, Claude 3.5, GPT-4o, DeepSeek R1, Mistral)** | **LegAIQ WINS** | Low |
 | **RAG Architecture** | Vector + keyword (proprietary) | Hybrid BM25 + vector (RRF), pgvector | Comparable | Low |
 | **Citation Validation** | Yes (source grounding) | Yes (evidence sufficiency gate) | Parity | Low |
 | **Prompt Injection Defense** | Enterprise-grade | Implemented (kill switch) | Parity | Low |
-| **Streaming Responses** | Yes | Partial | Minor gap | Medium |
+| **Streaming Responses** | Yes | **Full Real-time Streaming (SSE + OnChunk)** | **Parity** | Medium |
 
 ### 2. Document Processing Pipeline
 

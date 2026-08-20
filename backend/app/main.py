@@ -81,6 +81,11 @@ from app.api.sso import router as sso_router
 from app.api.pii import router as pii_router
 from app.api.analytics import router as analytics_router
 from app.api.contract_intelligence import router as contract_intelligence_router
+from app.api.review_tables import router as review_tables_router
+from app.api.workflows import router as workflows_router
+from app.api.shared_spaces import router as shared_spaces_router
+from app.api.state_portals import router as state_portals_router
+from app.api.bsa import router as bsa_router
 
 app.include_router(cases_router, prefix=settings.API_V1_PREFIX)
 app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
@@ -103,3 +108,9 @@ app.include_router(sso_router, prefix=settings.API_V1_PREFIX)
 app.include_router(pii_router, prefix=settings.API_V1_PREFIX)
 app.include_router(analytics_router, prefix=settings.API_V1_PREFIX)
 app.include_router(contract_intelligence_router, prefix=settings.API_V1_PREFIX)
+app.include_router(review_tables_router, prefix=settings.API_V1_PREFIX)
+app.include_router(workflows_router, prefix=settings.API_V1_PREFIX)
+app.include_router(shared_spaces_router, prefix=settings.API_V1_PREFIX)
+app.include_router(state_portals_router, prefix=settings.API_V1_PREFIX)
+app.include_router(bsa_router, prefix=settings.API_V1_PREFIX)
+

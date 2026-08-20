@@ -17,6 +17,7 @@ import {
 import { api } from "@/lib/api";
 import { Button, Card, Badge } from "@/components/ui";
 import { VERIFICATION_STYLES } from "@/lib/utils";
+import { PIIRedactionPanel } from "@/components/pii/PIIRedactionPanel";
 
 export default function AnalysisPage() {
   const { caseId } = useParams<{ caseId: string }>();
@@ -311,6 +312,11 @@ export default function AnalysisPage() {
             </Card>
           ))}
         </div>
+      </div>
+
+      {/* Indian PII Detection & Auto-Redaction Suite */}
+      <div className="pt-4">
+        <PIIRedactionPanel />
       </div>
     </div>
   );

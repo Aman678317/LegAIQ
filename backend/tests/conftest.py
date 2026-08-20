@@ -25,6 +25,8 @@ PATCH_TARGETS = [
     "app.api.org",
     "app.api.billing",
     "app.api.voice",
+    "app.api.review_tables",
+    "app.api.contract_intelligence",
     "app.workers.tasks",
     "app.workers.dispatcher",
     "app.ai.agents.base",

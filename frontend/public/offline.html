@@ -205,47 +205,40 @@
     const retryText = document.getElementById('retryText');
     const statusEl = document.getElementById('status');
 
+    // If on localhost, unregister SW and redirect immediately
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const reg of registrations) reg.unregister();
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
+      }
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
+    }
+
     async function checkConnection() {
       retryBtn.disabled = true;
-      retryText.textContent = 'Checking...';
+      retryText.textContent = 'Redirecting...';
       retryBtn.classList.add('checking');
-      statusEl.textContent = 'Checking connection...';
-      statusEl.className = 'status';
+      statusEl.textContent = 'Connecting to workspace...';
+      statusEl.className = 'status online';
 
-      try {
-        // Try to fetch a lightweight resource
-        const response = await fetch('/', {
-          method: 'HEAD',
-          cache: 'no-cache',
-          mode: 'no-cors'
-        });
-        
-        // If we get here without error, we're likely online
-        // But no-cors doesn't give us real response, so try with credentials
-        await fetch('/api/v1/health', {
-          method: 'GET',
-          cache: 'no-cache',
-          credentials: 'include'
-        }).catch(() => {});
-
-        // If service worker is controlling, it might serve cached content
-        // So check navigator.onLine as well
-        if (navigator.onLine) {
-          statusEl.textContent = 'Connection restored! Redirecting...';
-          statusEl.className = 'status online';
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        } else {
-          throw new Error('Offline');
-        }
-      } catch (error) {
-        statusEl.textContent = 'Still offline. Changes will sync when reconnected.';
-        statusEl.className = 'status';
-        retryBtn.disabled = false;
-        retryText.textContent = 'Try Again';
-        retryBtn.classList.remove('checking');
+      if ('serviceWorker' in navigator) {
+        try {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const reg of regs) await reg.unregister();
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          }
+        } catch {}
       }
+
+      window.location.href = '/dashboard';
     }
 
     // Auto-check on load

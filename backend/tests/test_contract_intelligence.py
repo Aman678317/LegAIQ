@@ -477,5 +477,190 @@ class TestEdgeCases:
         assert assessment.risk_score == 0
 
 
+class TestEnterpriseClauseLibrary:
+    """Tests for Enterprise Clause Library repository and fallbacks."""
+
+    def setup_method(self):
+        from app.ai.clause_library import EnterpriseClauseLibrary, ClauseLibraryItem
+        self.library = EnterpriseClauseLibrary()
+
+    def test_list_clauses_all(self):
+        """Retrieve preloaded standard clause library."""
+        clauses = self.library.list_clauses()
+        assert len(clauses) >= 5
+        types = {c.clause_type for c in clauses}
+        assert "indemnity" in types
+        assert "limitation_of_liability" in types
+        assert "non_compete" in types
+        assert "governing_law" in types
+        assert "stamp_duty" in types
+
+    def test_filter_by_category_and_query(self):
+        """Filter clause library by category and search keyword."""
+        results = self.library.list_clauses(category="Dispute Resolution")
+        assert len(results) >= 1
+        assert any("arbitration" in c.standard_language.lower() for c in results)
+
+        search_res = self.library.list_clauses(query="Section 27")
+        assert len(search_res) >= 1
+        assert search_res[0].clause_type == "non_compete"
+
+    def test_add_and_update_custom_clause(self):
+        """Add and modify a custom clause in the library."""
+        from app.ai.clause_library import ClauseLibraryItem
+        new_item = ClauseLibraryItem(
+            clause_id="LIB-CUSTOM-099",
+            clause_type="custom",
+            title="SaaS SLA & Uptime Guarantee",
+            category="Technology",
+            standard_language="Service Provider guarantees 99.9% monthly uptime.",
+            fallback_tier_1="99.5% monthly uptime with service credits.",
+        )
+        added = self.library.add_clause(new_item)
+        assert added.clause_id == "LIB-CUSTOM-099"
+
+        # Update
+        updated = self.library.update_clause("LIB-CUSTOM-099", {"title": "Updated SaaS SLA 99.99%"})
+        assert updated is not None
+        assert updated.title == "Updated SaaS SLA 99.99%"
+
+        # Delete
+        assert self.library.delete_clause("LIB-CUSTOM-099") is True
+        assert self.library.get_clause("LIB-CUSTOM-099") is None
+
+
+class TestFirmPlaybookDeviationEngine:
+    """Tests for Playbook Deviation Engine and automated redlining."""
+
+    def setup_method(self):
+        from app.ai.playbooks import PlaybookDeviationEngine
+        self.engine = PlaybookDeviationEngine()
+
+    def test_msa_playbook_detects_forbidden_indemnity(self):
+        """Detect uncapped indemnity and generate redline suggestion."""
+        from app.ai.contract_intelligence import analyze_contract
+        text = """
+        MASTER SERVICES AGREEMENT
+        INDEMNITY: Developer shall provide unlimited indemnity and hold harmless Client from any and all claims without cap.
+        GOVERNING LAW: Laws of India.
+        TERMINATION: 30 days notice for breach.
+        """
+        contract = analyze_contract(text, "TEST-DEV-01", "MSA Test", "master_services_agreement")
+        res = self.engine.evaluate_contract("TEST-DEV-01", "PB-MSA-001", contract.clauses, text)
+
+        assert res.compliance_score < 90
+        assert len(res.deviations) >= 1
+        assert any(d.clause_type == "indemnity" for d in res.deviations)
+        assert any("unlimited" in d.issue_description.lower() for d in res.deviations)
+        assert len(res.redline_recommendations) >= 1
+
+    def test_employment_playbook_flags_section_27_void_non_compete(self):
+        """Detect void post-employment non-compete under Section 27 Indian Contract Act."""
+        from app.ai.contract_intelligence import analyze_contract
+        text = """
+        EMPLOYMENT AGREEMENT
+        NON-COMPETE: Employee covenants not to engage in competing business for 1 year following termination.
+        NON-SOLICITATION: Employee shall not solicit clients for 6 months.
+        INTELLECTUAL PROPERTY: All works created are work for hire.
+        """
+        contract = analyze_contract(text, "TEST-EMP-01", "Employment Test", "employment_agreement")
+        res = self.engine.evaluate_contract("TEST-EMP-01", "PB-EMPLOY-001", contract.clauses, text)
+
+        assert res.overall_status in ("walkaway_triggered", "high_risk_deviations")
+        sec_27_devs = [d for d in res.deviations if d.clause_type == "non_compete"]
+        assert len(sec_27_devs) >= 1
+        assert sec_27_devs[0].severity == "critical"
+        assert "Section 27" in (sec_27_devs[0].statutory_reference or sec_27_devs[0].issue_description)
+
+    def test_lease_playbook_flags_missing_stamp_duty(self):
+        """Detect missing stamp duty clause in commercial lease deed."""
+        from app.ai.contract_intelligence import analyze_contract
+        text = """
+        COMMERCIAL LEASE DEED
+        TERM: 3 years.
+        TERMINATION: 60 days notice.
+        """
+        contract = analyze_contract(text, "TEST-LEASE-01", "Lease Test", "lease_deed")
+        res = self.engine.evaluate_contract("TEST-LEASE-01", "PB-LEASE-001", contract.clauses, text)
+
+        assert len(res.deviations) >= 1
+        assert any(d.clause_type == "stamp_duty" for d in res.deviations)
+
+
+class TestRiskHeatmap:
+    """Test risk heatmap generation across functional categories."""
+
+    def test_generate_risk_heatmap_structure(self):
+        """Generate structured risk heatmap matrix across 5 functional categories."""
+        from app.ai.contract_intelligence import analyze_contract, ContractIntelligenceEngine
+        engine = ContractIntelligenceEngine()
+        text = """
+        COMMERCIAL AGREEMENT
+        INDEMNITY: Unlimited indemnity for all damages.
+        PAYMENT: Client pays INR 10,00,000 within 30 days.
+        NON-COMPETE: Shall not compete post-termination for 2 years.
+        GOVERNING LAW: Laws of India.
+        """
+        contract = analyze_contract(text, "HEATMAP-01", "Heatmap Test", "commercial")
+        heatmap = engine.generate_risk_heatmap(contract)
+
+        assert "categories" in heatmap
+        assert "Liability & Indemnity" in heatmap["categories"]
+        assert "Restrictive Covenants" in heatmap["categories"]
+        assert "Commercial & Term" in heatmap["categories"]
+        assert heatmap["categories"]["Liability & Indemnity"]["highest_risk"] in ("critical", "high")
+
+
+class TestContractIntelligenceApiExtended:
+    """Test Clause Library and Playbook REST API endpoints."""
+
+    @pytest.mark.asyncio
+    async def test_clause_library_api(self, client, auth_headers):
+        """List and get clause library items."""
+        resp = await client.get("/api/v1/contracts/clause-library", headers=auth_headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total"] >= 5
+
+        # Get specific clause
+        first_id = data["items"][0]["clause_id"]
+        c_resp = await client.get(f"/api/v1/contracts/clause-library/{first_id}", headers=auth_headers)
+        assert c_resp.status_code == 200
+        assert c_resp.json()["clause_id"] == first_id
+
+    @pytest.mark.asyncio
+    async def test_playbook_evaluation_api(self, client, auth_headers, seed_case):
+        """Evaluate contract against firm playbook via REST API."""
+        case_id = seed_case["id"]
+        eval_resp = await client.post(
+            f"/api/v1/cases/{case_id}/contracts/playbooks/evaluate",
+            json={
+                "playbook_id": "PB-MSA-001",
+                "full_text": "AGREEMENT\nINDEMNITY: Unlimited indemnity.\nGOVERNING LAW: Laws of India.",
+            },
+            headers=auth_headers,
+        )
+        assert eval_resp.status_code == 200
+        res_data = eval_resp.json()
+        assert "compliance_score" in res_data
+        assert "deviations" in res_data
+        assert len(res_data["deviations"]) >= 1
+
+    @pytest.mark.asyncio
+    async def test_contract_heatmap_api(self, client, auth_headers, seed_case):
+        """Generate heatmap via REST API."""
+        case_id = seed_case["id"]
+        heat_resp = await client.post(
+            f"/api/v1/cases/{case_id}/contracts/heatmap",
+            json={
+                "full_text": "AGREEMENT\nINDEMNITY: Unlimited indemnity.\nPAYMENT: 1000 INR.",
+            },
+            headers=auth_headers,
+        )
+        assert heat_resp.status_code == 200
+        heat_data = heat_resp.json()
+        assert "categories" in heat_data
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

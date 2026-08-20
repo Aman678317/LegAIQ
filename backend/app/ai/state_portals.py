@@ -118,9 +118,13 @@ class BasePortalConnector(ABC):
         self._request_count += 1
 
     @abstractmethod
-    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str) -> PortalSearchResult:
+    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str, hobli: Optional[str] = None, **kwargs: Any) -> PortalSearchResult:
         """Search land records by survey/gat/khasra number."""
         pass
+
+    async def search_by_survey_number(self, survey_number: str, district: str, taluk: str, village: str, hobli: Optional[str] = None, **kwargs: Any) -> PortalSearchResult:
+        """Alias for search_by_survey supporting hobli and extra kwargs."""
+        return await self.search_by_survey(survey_number=survey_number, district=district, taluk=taluk, village=village, hobli=hobli, **kwargs)
 
     @abstractmethod
     async def search_by_owner(self, owner_name: str, district: str, taluk: str, village: Optional[str] = None) -> PortalSearchResult:
@@ -198,7 +202,7 @@ class MaharashtraPortal(BasePortalConnector):
         )
         super().__init__(config, mock_mode)
 
-    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str) -> PortalSearchResult:
+    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str, hobli: Optional[str] = None, **kwargs: Any) -> PortalSearchResult:
         await self._rate_limit()
         
         if self.mock_mode:
@@ -312,7 +316,7 @@ class KarnatakaPortal(BasePortalConnector):
         )
         super().__init__(config, mock_mode)
 
-    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str) -> PortalSearchResult:
+    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str, hobli: Optional[str] = None, **kwargs: Any) -> PortalSearchResult:
         await self._rate_limit()
         
         if self.mock_mode:
@@ -385,7 +389,7 @@ class TamilNaduPortal(BasePortalConnector):
         )
         super().__init__(config, mock_mode)
 
-    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str) -> PortalSearchResult:
+    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str, hobli: Optional[str] = None, **kwargs: Any) -> PortalSearchResult:
         await self._rate_limit()
         
         if self.mock_mode:
@@ -459,7 +463,7 @@ class TelanganaPortal(BasePortalConnector):
         )
         super().__init__(config, mock_mode)
 
-    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str) -> PortalSearchResult:
+    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str, hobli: Optional[str] = None, **kwargs: Any) -> PortalSearchResult:
         await self._rate_limit()
         
         if self.mock_mode:
@@ -531,7 +535,7 @@ class GujaratPortal(BasePortalConnector):
         )
         super().__init__(config, mock_mode)
 
-    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str) -> PortalSearchResult:
+    async def search_by_survey(self, survey_number: str, district: str, taluk: str, village: str, hobli: Optional[str] = None, **kwargs: Any) -> PortalSearchResult:
         await self._rate_limit()
         
         if self.mock_mode:
@@ -587,6 +591,17 @@ class GujaratPortal(BasePortalConnector):
 
 
 # ============================================================================
+# Connector Aliases
+# ============================================================================
+
+MahabhulekhConnector = MaharashtraPortal
+BhoomiConnector = KarnatakaPortal
+TNREGINETConnector = TamilNaduPortal
+DharaniConnector = TelanganaPortal
+AnyRoRConnector = GujaratPortal
+
+
+# ============================================================================
 # Portal Registry & Factory
 # ============================================================================
 
@@ -599,12 +614,40 @@ _PORTAL_REGISTRY: Dict[PortalState, type] = {
 }
 
 
-def get_portal_connector(state: PortalState, mock_mode: bool = True) -> BasePortalConnector:
+def get_portal_connector(state: PortalState | str, mock_mode: bool = True) -> BasePortalConnector:
     """Factory function to get portal connector for a state."""
+    if isinstance(state, str):
+        state_clean = state.lower().strip().replace(" ", "_").replace("-", "_")
+        for ps in PortalState:
+            if ps.value == state_clean or ps.name.lower() == state_clean:
+                state = ps
+                break
+        else:
+            abbr_map = {
+                "mh": PortalState.MAHARASHTRA,
+                "ka": PortalState.KARNATAKA,
+                "tn": PortalState.TAMIL_NADU,
+                "ts": PortalState.TELANGANA,
+                "tg": PortalState.TELANGANA,
+                "gj": PortalState.GUJARAT,
+            }
+            if state_clean in abbr_map:
+                state = abbr_map[state_clean]
+            else:
+                raise ValueError(f"No portal connector available for state: {state}")
+
     connector_class = _PORTAL_REGISTRY.get(state)
     if not connector_class:
         raise ValueError(f"No portal connector available for state: {state}")
     return connector_class(mock_mode=mock_mode)
+
+
+class StatePortalFactory:
+    """Factory for creating state portal connectors."""
+
+    @staticmethod
+    def get_connector(state: PortalState | str, mock_mode: bool = True) -> BasePortalConnector:
+        return get_portal_connector(state, mock_mode=mock_mode)
 
 
 async def search_all_portals(

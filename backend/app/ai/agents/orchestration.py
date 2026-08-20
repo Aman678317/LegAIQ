@@ -433,28 +433,37 @@ class AgentOrchestrator:
         state: WorkflowState,
         organization_id: Optional[str],
         user_id: Optional[str],
+        step_callback: Optional[Callable[[str, str, str, dict, list], Any]] = None,
     ) -> Any:
         """Execute a single workflow node."""
         agent_type = node["agent_type"]
-        task = node["task_builder"](state.__dict__)
+        task_builder = node.get("task_builder")
+        task = task_builder(state.__dict__) if callable(task_builder) else (node.get("task") or {})
         
-        if agent_type == "risk_agent":
-            ctx = new_agent_context(RiskAgent, state.case_id, organization_id)
-            return await execute_agent(RiskAgent(ctx), task)
-        elif agent_type == "report_agent":
-            ctx = new_agent_context(ReportAgent, state.case_id, organization_id)
-            return await execute_agent(ReportAgent(ctx), task)
-        elif agent_type == "verification_agent":
-            ctx = new_agent_context(VerificationAgent, state.case_id, organization_id)
-            return await execute_agent(VerificationAgent(ctx), task)
-        elif agent_type == "voice_agent":
-            ctx = new_agent_context(
-                VoiceAgent, state.case_id, organization_id, user_id,
-                budget=VoiceAgent.VOICE_BUDGET,
-            )
-            return await execute_agent(VoiceAgent(ctx), task)
+        from app.ai.agents.registry import (
+            DueDiligenceAgent, TitleExaminerAgent, RiskAuditorAgent, RiskAgent,
+            LitigationStrategistAgent, ContractReviewerAgent, BSAComplianceAgent,
+            ReportAgent, VerificationAgent, VoiceAgent,
+        )
+
+        agent_map = {
+            "due_diligence_agent": DueDiligenceAgent,
+            "title_examiner_agent": TitleExaminerAgent,
+            "risk_auditor_agent": RiskAuditorAgent,
+            "risk_agent": RiskAgent,
+            "litigation_strategist_agent": LitigationStrategistAgent,
+            "contract_reviewer_agent": ContractReviewerAgent,
+            "bsa_compliance_agent": BSAComplianceAgent,
+            "report_agent": ReportAgent,
+            "verification_agent": VerificationAgent,
+            "voice_agent": VoiceAgent,
+        }
+
+        if agent_type in agent_map:
+            agent_cls = agent_map[agent_type]
+            ctx = new_agent_context(agent_cls, state.case_id, organization_id, user_id)
+            return await execute_agent(agent_cls(ctx), task)
         elif agent_type == "custom":
-            # Custom task - execute via Celery or direct call
             return await self._execute_custom_task(node, task, state)
         else:
             raise ValueError(f"Unknown agent type: {agent_type}")

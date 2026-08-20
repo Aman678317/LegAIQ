@@ -46,6 +46,11 @@ class ClauseType(str, Enum):
     SIGNATURE = "signature"
     SCHEDULES = "schedules"
     ANNEXURES = "annexures"
+    STAMP_DUTY = "stamp_duty"
+    JURISDICTION = "jurisdiction"
+    DATA_PROTECTION = "data_protection"
+    TAXATION = "taxation"
+    ANTI_BRIBERY = "anti_bribery"
     CUSTOM = "custom"
 
 
@@ -294,6 +299,26 @@ CLAUSE_PATTERNS = {
         r"(?:^|\n)(?:ANNEXURES|ANNEXURE|APPENDIX|APPENDICES)\b(?:\s*:|\s*\n)",
         r"(?:^|\n)(?:Annexure [A-Z])\b",
     ],
+    ClauseType.STAMP_DUTY: [
+        r"(?:^|\n)(?:STAMP DUTY|STAMP ACT|REGISTRATION CHARGES)\b(?:\s*:|\s*\n)",
+        r"(?:^|\n)(?:stamp duty (?:shall be paid|payable|borne))\b",
+    ],
+    ClauseType.JURISDICTION: [
+        r"(?:^|\n)(?:JURISDICTION|COURTS|VENUE|FORUM)\b(?:\s*:|\s*\n)",
+        r"(?:^|\n)(?:The courts at [A-Z][a-zA-Z\s]+ shall have exclusive jurisdiction)\b",
+    ],
+    ClauseType.DATA_PROTECTION: [
+        r"(?:^|\n)(?:DATA PROTECTION|PRIVACY|DATA PRIVACY|DPDP)\b(?:\s*:|\s*\n)",
+        r"(?:^|\n)(?:Digital Personal Data Protection Act|personal data processing)\b",
+    ],
+    ClauseType.TAXATION: [
+        r"(?:^|\n)(?:TAXES|TAXATION|GST|WITHHOLDING TAX|TDS)\b(?:\s*:|\s*\n)",
+        r"(?:^|\n)(?:All taxes|Goods and Services Tax|Section 194)\b",
+    ],
+    ClauseType.ANTI_BRIBERY: [
+        r"(?:^|\n)(?:ANTI-BRIBERY|ANTI CORRUPTION|CORRUPT PRACTICES|FCPA)\b(?:\s*:|\s*\n)",
+        r"(?:^|\n)(?:Prevention of Corruption Act|anti-bribery laws)\b",
+    ],
 }
 
 
@@ -496,6 +521,26 @@ class ContractIntelligenceEngine:
         if risk_factors:
             return RiskLevel.LOW, risk_factors
 
+        # Indian Statutory Risk Specific Checks
+        if clause_type == ClauseType.NON_COMPETE:
+            post_term_terms = [
+                "post-termination", "post termination", "after termination",
+                "following termination", "following termination of employment",
+                "upon termination", "upon cessation of services", "cessation of services",
+                "following departure", "after departure", "subsequent to disassociation",
+                "post disassociation", "post employment", "after employment", "post-employment",
+                "months post-termination", "years post-termination",
+                "following departure from", "subsequent to resignation",
+            ]
+            if any(term in content_lower for term in post_term_terms):
+                risk_factors.append("Critical: Section 27 Indian Contract Act 1872 void restraint of trade (post-termination non-compete is void ab initio)")
+                return RiskLevel.CRITICAL, risk_factors
+
+        if clause_type == ClauseType.DISPUTE_RESOLUTION:
+            if any(term in content_lower for term in ["unilateral appointment", "sole discretion to appoint", "exclusive right to appoint arbitrator"]):
+                risk_factors.append("High: Unilateral arbitrator appointment invalid under Arbitration Act 1996 §12(5) (Perkins Eastman)")
+                return RiskLevel.HIGH, risk_factors
+
         # Clause-type specific defaults
         type_risk_defaults = {
             ClauseType.INDEMNITY: RiskLevel.HIGH,
@@ -506,6 +551,11 @@ class ContractIntelligenceEngine:
             ClauseType.NON_COMPETE: RiskLevel.HIGH,
             ClauseType.INTELLECTUAL_PROPERTY: RiskLevel.HIGH,
             ClauseType.DISPUTE_RESOLUTION: RiskLevel.MEDIUM,
+            ClauseType.STAMP_DUTY: RiskLevel.MEDIUM,
+            ClauseType.DATA_PROTECTION: RiskLevel.MEDIUM,
+            ClauseType.TAXATION: RiskLevel.LOW,
+            ClauseType.JURISDICTION: RiskLevel.LOW,
+            ClauseType.ANTI_BRIBERY: RiskLevel.MEDIUM,
             ClauseType.FORCE_MAJEURE: RiskLevel.LOW,
             ClauseType.GOVERNING_LAW: RiskLevel.LOW,
         }
@@ -847,6 +897,58 @@ class ContractIntelligenceEngine:
                 issues.append("Reference Arbitration and Conciliation Act, 1996 in arbitration clause")
 
         return issues
+
+    def generate_risk_heatmap(self, contract: ContractDocument) -> Dict[str, Any]:
+        """Generate structured risk heatmap matrix across functional categories."""
+        categories = {
+            "Liability & Indemnity": [ClauseType.INDEMNITY, ClauseType.LIMITATION_OF_LIABILITY, ClauseType.WARRANTIES],
+            "Commercial & Term": [ClauseType.PAYMENT, ClauseType.TERM, ClauseType.TERMINATION, ClauseType.SCOPE],
+            "Restrictive Covenants": [ClauseType.NON_COMPETE, ClauseType.NON_SOLICITATION, ClauseType.CONFIDENTIALITY],
+            "Compliance & Statutory": [ClauseType.STAMP_DUTY, ClauseType.DATA_PROTECTION, ClauseType.TAXATION, ClauseType.ANTI_BRIBERY],
+            "Dispute & Governance": [ClauseType.GOVERNING_LAW, ClauseType.DISPUTE_RESOLUTION, ClauseType.JURISDICTION, ClauseType.ENTIRE_AGREEMENT],
+        }
+
+        category_scores: Dict[str, Dict[str, Any]] = {}
+        risk_value_map = {
+            RiskLevel.CRITICAL: 100,
+            RiskLevel.HIGH: 75,
+            RiskLevel.MEDIUM: 45,
+            RiskLevel.LOW: 20,
+            RiskLevel.NEGLIGIBLE: 5,
+        }
+
+        for cat_name, clause_types in categories.items():
+            cat_clauses = [c for c in contract.clauses if c.clause_type in clause_types]
+            if cat_clauses:
+                scores = [risk_value_map.get(c.risk_level, 10) for c in cat_clauses]
+                avg_score = sum(scores) / len(scores)
+                highest_risk = max(cat_clauses, key=lambda c: risk_value_map.get(c.risk_level, 0)).risk_level.value
+            else:
+                avg_score = 0.0
+                highest_risk = "negligible"
+
+            category_scores[cat_name] = {
+                "score": round(avg_score, 1),
+                "highest_risk": highest_risk,
+                "clause_count": len(cat_clauses),
+                "clauses": [
+                    {
+                        "clause_id": c.clause_id,
+                        "title": c.title,
+                        "type": c.clause_type.value,
+                        "risk_level": c.risk_level.value,
+                        "risk_factors": c.risk_factors,
+                    }
+                    for c in cat_clauses
+                ],
+            }
+
+        return {
+            "contract_id": contract.contract_id,
+            "overall_score": contract.risk_assessment.risk_score if contract.risk_assessment else 0.0,
+            "overall_risk": contract.risk_assessment.overall_risk.value if contract.risk_assessment else "negligible",
+            "categories": category_scores,
+        }
 
 
 # ============================================================================

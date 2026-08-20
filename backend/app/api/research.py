@@ -408,3 +408,33 @@ async def research_sources(session_id: str, _=Depends(resource_case_access("rese
     if not session.data or session.data["case_id"] != case["id"]:
         raise HTTPException(404, "Research session not found in this case")
     return svc().table("research_sources").select("*").eq("session_id", session_id).execute().data
+
+
+class KanoonSearchQuery(BaseModel):
+    query: str = Field(min_length=2, max_length=500)
+    court: Optional[str] = None
+    limit: Optional[int] = 10
+
+
+@router.post("/research/kanoon/search")
+async def kanoon_search(
+    body: KanoonSearchQuery,
+    ctx: AuthContext = Depends(get_auth_context),
+):
+    """Search Indian Kanoon case law judgments and precedents."""
+    from app.ai.indian_kanoon import IndianKanoonClient
+    return await IndianKanoonClient.search_judgments(
+        query=body.query,
+        court=body.court,
+        limit=body.limit or 10,
+    )
+
+
+@router.get("/research/kanoon/citation-graph/{doc_id}")
+async def kanoon_citation_graph(
+    doc_id: str,
+    ctx: AuthContext = Depends(get_auth_context),
+):
+    """Retrieve citation network graph for a landmark Indian case."""
+    from app.ai.indian_kanoon import IndianKanoonClient
+    return IndianKanoonClient.get_citation_graph(doc_id)
