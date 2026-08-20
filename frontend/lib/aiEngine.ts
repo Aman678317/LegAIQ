@@ -75,21 +75,36 @@ export interface LegalRisk {
 export type LegalDomain = "TAX" | "PROPERTY" | "CORPORATE" | "ARBITRATION" | "CONSTITUTIONAL" | "CIVIL" | "CRIMINAL" | "GENERAL";
 
 export function detectDomain(ctx: LegalContext, query?: string): LegalDomain {
+  if (ctx.caseType === "PROPERTY") return "PROPERTY";
+  if (ctx.caseType === "TAX") return "TAX";
+  if (ctx.caseType === "COMMERCIAL" || ctx.caseType === "CORPORATE") return "CORPORATE";
+
   const combined = `${ctx.caseName} ${ctx.description || ""} ${ctx.caseType} ${ctx.documentNames.join(" ")} ${query || ""}`.toLowerCase();
+
+  if (
+    combined.includes("survey no") ||
+    combined.includes("sale deed") ||
+    combined.includes("partition deed") ||
+    combined.includes("khata") ||
+    combined.includes("pahani") ||
+    combined.includes("rtc") ||
+    combined.includes("land") ||
+    combined.includes("property") ||
+    combined.includes("whitefield")
+  ) {
+    return "PROPERTY";
+  }
 
   if (
     combined.includes("vodafone") ||
     combined.includes("income tax") ||
-    combined.includes("section 9") ||
     combined.includes("section 195") ||
     combined.includes("capital gain") ||
     combined.includes("withholding") ||
-    combined.includes("dispute") ||
-    combined.includes("tax") ||
+    combined.includes("tax dispute") ||
     combined.includes("gst") ||
     combined.includes("itat") ||
-    combined.includes("revenue department") ||
-    ctx.caseType === "TAX"
+    combined.includes("direct tax")
   ) {
     return "TAX";
   }
@@ -98,22 +113,19 @@ export function detectDomain(ctx: LegalContext, query?: string): LegalDomain {
     combined.includes("company") ||
     combined.includes("merger") ||
     combined.includes("acquisition") ||
-    combined.includes("share") ||
+    combined.includes("share purchase") ||
     combined.includes("ibc") ||
     combined.includes("nclt") ||
-    combined.includes("director") ||
-    ctx.caseType === "COMMERCIAL" ||
-    ctx.caseType === "CORPORATE"
+    combined.includes("director")
   ) {
     return "CORPORATE";
   }
 
   if (
     combined.includes("arbitrat") ||
-    combined.includes("section 9") ||
     combined.includes("section 11") ||
     combined.includes("section 34") ||
-    combined.includes("award")
+    combined.includes("arbitral award")
   ) {
     return "ARBITRATION";
   }
@@ -126,20 +138,6 @@ export function detectDomain(ctx: LegalContext, query?: string): LegalDomain {
     combined.includes("fundamental right")
   ) {
     return "CONSTITUTIONAL";
-  }
-
-  if (
-    combined.includes("survey no") ||
-    combined.includes("sale deed") ||
-    combined.includes("partition deed") ||
-    combined.includes("khata") ||
-    combined.includes("pahani") ||
-    combined.includes("rtc") ||
-    combined.includes("land") ||
-    combined.includes("property") ||
-    ctx.caseType === "PROPERTY"
-  ) {
-    return "PROPERTY";
   }
 
   return "GENERAL";
@@ -822,7 +820,7 @@ export function generateRisks(ctx: LegalContext): LegalRisk[] {
       title: "Survey number mismatch across deeds",
       description: "Sale Deed 1987 records Sy. No. 124/3, while Partition Deed 2004 recites Sy. No. 124/2 in Schedule A.",
       level: "HIGH",
-      category: "TITLE_DISCREPANCY",
+      category: "DOCUMENT",
       recommended_action: "Obtain certified Tippani and Akarbandh sketch from the Assistant Director of Land Records (ADLR) to confirm hissa subdivision.",
       evidence: [
         {
@@ -840,7 +838,7 @@ export function generateRisks(ctx: LegalContext): LegalRisk[] {
       title: "Missing 15-year Encumbrance Certificate gap (1987–2004)",
       description: "No intermediate Nil Encumbrance Certificate (Form 15) available to verify whether prior mortgages or court attachments existed before partition.",
       level: "MEDIUM",
-      category: "ENCUMBRANCE",
+      category: "REGISTRATION",
       recommended_action: "Apply for 30-year Form 15 Encumbrance Certificate at K.R. Puram SRO (Kaveri 2.0 portal).",
       evidence: [
         {
@@ -851,6 +849,24 @@ export function generateRisks(ctx: LegalContext): LegalRisk[] {
       ],
       resolved: false,
       created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+    },
+    {
+      id: `${ctx.caseId}-risk-3`,
+      case_id: ctx.caseId,
+      title: "Unverified Family Tree & Coparcenary Succession",
+      description: "Partition deed recites partition among 4 coparceners without attaching pedigree tree from Tahsildar.",
+      level: "HIGH",
+      category: "OWNERSHIP",
+      recommended_action: "Obtain certified Family Tree (Vamsha Vruksha) issued by jurisdictional Tahsildar.",
+      evidence: [
+        {
+          document_name: "partition_deed_2004.pdf",
+          page_number: 1,
+          source_text: "…Family Partition between legal heirs of Late Lakshmi Devi…",
+        },
+      ],
+      resolved: false,
+      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
     },
   ];
 }
