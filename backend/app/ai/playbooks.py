@@ -495,3 +495,7 @@ class PlaybookDeviationEngine:
             deviations=deviations,
             redline_recommendations=redlines,
         )
+
+
+# Alias for backward compatibility with test suites
+PlaybookEvaluator = PlaybookDeviationEngine

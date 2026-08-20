@@ -14,6 +14,16 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 
+# Default columns for rapid legal review initialization
+DEFAULT_LEGAL_COLUMNS = [
+    {"name": "Governing Law", "column_type": "prompt", "prompt": "What is the governing law of this agreement?", "position": 0},
+    {"name": "Jurisdiction", "column_type": "prompt", "prompt": "Which court or seat has jurisdiction for dispute resolution?", "position": 1},
+    {"name": "Indemnity Cap", "column_type": "prompt", "prompt": "Is there a monetary cap or limitation on indemnity?", "position": 2},
+    {"name": "Termination Notice", "column_type": "prompt", "prompt": "What is the termination notice period?", "position": 3},
+    {"name": "Stamp Duty Paid", "column_type": "prompt", "prompt": "What is the stamp duty amount paid or noted?", "position": 4},
+]
+
+
 @dataclass
 class CellEvidence:
     """Grounding evidence for extracted review cell value."""
