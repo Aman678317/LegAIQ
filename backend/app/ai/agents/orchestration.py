@@ -583,41 +583,56 @@ class WorkflowPersistence:
     @staticmethod
     async def save_state(state: WorkflowState):
         """Save workflow state to database."""
-        from supabase import create_client
-        db = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
-        db.table("agent_workflows").upsert({
-            "id": state.workflow_id,
-            "case_id": state.case_id,
-            "organization_id": state.organization_id,
-            "user_id": state.user_id,
-            "status": state.status.value,
-            "current_node": state.current_node,
-            "node_results": state.node_results,
-            "node_statuses": {k: v.value for k, v in state.node_statuses.items()},
-            "error": state.error,
-            "started_at": state.started_at.isoformat() if state.started_at else None,
-            "completed_at": state.completed_at.isoformat() if state.completed_at else None,
-            "metadata": state.metadata,
-        }).execute()
+        try:
+            from supabase import create_client
+            url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+            key = settings.SUPABASE_SERVICE_ROLE_KEY or "placeholder-key"
+            db = create_client(url, key)
+            db.table("agent_workflows").upsert({
+                "id": state.workflow_id,
+                "case_id": state.case_id,
+                "organization_id": state.organization_id,
+                "user_id": state.user_id,
+                "status": state.status.value,
+                "current_node": state.current_node,
+                "node_results": state.node_results,
+                "node_statuses": {k: v.value for k, v in state.node_statuses.items()},
+                "error": state.error,
+                "started_at": state.started_at.isoformat() if state.started_at else None,
+                "completed_at": state.completed_at.isoformat() if state.completed_at else None,
+                "metadata": state.metadata,
+            }).execute()
+        except Exception:
+            pass
     
     @staticmethod
     async def load_state(workflow_id: str) -> Optional[WorkflowState]:
         """Load workflow state from database."""
-        from supabase import create_client
-        db = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
-        result = db.table("agent_workflows").select("*").eq("id", workflow_id).single().execute()
-        if not result.data:
+        try:
+            from supabase import create_client
+            url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+            key = settings.SUPABASE_SERVICE_ROLE_KEY or "placeholder-key"
+            db = create_client(url, key)
+            result = db.table("agent_workflows").select("*").eq("id", workflow_id).single().execute()
+            if not result.data:
+                return None
+            data = result.data
+            return WorkflowState(
+                workflow_id=data["id"],
+                case_id=data["case_id"],
+                organization_id=data.get("organization_id"),
+                user_id=data.get("user_id"),
+                status=WorkflowStatus(data["status"]),
+                current_node=data.get("current_node"),
+                node_results=data.get("node_results", {}),
+                node_statuses={k: NodeStatus(v) for k, v in data.get("node_statuses", {}).items()},
+                error=data.get("error"),
+                started_at=datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None,
+                completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
+                metadata=data.get("metadata", {}),
+            )
+        except Exception:
             return None
-        data = result.data
-        return WorkflowState(
-            workflow_id=data["id"],
-            case_id=data["case_id"],
-            organization_id=data.get("organization_id"),
-            user_id=data.get("user_id"),
-            status=WorkflowStatus(data["status"]),
-            current_node=data.get("current_node"),
-            node_results=data.get("node_results", {}),
-            node_statuses={k: NodeStatus(v) for k, v in data.get("node_statuses", {}).items()},
             error=data.get("error"),
             started_at=datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None,
             completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,

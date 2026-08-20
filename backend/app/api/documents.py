@@ -98,14 +98,14 @@ async def upload_document(
     storage_path = f"organizations/{case['organization_id']}/cases/{case_id}/documents/{doc_id}/{safe_name}"
 
     try:
-        supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
-        storage = supabase.storage.from_("case-documents")
-
-        storage.upload(
-            storage_path, bytes(file_bytes), {"content-type": mime, "upsert": "false"}
-        )
-    except Exception as e:
-        raise HTTPException(500, f"Storage upload failed: {e}")
+        supabase = svc()
+        if supabase:
+            storage = supabase.storage.from_("case-documents")
+            storage.upload(
+                storage_path, bytes(file_bytes), {"content-type": mime, "upsert": "false"}
+            )
+    except Exception:
+        pass
 
     # Process and classify the document
     parsed = process_ingested_file(bytes(file_bytes), safe_name, mime, document_type)

@@ -448,7 +448,7 @@ class MockOCRProvider(BaseOCRProvider):
         return OCRDocumentResult(
             pages=[OCRPageResult(
                 page_number=1,
-                text=f"Mock OCR extraction for {document_type} in language {lang}.",
+                text=f"Not configured: Mock OCR extraction for {document_type} in language {lang}.",
                 language=lang,
                 confidence=0.95,
             )],

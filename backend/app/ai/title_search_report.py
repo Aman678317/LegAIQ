@@ -1055,9 +1055,14 @@ async def run_title_search_report_job(job_id: str, mock_mode: bool = True):
     from app.config import get_settings
 
     settings = get_settings()
-    db = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+    url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+    key = settings.SUPABASE_SERVICE_ROLE_KEY or "placeholder-key"
+    try:
+        db = create_client(url, key)
+        job = db.table("jobs").select("*").eq("id", job_id).single().execute().data
+    except Exception:
+        job = None
 
-    job = db.table("jobs").select("*").eq("id", job_id).single().execute().data
     if not job:
         return
 

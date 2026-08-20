@@ -723,6 +723,19 @@ class ContractIntelligenceEngine:
 
     def assess_risk(self, contract: ContractDocument) -> ContractRiskAssessment:
         """Perform comprehensive risk assessment of contract."""
+        if not contract.clauses:
+            return ContractRiskAssessment(
+                contract_id=contract.contract_id,
+                overall_risk=RiskLevel.NEGLIGIBLE,
+                risk_score=0,
+                clause_risks={},
+                critical_issues=[],
+                high_risk_issues=[],
+                recommendations=[],
+                compliance_gaps=[],
+                assessed_at=datetime.now(timezone.utc),
+            )
+
         clause_risks = {}
         critical_issues = []
         high_risk_issues = []
@@ -763,24 +776,26 @@ class ContractIntelligenceEngine:
         risk_weights = {
             RiskLevel.CRITICAL: 40,
             RiskLevel.HIGH: 25,
-            RiskLevel.MEDIUM: 15,
-            RiskLevel.LOW: 5,
-            RiskLevel.NEGLIGIBLE: 2,
+            RiskLevel.MEDIUM: 10,
+            RiskLevel.LOW: 3,
+            RiskLevel.NEGLIGIBLE: 1,
         }
 
-        total_score = sum(risk_weights.get(r, 0) for r in clause_risks.values()) + (len(compliance_gaps) * 5)
+        total_score = sum(risk_weights.get(r, 0) for r in clause_risks.values())
         risk_score = min(100, total_score)
 
         has_critical = any(r == RiskLevel.CRITICAL for r in clause_risks.values())
         has_high = any(r == RiskLevel.HIGH for r in clause_risks.values())
+        has_medium = any(r == RiskLevel.MEDIUM for r in clause_risks.values())
+        has_low = any(r == RiskLevel.LOW for r in clause_risks.values())
 
-        if has_critical or risk_score >= 60:
-            overall_risk = RiskLevel.CRITICAL if (has_critical and has_high) or risk_score >= 60 else RiskLevel.HIGH
-        elif has_high or risk_score >= 35:
+        if has_critical:
+            overall_risk = RiskLevel.CRITICAL
+        elif has_high:
             overall_risk = RiskLevel.HIGH
-        elif risk_score >= 20:
+        elif has_medium:
             overall_risk = RiskLevel.MEDIUM
-        elif risk_score >= 10:
+        elif has_low:
             overall_risk = RiskLevel.LOW
         else:
             overall_risk = RiskLevel.NEGLIGIBLE

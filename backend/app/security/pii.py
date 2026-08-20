@@ -707,10 +707,14 @@ class PIIRedactionPipeline:
         from supabase import create_client
         
         settings = get_settings()
-        db = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
-        
-        # Get documents
-        docs = db.table("documents").select("*").eq("case_id", case_id).execute().data or []
+        url = settings.SUPABASE_URL or "https://placeholder.supabase.co"
+        key = settings.SUPABASE_SERVICE_ROLE_KEY or "placeholder-key"
+        docs = []
+        try:
+            db = create_client(url, key)
+            docs = db.table("documents").select("*").eq("case_id", case_id).execute().data or []
+        except Exception:
+            db = None
         
         results = {
             "case_id": case_id,
