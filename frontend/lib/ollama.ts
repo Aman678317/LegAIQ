@@ -45,10 +45,10 @@ export async function checkOllamaStatus(baseUrl = DEFAULT_OLLAMA_URL): Promise<O
     const res = await fetch(`${baseUrl}/api/tags`, {
       method: "GET",
       signal: controller.signal,
-    });
+    }).catch(() => null);
     clearTimeout(timeoutId);
 
-    if (!res.ok) {
+    if (!res || !res.ok) {
       return { online: false, models: [], activeModel: null };
     }
 
@@ -131,11 +131,11 @@ export async function chatWithOllama(
         stream: false,
         options: { temperature },
       }),
-    });
+    }).catch(() => null);
     clearTimeout(timeoutId);
 
-    if (res.ok) {
-      const data = await res.json();
+    if (res && res.ok) {
+      const data = await res.json().catch(() => null);
       const content = data?.message?.content || "";
       if (content) {
         return {
@@ -158,23 +158,22 @@ export async function chatWithOllama(
         model: actualModel,
         messages: formattedMessages,
         system: systemPrompt,
-        temperature,
       }),
-    });
+    }).catch(() => null);
 
-    if (res.ok) {
-      const data = await res.json();
-      const content = data?.text || data?.message?.content || "";
+    if (res && res.ok) {
+      const data = await res.json().catch(() => null);
+      const content = data?.content || data?.text || "";
       if (content) {
         return {
           text: content,
-          model: data.model || actualModel,
+          model: actualModel,
           duration_ms: Date.now() - start,
         };
       }
     }
   } catch {
-    // API route failed, continue
+    // API route unavailable or offline
   }
 
   // 3. Try Next.js Ollama proxy /api/ollama/chat
@@ -188,10 +187,10 @@ export async function chatWithOllama(
         stream: false,
         options: { temperature },
       }),
-    });
+    }).catch(() => null);
 
-    if (res.ok) {
-      const data = await res.json();
+    if (res && res.ok) {
+      const data = await res.json().catch(() => null);
       const content = data?.message?.content || data?.content || "";
       if (content) {
         return {
@@ -202,7 +201,7 @@ export async function chatWithOllama(
       }
     }
   } catch {
-    // proxy failed
+    // proxy also failed
   }
 
   return null;

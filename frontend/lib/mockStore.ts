@@ -105,11 +105,12 @@ function getContext(caseId: string): LegalContext {
   };
 }
 
-function createDefaultCaseData(caseId: string, name = "Vodafone International Holdings B.V. v. Union of India"): DemoCase {
-  const isVodafone = name.toLowerCase().includes("vodafone") || caseId.includes("vodafone");
+function createDefaultCaseData(caseId: string, name?: string): DemoCase {
+  const caseName = name || (caseId.toLowerCase().includes("vodafone") ? "Vodafone International Holdings B.V. v. Union of India" : "Whitefield Property Dispute & Title Investigation");
+  const isVodafone = caseName.toLowerCase().includes("vodafone") || caseId.toLowerCase().includes("vodafone");
   return {
     id: caseId,
-    name: isVodafone ? "Vodafone International Holdings B.V. v. Union of India" : name,
+    name: isVodafone ? "Vodafone International Holdings B.V. v. Union of India" : caseName,
     case_type: isVodafone ? "TAX" : "PROPERTY",
     status: "ACTIVE",
     organization_id: "demo-org",
@@ -1044,7 +1045,7 @@ export const DEMO_CLAUSE_LIBRARY = [
     fallback_tier_2: "12-month non-solicitation of clients with whom direct interaction occurred.",
     walkaway_language: "WALKAWAY: Post-termination non-competes are void ab initio in India (Percept D'Mark v. Zaheer Khan).",
     guidance_notes: "Section 27 voidness is absolute under Indian jurisprudence.",
-    statutory_reference: "Indian Contract Act, 1872 §27; Percept D'Mark (2006)",
+    statutory_reference: "Indian Contract Act, 1872 Section 27 (§27); Percept D'Mark (2006)",
     tags: ["non-compete", "section-27", "restraint-of-trade"],
   },
   {
@@ -1122,7 +1123,7 @@ export function evaluateDemoPlaybook(caseId: string, body: any) {
             current_text: "Employee shall not compete for 1 year following termination in India.",
             issue_description: "CRITICAL STATUTORY VIOLATION: Post-termination non-compete is void ab initio under Section 27 Indian Contract Act 1872.",
             recommended_redline: "Employee shall not engage in competing business during the active term of employment only. No post-termination restraint applies per Section 27 ICA.",
-            statutory_reference: "Indian Contract Act, 1872 §27; Percept D'Mark (2006)",
+            statutory_reference: "Indian Contract Act, 1872 Section 27 (§27); Percept D'Mark (2006)",
           },
         ]
       : [

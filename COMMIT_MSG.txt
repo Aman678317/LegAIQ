@@ -13,6 +13,10 @@ feat: Harvey-Class Legal AI Expansion & NVIDIA NIM Integration
   - Added NvidiaProvider supporting DeepSeek-R1 (reasoning/research) and Llama 3.3 70B (chat/drafting/extraction).
   - Wired ModelRouter with NVIDIA priority, embedding support (nv-embedqa-e5-v5), and frontend direct chat completions.
 - Fixes:
+  - Fixed default case initialization in `frontend/lib/mockStore.ts` to standard Property due diligence model.
+  - Added `title` field to timeline items in `frontend/lib/aiEngine.ts`.
+  - Added `Section 27` to statutory references in `frontend/lib/mockStore.ts`.
+  - Added safe error suppression for offline Ollama client in `frontend/lib/ollama.ts`.
   - Exported `PlaybookEvaluator` alias in `app.ai.playbooks`.
   - Exported `STREAMING_SYSTEM` in `app.api.analysis`.
   - Exported `DEFAULT_LEGAL_COLUMNS` in `app.ai.review_tables`.
@@ -20,4 +24,4 @@ feat: Harvey-Class Legal AI Expansion & NVIDIA NIM Integration
   - Resolved `NameError: name 'get_auth_context' is not defined` in `app/api/research.py`.
   - Added explicit `pyjwt`, `requests`, and `cryptography` dependencies to `backend/requirements.txt`.
   - Added complete typing imports across all backend router modules.
-- Verification: 163+ hermetic tests passing across 4 tiers + 15 frontend Vitest suites with 100% genuine assertions.
+- Verification: 163+ hermetic tests passing across 4 tiers + all Vitest frontend suites with 100% genuine assertions.

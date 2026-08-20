@@ -1026,6 +1026,7 @@ export function generateTimeline(ctx: LegalContext) {
     return [
       {
         id: "tl-1",
+        title: "Execution of Share Purchase Agreement (SPA)",
         transaction_type: "ACQUISITION_SPA",
         event_date: "2007-02-11",
         description: "Execution of Share Purchase Agreement (SPA) between HTIL and Vodafone B.V. for acquisition of 100% share capital of CGP Investments (Holdings) Ltd for USD 11.1 Billion.",
@@ -1037,6 +1038,7 @@ export function generateTimeline(ctx: LegalContext) {
       },
       {
         id: "tl-2",
+        title: "Show Cause Notice u/s 201",
         transaction_type: "SHOW_CAUSE_NOTICE",
         event_date: "2007-09-19",
         description: "Income Tax Department issues Show Cause Notice u/s 201 treating Vodafone as an assessee-in-default for non-deduction of withholding tax u/s 195.",
@@ -1048,6 +1050,7 @@ export function generateTimeline(ctx: LegalContext) {
       },
       {
         id: "tl-3",
+        title: "Supreme Court Landmark Judgment",
         transaction_type: "SUPREME_COURT_JUDGMENT",
         event_date: "2012-01-20",
         description: "Supreme Court of India (3-Judge Bench) quashes the Rs. 11,000 Crore tax demand and rules in favour of Vodafone B.V.",
@@ -1059,6 +1062,7 @@ export function generateTimeline(ctx: LegalContext) {
       },
       {
         id: "tl-4",
+        title: "Finance Act 2012 Retrospective Amendment",
         transaction_type: "RETROSPECTIVE_AMENDMENT",
         event_date: "2012-05-28",
         description: "Parliament passes Finance Act, 2012 introducing Explanations 4 and 5 to Section 9(1)(i) with retrospective effect from 1 April 1962.",
@@ -1070,6 +1074,7 @@ export function generateTimeline(ctx: LegalContext) {
       },
       {
         id: "tl-5",
+        title: "Taxation Laws Amendment Act 2021",
         transaction_type: "STATUTORY_REPEAL",
         event_date: "2021-08-13",
         description: "Taxation Laws (Amendment) Act, 2021 nullifies all retrospective tax demands raised for indirect transfers executed prior to 28 May 2012.",
@@ -1086,6 +1091,7 @@ export function generateTimeline(ctx: LegalContext) {
   return [
     {
       id: "tl-1",
+      title: "Absolute Sale Deed Execution & Registration",
       transaction_type: "SALE",
       event_date: "1987-07-14",
       description: "Absolute Sale Deed registered in favour of Smt. Lakshmi Devi from Sri K. Ramaswamy Gowda for consideration of Rs. 1,45,000.",
@@ -1097,6 +1103,7 @@ export function generateTimeline(ctx: LegalContext) {
     },
     {
       id: "tl-2",
+      title: "Family Partition Deed Execution",
       transaction_type: "PARTITION",
       event_date: "2004-03-22",
       description: "Registered Family Partition Deed executed among legal heirs allocating eastern portion to N. Suresh Kumar.",
@@ -1108,6 +1115,7 @@ export function generateTimeline(ctx: LegalContext) {
     },
     {
       id: "tl-3",
+      title: "Revenue RTC Mutation Record",
       transaction_type: "MUTATION",
       event_date: "2023-11-15",
       description: "Revenue RTC mutation updated in Bhoomi portal recording N. Suresh Kumar as Khatedar.",
