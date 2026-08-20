@@ -12,4 +12,6 @@ feat: Harvey-Class Legal AI Expansion & NVIDIA NIM Integration
 - NVIDIA NIM AI Integration:
   - Added NvidiaProvider supporting DeepSeek-R1 (reasoning/research) and Llama 3.3 70B (chat/drafting/extraction).
   - Wired ModelRouter with NVIDIA priority, embedding support (nv-embedqa-e5-v5), and frontend direct chat completions.
+- Fixes:
+  - Resolved `NameError: name 'Tuple' is not defined` in `app/api/analysis.py` for uvicorn runtime.
 - Verification: 163+ hermetic tests passing across 4 tiers + 15 frontend Vitest suites with 100% genuine assertions.

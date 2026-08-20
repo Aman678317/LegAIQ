@@ -17,7 +17,7 @@ import urllib.parse
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode
 
 import jwt
