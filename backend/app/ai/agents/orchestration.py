@@ -396,6 +396,9 @@ class AgentOrchestrator:
     
     def _topological_sort(self, nodes: dict, entry_node: str) -> list[str]:
         """Topologically sort nodes for execution order."""
+        if entry_node not in nodes:
+            raise KeyError(f"Entry node '{entry_node}' not found in workflow graph")
+
         visited = set()
         temp = set()
         order = []
@@ -628,6 +631,7 @@ class AIKillSwitch:
     """Emergency AI kill switch for halting all agent operations."""
     
     _enabled = False
+    _reason = None
     
     def __init__(self):
         pass
@@ -640,23 +644,28 @@ class AIKillSwitch:
         return self._enabled
     
     @classmethod
-    def enable(cls):
+    def enable(cls, reason: Optional[str] = None):
         cls._enabled = True
+        cls._reason = reason
 
-    def activate(self):
+    def activate(self, reason: Optional[str] = None):
         AIKillSwitch._enabled = True
+        AIKillSwitch._reason = reason
     
     @classmethod
     def disable(cls):
         cls._enabled = False
+        cls._reason = None
 
     def deactivate(self):
         AIKillSwitch._enabled = False
+        AIKillSwitch._reason = None
     
     @classmethod
     async def check_and_raise(cls):
         if cls._enabled:
-            raise RuntimeError("AI operations disabled by kill switch")
+            reason_msg = f": {cls._reason}" if cls._reason else ""
+            raise RuntimeError(f"AI operations disabled by kill switch{reason_msg}")
 
 
 # Decorator for workflow functions to check kill switch

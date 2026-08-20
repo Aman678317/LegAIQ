@@ -667,13 +667,43 @@ class ContractIntelligenceEngine:
     def _extract_parties(self, text: str) -> List[Dict[str, str]]:
         """Extract party information from contract text."""
         parties = []
-        # Pattern for parties in preamble: "Between X and Y"
-        between_match = re.search(r"BETWEEN:\s*([^.\n]+(?:\n[^.\n]+)*?)\s*AND\s*([^.\n]+(?:\n[^.\n]+)*)", text, re.IGNORECASE)
-        if between_match:
-            party1 = between_match.group(1).strip()
-            party2 = between_match.group(2).strip()
-            parties.append({"name": re.sub(r'[\(\"\)]', '', party1.split('\n')[0]).strip(), "role": "Party 1"})
-            parties.append({"name": re.sub(r'[\(\"\)]', '', party2.split('\n')[0]).strip(), "role": "Party 2"})
+        seen = set()
+
+        # 1. Pattern: Between X and Y
+        between_and = re.search(r"between\s*:?\s*([^.\n]+(?:\n[^.\n]+)*?)\s+and\s+([^.\n]+(?:\n[^.\n]+)*)", text, re.IGNORECASE)
+        if between_and:
+            p1 = re.sub(r'[\(\"\)]', '', between_and.group(1).split('\n')[0]).strip()
+            p2 = re.sub(r'[\(\"\)]', '', between_and.group(2).split('\n')[0]).strip()
+            p1 = re.sub(r'^is made\s+', '', p1, flags=re.IGNORECASE).strip()
+            if p1 and p1.lower() not in seen and len(p1) > 2:
+                parties.append({"name": p1, "role": "Party 1"})
+                seen.add(p1.lower())
+            if p2 and p2.lower() not in seen and len(p2) > 2:
+                parties.append({"name": p2, "role": "Party 2"})
+                seen.add(p2.lower())
+
+        # 2. Line items under "between:" or "parties:"
+        between_block = re.search(r"(?:between|parties)\s*:\s*\n((?:[^\n]+\n?)+)", text, re.IGNORECASE)
+        if between_block:
+            lines = between_block.group(1).strip().split("\n")
+            for line in lines:
+                cleaned = re.sub(r'^\s*[\d\.\-\*]+\s*', '', line).strip()
+                cleaned = re.sub(r'\s*\([\"\'].*?[\"\']\)', '', cleaned).strip()
+                if cleaned and len(cleaned) > 2 and cleaned.lower() not in seen:
+                    parties.append({"name": cleaned, "role": f"Party {len(parties)+1}"})
+                    seen.add(cleaned.lower())
+
+        # 3. Explicit "Party X: Name" or ("Alias")
+        party_defs = [
+            r"(?:Party\s+[A-Z\d]|Vendor|Client|Licensor|Licensee|Employer|Employee)\s*[:\-]\s*([^\n,]+)",
+            r"([A-Z][a-zA-Z0-9\s,\.\-&]{2,50}?)\s*\([\"']([A-Za-z0-9\s]+)[\"']\)",
+        ]
+        for pat in party_defs:
+            for m in re.finditer(pat, text):
+                p_name = m.group(1).strip()
+                if p_name and len(p_name) > 2 and p_name.lower() not in seen and not p_name.lower().startswith("this agreement"):
+                    parties.append({"name": p_name, "role": f"Party {len(parties)+1}"})
+                    seen.add(p_name.lower())
 
         return parties
 

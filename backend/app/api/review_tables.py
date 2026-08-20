@@ -4,6 +4,7 @@ Spreadsheet-style review tables for bulk structured legal extraction across
 case documents with evidence grounding, confidence scores, and Excel/CSV export.
 """
 
+import re
 import uuid
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
@@ -12,7 +13,7 @@ from pydantic import BaseModel, Field
 from supabase import create_client
 
 from app.config import get_settings
-from app.security.auth import get_case_access
+from app.security.auth import AuthContext, get_auth_context, get_case_access
 from app.ai.review_tables import ReviewTableExtractionEngine, ReviewTableExporter
 
 settings = get_settings()

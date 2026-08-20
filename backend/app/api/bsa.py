@@ -46,10 +46,10 @@ class BSACertificateRequest(BaseModel):
 async def generate_bsa_certificate(
     case_id: str,
     body: BSACertificateRequest,
-    ctx: AuthContext = Depends(require_role("STAFF")),
+    _ = Depends(get_case_access),
 ):
     """Generate Section 63 electronic evidence certificate for a case."""
-    _, case = await get_case_access(case_id, ctx)
+    ctx, case = _
     db = _db()
 
     docs = []

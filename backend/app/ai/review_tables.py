@@ -304,21 +304,18 @@ class ReviewTableExporter:
 
                 writer.writerow(row_data)
         else:
-            header = ["Document Name"] + [col.get("name", "Column") for col in columns]
-            writer.writerow([ReviewTableExporter._sanitize_csv_cell(h) for h in header])
-
+            lines = [",".join([ReviewTableExporter._sanitize_csv_cell(h) for h in ["Document Name"] + [col.get("name", "Column") for col in columns]])]
             for row in rows:
                 doc_name = row.get("document_name", "Untitled Document")
                 cells_by_col = row.get("cells", {})
-                row_data = [ReviewTableExporter._sanitize_csv_cell(doc_name)]
-
+                vals = [ReviewTableExporter._sanitize_csv_cell(doc_name)]
                 for col in columns:
                     col_id = col.get("id")
                     cell = cells_by_col.get(col_id, {})
                     val = cell.get("value", "") if isinstance(cell, dict) else str(cell)
-                    row_data.append(ReviewTableExporter._sanitize_csv_cell(val))
-
-                writer.writerow(row_data)
+                    vals.append(ReviewTableExporter._sanitize_csv_cell(val))
+                lines.append(",".join(vals))
+            return "\n".join(lines) + "\n"
 
         return output.getvalue()
 

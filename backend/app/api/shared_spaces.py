@@ -67,11 +67,10 @@ class VerifyPasscodeRequest(BaseModel):
 async def create_case_shared_space(
     case_id: str,
     body: CreateSharedSpaceRequest,
-    ctx: AuthContext = Depends(require_role("LAWYER")),
+    _ = Depends(get_case_access),
 ):
     """Create an expiring shared space link for external collaborators."""
-    # Verify lawyer has access to the case
-    _, case = await get_case_access(case_id, ctx)
+    ctx, case = _
 
     share_id = str(uuid.uuid4())
     token = secrets.token_urlsafe(32)
