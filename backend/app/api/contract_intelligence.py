@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from app.security.auth import get_auth_context, get_case_access
+from app.security.auth import AuthContext, get_auth_context, get_case_access, require_role
 from app.ai.contract_intelligence import (
     ContractIntelligenceEngine,
     ContractDocument,

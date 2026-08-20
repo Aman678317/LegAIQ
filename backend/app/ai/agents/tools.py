@@ -7,7 +7,7 @@ Tools are case-scoped: they only ever touch the case in the agent context.
 import asyncio
 import time
 from datetime import datetime, timezone
-from typing import Any, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pydantic import ValidationError
 from supabase import create_client

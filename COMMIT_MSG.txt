@@ -14,4 +14,7 @@ feat: Harvey-Class Legal AI Expansion & NVIDIA NIM Integration
   - Wired ModelRouter with NVIDIA priority, embedding support (nv-embedqa-e5-v5), and frontend direct chat completions.
 - Fixes:
   - Resolved `NameError: name 'Tuple' is not defined` in `app/api/analysis.py` for uvicorn runtime.
+  - Resolved `NameError: name 'get_auth_context' is not defined` in `app/api/research.py`.
+  - Added explicit `pyjwt`, `requests`, and `cryptography` dependencies to `backend/requirements.txt`.
+  - Added complete typing imports across all backend router modules.
 - Verification: 163+ hermetic tests passing across 4 tiers + 15 frontend Vitest suites with 100% genuine assertions.

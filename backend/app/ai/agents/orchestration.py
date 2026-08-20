@@ -8,7 +8,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 from pydantic import BaseModel, Field
 
 from app.ai.agents.base import (

@@ -2,7 +2,7 @@
 import hashlib
 import re
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import quote_plus
 
 import httpx
@@ -12,7 +12,7 @@ from supabase import create_client
 
 from app.ai.provider import LLMRequest, router as llm_router
 from app.config import get_settings
-from app.security.auth import get_case_access, resource_case_access
+from app.security.auth import AuthContext, get_auth_context, get_case_access, require_role, resource_case_access
 from app.security.ssrf import validate_external_url
 
 settings = get_settings()
