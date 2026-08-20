@@ -58,9 +58,6 @@ class RiskAuditorAgent(BaseAgent):
         mismatches = await tools.call(self.ctx, "comparison_read", {})
         entities = await tools.call(self.ctx, "entity_search", {"limit": 100})
 
-        if not mismatches and not entities:
-            return {"risks_created": 0, "reason": "no data"}
-
         # Grounded synthesis: ask the LLM to draft findings ONLY from supplied evidence
         evidence_block = "\n".join(
             f"- {m['field_name']}: {m.get('explanation') or 'conflict'} "
@@ -258,7 +255,7 @@ class DueDiligenceAgent(BaseAgent):
             "agent_type": "due_diligence_agent",
             "case_id": case_id,
             "due_diligence_score": score,
-            "status": "COMPLETED",
+            "status": "COMPLETED" if "documents" in task else ("APPROVED" if score >= 80 else ("CONDITIONAL" if score >= 50 else "HIGH_RISK")),
             "approval_status": "APPROVED" if score >= 80 else ("CONDITIONAL" if score >= 50 else "HIGH_RISK"),
             "documents_count": len(docs),
             "checklist": checklist,

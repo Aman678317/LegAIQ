@@ -322,7 +322,7 @@ class KarnatakaPortal(BasePortalConnector):
         if self.mock_mode:
             await asyncio.sleep(0.1)
             record = self._create_mock_record(survey_number, district, taluk, village)
-            record.document_type = "RTC (Pahani)"
+            record.document_type = "RTC (Record of Rights, Tenancy and Crops)"
             record.document_reference = f"RTC/{district}/{taluk}/{village}/{survey_number}"
             record.land_type = "Dry / Wet / Garden"
             record.tenure = "Bhumidhari / Gair Bhumidhari"
@@ -338,7 +338,7 @@ class KarnatakaPortal(BasePortalConnector):
             await asyncio.sleep(0.1)
             record = self._create_mock_record(f"OWNER-{owner_name[:10]}", district, taluk, village or "")
             record.owner_names = [owner_name]
-            record.document_type = "RTC (Pahani)"
+            record.document_type = "RTC (Record of Rights, Tenancy and Crops)"
             return PortalSearchResult(success=True, records=[record], query={"owner": owner_name})
 
         return PortalSearchResult(success=False, error="Owner search not implemented", query={"owner": owner_name})

@@ -723,19 +723,6 @@ class ContractIntelligenceEngine:
 
     def assess_risk(self, contract: ContractDocument) -> ContractRiskAssessment:
         """Perform comprehensive risk assessment of contract."""
-        if not contract.clauses:
-            return ContractRiskAssessment(
-                contract_id=contract.contract_id,
-                overall_risk=RiskLevel.NEGLIGIBLE,
-                risk_score=0,
-                clause_risks={},
-                critical_issues=[],
-                high_risk_issues=[],
-                recommendations=[],
-                compliance_gaps=[],
-                assessed_at=datetime.now(timezone.utc),
-            )
-
         clause_risks = {}
         critical_issues = []
         high_risk_issues = []

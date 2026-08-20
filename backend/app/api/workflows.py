@@ -196,6 +196,9 @@ async def get_agent_library(ctx: AuthContext = Depends(get_auth_context)):
     }
 
 
+_CUSTOM_WORKFLOWS_STORE: Dict[str, dict] = {}
+
+
 @router.get("")
 async def list_workflows(
     include_templates: bool = Query(True, description="Include built-in templates"),
@@ -203,12 +206,16 @@ async def list_workflows(
 ):
     """List all saved workflows and pre-built templates."""
     db = _db()
-    custom_workflows = []
-    try:
-        rows = db.table("workflows").select("*").execute().data or []
-        custom_workflows = rows
-    except Exception:
-        pass
+    custom_workflows = list(_CUSTOM_WORKFLOWS_STORE.values())
+    if db:
+        try:
+            rows = db.table("workflows").select("*").execute().data or []
+            existing_ids = {w["id"] for w in custom_workflows}
+            for r in rows:
+                if r["id"] not in existing_ids:
+                    custom_workflows.append(r)
+        except Exception:
+            pass
 
     results = []
     if include_templates:
@@ -245,11 +252,13 @@ async def create_workflow(
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
 
+    _CUSTOM_WORKFLOWS_STORE[workflow_id] = record
+
     if db:
         try:
             db.table("workflows").insert(record).execute()
         except Exception:
-            pass  # In-memory persistence fallback
+            pass
 
     return record
 
@@ -264,6 +273,9 @@ async def get_workflow(
     for tpl in PREBUILT_TEMPLATES:
         if tpl["id"] == workflow_id:
             return tpl
+
+    if workflow_id in _CUSTOM_WORKFLOWS_STORE:
+        return _CUSTOM_WORKFLOWS_STORE[workflow_id]
 
     db = _db()
     if db:
@@ -290,6 +302,9 @@ async def update_workflow(
         updates["nodes"] = [n.model_dump() if hasattr(n, "model_dump") else n for n in updates["nodes"]]
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
 
+    if workflow_id in _CUSTOM_WORKFLOWS_STORE:
+        _CUSTOM_WORKFLOWS_STORE[workflow_id].update(updates)
+
     if db:
         try:
             res = db.table("workflows").update(updates).eq("id", workflow_id).execute()
@@ -313,6 +328,7 @@ async def delete_workflow(
     ctx: AuthContext = Depends(get_auth_context),
 ):
     """Delete a custom workflow."""
+    _CUSTOM_WORKFLOWS_STORE.pop(workflow_id, None)
     db = _db()
     if db:
         try:
@@ -479,6 +495,9 @@ async def execute_workflow(
         if tpl["id"] == workflow_id:
             workflow_def = tpl
             break
+
+    if not workflow_def and workflow_id in _CUSTOM_WORKFLOWS_STORE:
+        workflow_def = _CUSTOM_WORKFLOWS_STORE[workflow_id]
 
     if not workflow_def:
         db = _db()
