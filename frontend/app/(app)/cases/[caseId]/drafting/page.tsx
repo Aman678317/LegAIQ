@@ -8,7 +8,6 @@ import { Button, Card, Badge } from "@/components/ui";
 import { formatDateTime, DRAFT_TYPES } from "@/lib/utils";
 import { downloadDraftFile } from "@/lib/reportExporter";
 import { checkOllamaStatus, OllamaStatus } from "@/lib/ollama";
-import { checkRajoraStatus, RajoraStatus, RAJORA_PRIVATE_MODEL } from "@/lib/rajora";
 
 export default function DraftingPage() {
   const { caseId } = useParams<{ caseId: string }>();
@@ -20,13 +19,7 @@ export default function DraftingPage() {
     models: [],
     activeModel: null,
   });
-  const [rajoraStatus, setRajoraStatus] = useState<RajoraStatus>({
-    online: false,
-    latencyMs: null,
-    model: "rajora-private",
-    mode: "private",
-  });
-  const [selectedModel, setSelectedModel] = useState<string>("rajora-private");
+  const [selectedModel, setSelectedModel] = useState<string>("llama3.1:70b");
 
   // Create form
   const [showCreate, setShowCreate] = useState(false);
@@ -53,7 +46,6 @@ export default function DraftingPage() {
   useEffect(() => {
     load();
     checkOllamaStatus().then(setOllamaStatus);
-    checkRajoraStatus().then(setRajoraStatus);
   }, [caseId]);
 
   async function createDraft(e: React.FormEvent) {
@@ -114,12 +106,7 @@ export default function DraftingPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {rajoraStatus.online ? (
-            <div className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 text-xs text-purple-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
-              <span className="font-mono text-xs">Rajora Private LLM</span>
-            </div>
-          ) : ollamaStatus.online ? (
+          {ollamaStatus.online ? (
             <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-400">
               <Cpu size={13} className="animate-pulse text-emerald-400" />
               <span className="font-mono text-xs">Ollama: {ollamaStatus.activeModel || "Online"}</span>
@@ -165,7 +152,6 @@ export default function DraftingPage() {
                   onChange={(e) => setSelectedModel(e.target.value)}
                   className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-white outline-none focus:border-primary"
                 >
-                  <option value="rajora-private">Rajora Private LLM (Sovereign Zero-Egress)</option>
                   <option value="llama3.1:70b">Ollama (Llama 3.1 Local On-Premises)</option>
                   <option value="claude-3-5-sonnet">Claude 3.5 Sonnet (High Precision Legal)</option>
                   <option value="gpt-4o">GPT-4o (Enterprise Legal Reasoner)</option>

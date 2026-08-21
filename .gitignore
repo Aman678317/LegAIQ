@@ -50,3 +50,4 @@ frontend/playwright-report/
 # OneDrive stray files
 *.url
 
+.mimosa.disabled/

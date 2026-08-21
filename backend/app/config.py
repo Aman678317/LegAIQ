@@ -64,13 +64,6 @@ class Settings(BaseSettings):
     OLLAMA_MODEL: str = "llama3"
     OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
 
-    # Rajora Private LLM (Self-Hosted Inference)
-    RAJORA_BASE_URL: str = ""
-    RAJORA_SERVICE_API_KEY: str = ""
-    RAJORA_DEFAULT_MODEL: str = "rajora-private-v1"
-    RAJORA_TIMEOUT_SECONDS: int = 120
-    RAJORA_INTERNAL_SECRET: str = ""
-
     # OCR
     OCR_PROVIDER: str = "tesseract"
     TESSERACT_CMD: str = "tesseract"

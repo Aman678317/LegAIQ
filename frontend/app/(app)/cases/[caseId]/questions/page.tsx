@@ -4,14 +4,13 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import {
   Send, Loader2, MessageSquare, FileText, Languages, Cpu, Sparkles,
-  HelpCircle, Scale, PenTool, CheckCircle2, ShieldCheck, ExternalLink,
+  HelpCircle, Scale, PenTool, CheckCircle2, ExternalLink,
   ChevronRight, X, BookOpen, AlertTriangle
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, Badge, Button } from "@/components/ui";
 import { LANGUAGES } from "@/lib/utils";
 import { checkOllamaStatus, OllamaStatus } from "@/lib/ollama";
-import { RAJORA_PRIVATE_MODEL, checkRajoraStatus, isRajoraModel, RajoraStatus } from "@/lib/rajora";
 
 type ChatMode = "ask" | "analyze" | "draft";
 
@@ -99,15 +98,12 @@ export default function QuestionsPage() {
   const [indiaContext, setIndiaContext] = useState<boolean>(true);
 
   // M1: Multi-LLM model selector state
-  const [selectedModel, setSelectedModel] = useState<string>("rajora-private");
+  const [selectedModel, setSelectedModel] = useState<string>("llama3.1:70b");
   const [selectedLang, setSelectedLang] = useState("en");
   const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus>({
     online: false,
     models: [],
     activeModel: null,
-  });
-  const [rajoraStatus, setRajoraStatus] = useState<RajoraStatus>({
-    online: false,
   });
 
   const [caseInfo, setCaseInfo] = useState<any>(null);
@@ -128,10 +124,6 @@ export default function QuestionsPage() {
 
     checkOllamaStatus().then((status) => {
       setOllamaStatus(status);
-    });
-
-    checkRajoraStatus().then((status) => {
-      setRajoraStatus(status);
     });
   }, [caseId]);
 
@@ -266,21 +258,12 @@ export default function QuestionsPage() {
         <div className="flex flex-wrap items-center gap-2">
             {/* Multi-LLM Runtime Model Selector */}
           <div className="flex items-center gap-1.5 rounded-lg border border-border bg-bg-elevated px-2.5 py-1.5 text-xs text-white shadow-sm">
-            {isRajoraModel(selectedModel) ? (
-              <ShieldCheck size={14} className={rajoraStatus.online ? "text-emerald-400" : "text-indigo-400"} />
-            ) : (
-              <Cpu size={14} className={ollamaStatus.online ? "animate-pulse text-emerald-400" : "text-primary"} />
-            )}
+            <Cpu size={14} className={ollamaStatus.online ? "animate-pulse text-emerald-400" : "text-primary"} />
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
               className="cursor-pointer bg-transparent text-xs font-medium text-white outline-none"
             >
-              <optgroup label="Sovereign Private AI (Zero Third-Party)" className="bg-bg text-white">
-                <option value="rajora-private">
-                  Rajora Private LLM (Private · Zero Third-Party)
-                </option>
-              </optgroup>
               <optgroup label="Cloud Legal Frontier Models" className="bg-bg text-white">
                 <option value="claude-3-5-sonnet">Claude 3.5 Sonnet (High Precision Legal)</option>
                 <option value="gpt-4o">GPT-4o (Enterprise Legal Reasoner)</option>
@@ -455,11 +438,6 @@ export default function QuestionsPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          {isRajoraModel(msg.model || (msg.isStreaming ? selectedModel : undefined)) && (
-                            <Badge className="border-indigo-500/30 bg-indigo-500/10 text-[10px] font-medium text-indigo-300">
-                              🛡️ Private · Zero Third-Party
-                            </Badge>
-                          )}
                           {indiaContext && (
                             <Badge className="border-emerald-500/30 bg-emerald-500/10 text-[10px] font-medium text-emerald-400">
                               ✓ India Statutes Grounded

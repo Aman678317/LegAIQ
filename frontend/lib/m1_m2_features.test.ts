@@ -44,11 +44,11 @@ describe("Milestone 1 (R1): Assistant & Chat Workspace", () => {
     expect(draftRes.role).toBe("assistant");
     expect(draftRes.content).toBeTruthy();
 
-    // Rajora Private LLM mode
-    const rajoraRes = await mockStore.askDemoQuestion(caseId, "What was the Vodafone dispute?", "en", "rajora-private");
-    expect(rajoraRes.role).toBe("assistant");
-    expect(rajoraRes.content).toBeTruthy();
-    expect(rajoraRes.citations).toBeDefined();
+    // Local Ollama Private LLM mode
+    const ollamaRes = await mockStore.askDemoQuestion(caseId, "What was the Vodafone dispute?", "en", "llama3.1:70b");
+    expect(ollamaRes.role).toBe("assistant");
+    expect(ollamaRes.content).toBeTruthy();
+    expect(ollamaRes.citations).toBeDefined();
   });
 
   it("correctly extracts inline citations from text with [Doc: name, Pg: N]", () => {

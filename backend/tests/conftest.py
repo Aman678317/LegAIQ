@@ -34,7 +34,7 @@ PATCH_TARGETS = [
     "app.api.review_tables",
     "app.api.workflows",
     "app.api.shared_spaces",
-    "app.api.rajora",
+    "app.api.state_portals",
     "app.api.bsa",
     "app.workers.tasks",
     "app.workers.dispatcher",

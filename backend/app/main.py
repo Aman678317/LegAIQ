@@ -86,7 +86,6 @@ from app.api.workflows import router as workflows_router
 from app.api.shared_spaces import router as shared_spaces_router
 from app.api.state_portals import router as state_portals_router
 from app.api.bsa import router as bsa_router
-from app.api.rajora import router as rajora_router, internal_router as internal_rajora_router
 
 app.include_router(cases_router, prefix=settings.API_V1_PREFIX)
 app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
@@ -114,8 +113,5 @@ app.include_router(workflows_router, prefix=settings.API_V1_PREFIX)
 app.include_router(shared_spaces_router, prefix=settings.API_V1_PREFIX)
 app.include_router(state_portals_router, prefix=settings.API_V1_PREFIX)
 app.include_router(bsa_router, prefix=settings.API_V1_PREFIX)
-app.include_router(rajora_router, prefix=settings.API_V1_PREFIX)
-app.include_router(rajora_router, prefix="/api")
-app.include_router(internal_rajora_router)
 
 
