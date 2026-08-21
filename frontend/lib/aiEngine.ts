@@ -193,7 +193,7 @@ export function detectDomain(ctx: LegalContext, query?: string): LegalDomain {
   return "GENERAL";
 }
 
-// --------------------------- Intelligent Q&A Engine (Local Ollama + Cognitive Fallback) ---------------------------
+// --------------------------- Intelligent Q&A Engine (Harvey-Grade Live AI + Cognitive Fallback) ---------------------------
 
 export async function generateLegalAnswer(
   ctx: LegalContext,
@@ -202,48 +202,49 @@ export async function generateLegalAnswer(
   model?: string
 ): Promise<LegalAnswer> {
   const domain = detectDomain(ctx, question);
-  const primaryDoc = ctx.documentNames[0] || (domain === "TAX" ? "39003.pdf" : "sale_deed_1987.pdf");
+  const primaryDoc = ctx.documentNames[0] || (domain === "TAX" ? "case_record.pdf" : "property_record.pdf");
 
-  // 1. Try Local Ollama first if running
+  // 1. Live Harvey-Class Legal AI Generation via Cloud/Local Engine
   try {
-    const ollamaStatus = await checkOllamaStatus();
-    if (ollamaStatus.online) {
-      const activeModel = model || ollamaStatus.activeModel || "llama3";
-        const langInstruction =
-          language && language !== "en"
-            ? `Respond strictly and fully in the requested language (code: ${language}). Use precise formal Indian court legal terminology.`
-            : "Respond in English.";
+    const langInstruction =
+      language && language !== "en"
+        ? `Respond strictly and fully in the requested language (code: ${language}). Use precise formal Indian court legal terminology.`
+        : "Respond in English.";
 
-        const systemPrompt = `You are Jurisiva AI, an elite legal intelligence assistant built specifically for Indian Law (like Harvey AI).
+    const systemPrompt = `You are Jurisiva AI, an elite, world-class legal AI assistant built specifically for Indian Law (equivalent to Harvey AI).
 Case Name: ${ctx.caseName}
 Case Type: ${ctx.caseType}
-Jurisdiction: ${ctx.jurisdictionState || "India"}
+Jurisdiction: ${ctx.jurisdictionState || "Supreme Court & High Courts of India"}
 Uploaded Documents: ${ctx.documentNames.join(", ")}
 Language Requirement: ${langInstruction}
 
 Instructions:
-1. Provide comprehensive, direct, and authoritative legal analysis addressing the user's specific question from every relevant legal, procedural, factual, and statutory aspect.
-2. Ground your reasoning in the Indian Statutes (e.g. Income Tax Act 1961, Companies Act, Transfer of Property Act, CPC), relevant Sections, and Landmark Supreme Court / High Court Precedents.
-3. Structure your response with clear headings: Executive Summary, Legal & Statutory Analysis, Judicial Precedents, Evidentiary Findings, and Strategic Next Steps.
-4. Always maintain high professional rigor and reference evidence from uploaded case files.`;
+1. Provide comprehensive, realistic, direct, and authoritative legal analysis addressing the user's specific question from every relevant legal, procedural, factual, and statutory aspect.
+2. Ground your reasoning in Indian Statutes (e.g. Constitution of India, Bharatiya Nyaya Sanhita (BNS), Bharatiya Nagarik Suraksha Sanhita (BNSS), Bharatiya Sakshya Adhiniyam 2023 (BSA Section 63), Transfer of Property Act 1882, CPC Order 39, Income Tax Act 1961, Companies Act 2013, RERA, IBC), statutory sections, and landmark Supreme Court / High Court Precedents.
+3. Structure your response with clear markdown headings:
+   - ### 1. Executive Summary & Statutory Formulation
+   - ### 2. Detailed Legal Analysis & Jurisprudential Basis
+   - ### 3. Binding Judicial Precedents (Supreme Court of India)
+   - ### 4. Evidentiary Findings & Procedural Guidance
+   - ### 5. Strategic Recommendations & Practical Application
+4. Maintain the highest standard of professional legal rigor, cite specific section numbers, and explain the real-world societal, regulatory, and judicial impact.`;
 
-        const ollamaRes = await queryLocalOllama(question, systemPrompt, activeModel);
-        if (ollamaRes && ollamaRes.text && ollamaRes.text.trim().length > 30) {
-          return {
-            content: ollamaRes.text,
-            citations: [
-              {
-                document_name: primaryDoc,
-                page_number: 1,
-                source_text: `…Synthesized via Local Ollama (${ollamaRes.model}) from case files in ${ctx.caseName}…`,
-              },
-            ],
-          };
-        }
-      }
-    } catch {
-      // Fall back to built-in semantic legal engine
+    const aiRes = await queryLocalOllama(question, systemPrompt, model || "llama-3.3-70b");
+    if (aiRes && aiRes.text && aiRes.text.trim().length > 30) {
+      return {
+        content: aiRes.text,
+        citations: [
+          {
+            document_name: primaryDoc,
+            page_number: 1,
+            source_text: `…Synthesized via ${aiRes.model || "Llama 3.3 70B"} from case record in ${ctx.caseName}…`,
+          },
+        ],
+      };
     }
+  } catch {
+    // Fall back to built-in semantic legal engine if network is unavailable
+  }
 
   // 2. High-precision Indian Legal Cognitive Engine
   const q = question.toLowerCase();
@@ -1206,15 +1207,13 @@ export async function generateLegalResearch(
   const domain = detectDomain(ctx, question);
   const q = question.toLowerCase();
 
-  // 1. Try Local Ollama first if online
+  // 1. Live Legal Research AI Generation
   try {
-      const status = await checkOllamaStatus();
-      if (status.online) {
-        const activeModel = model || status.activeModel || "llama3";
-        const systemPrompt = `You are Jurisiva AI, an authoritative Indian Legal Research Agent.
+    const activeModel = model || "llama-3.3-70b";
+    const systemPrompt = `You are Jurisiva AI, an authoritative Indian Legal Research Agent.
 Case Context: ${ctx.caseName} (${ctx.caseType})
 Jurisdiction: ${jurisdiction}
-Goal: Research the legal proposition rigorously, citing the relevant Indian statutes (e.g. Income Tax Act 1961, Companies Act, Transfer of Property Act, CPC), section numbers, and landmark Supreme Court / High Court citations.
+Goal: Research the legal proposition rigorously, citing relevant Indian statutes (e.g. Constitution of India, BNS, BNSS, BSA 2023, Income Tax Act 1961, Companies Act 2013, Transfer of Property Act 1882, CPC), section numbers, and landmark Supreme Court / High Court citations.
 Format:
 ### Legal Research Memorandum
 #### 1. Statutory Architecture & Interpretation
@@ -1222,28 +1221,27 @@ Format:
 #### 3. Analytical Synthesis & Current Legal Position
 #### 4. Practical Strategic Recommendations`;
 
-        const ollamaRes = await queryLocalOllama(question, systemPrompt, activeModel);
-        if (ollamaRes && ollamaRes.text && ollamaRes.text.length > 50) {
-          return {
-            id: `res-${Date.now()}`,
-            case_id: ctx.caseId,
-            question,
-            status: "COMPLETED",
-            jurisdiction,
-            answer: ollamaRes.text,
-            model: activeModel,
-            sources: [
-              { id: "src-1", title: `Supreme Court of India Case Records — ${ctx.caseName}`, url: "https://main.sci.gov.in/judgments", verified: true },
-              { id: "src-2", title: "Indian Kanoon Law Search & Statutory Law", url: "https://indiankanoon.org", verified: true },
-              { id: "src-3", title: "eCourts Judicial Database", url: "https://judgments.ecourts.gov.in", verified: true },
-            ],
-            created_at: new Date().toISOString(),
-          };
-        }
-      }
-    } catch {
-      // Continue to fallback
+    const ollamaRes = await queryLocalOllama(question, systemPrompt, activeModel);
+    if (ollamaRes && ollamaRes.text && ollamaRes.text.length > 50) {
+      return {
+        id: `res-${Date.now()}`,
+        case_id: ctx.caseId,
+        question,
+        status: "COMPLETED",
+        jurisdiction,
+        answer: ollamaRes.text,
+        model: activeModel,
+        sources: [
+          { id: "src-1", title: `Supreme Court of India Case Records — ${ctx.caseName}`, url: "https://main.sci.gov.in/judgments", verified: true },
+          { id: "src-2", title: "Indian Kanoon Law Search & Statutory Law", url: "https://indiankanoon.org", verified: true },
+          { id: "src-3", title: "eCourts Judicial Database", url: "https://judgments.ecourts.gov.in", verified: true },
+        ],
+        created_at: new Date().toISOString(),
+      };
     }
+  } catch {
+    // Continue to fallback
+  }
 
   let answer = "";
   let sources = [

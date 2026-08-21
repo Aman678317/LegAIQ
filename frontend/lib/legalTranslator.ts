@@ -33,23 +33,20 @@ export async function translateLegalText(text: string, targetLang: string): Prom
 
   const targetLangName = LANGUAGE_NAMES[targetLang] || targetLang;
 
-  // 1. Attempt Local Ollama Translation
+  // 1. Attempt Live AI Translation (Cloud/Local)
   try {
-    const status = await checkOllamaStatus();
-    if (status.online && status.activeModel) {
-      const systemPrompt = `You are a certified High Court & Supreme Court legal translator for Indian Law.
+    const systemPrompt = `You are a certified High Court & Supreme Court legal translator for Indian Law.
 Translate the provided legal text into ${targetLangName} maintaining strict legal precision, correct judicial terms (e.g. धारा, याचिकाकर्ता, प्रतिवादी, अंतरण, विलेख, ಪತ್ರ, ತೀರ್ಪು, மனுதாரர், etc.).
 Provide ONLY the translated text without conversational filler.`;
 
-      const res = await queryLocalOllama(
-        `Translate the following text into ${targetLangName}:\n\n${text}`,
-        systemPrompt,
-        status.activeModel
-      );
+    const res = await queryLocalOllama(
+      `Translate the following text into ${targetLangName}:\n\n${text}`,
+      systemPrompt,
+      "llama-3.3-70b"
+    );
 
-      if (res && res.text && res.text.trim().length > 10) {
-        return res.text.trim();
-      }
+    if (res && res.text && res.text.trim().length > 10) {
+      return res.text.trim();
     }
   } catch {
     // Continue to fallback

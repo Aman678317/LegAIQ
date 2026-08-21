@@ -97,8 +97,8 @@ export default function QuestionsPage() {
   // M1: India Context toggle state
   const [indiaContext, setIndiaContext] = useState<boolean>(true);
 
-  // M1: Multi-LLM model selector state
-  const [selectedModel, setSelectedModel] = useState<string>("llama3.1:70b");
+  // M1: Multi-LLM model selector state (defaults to high-speed Llama 3.3 70B)
+  const [selectedModel, setSelectedModel] = useState<string>("llama-3.3-70b");
   const [selectedLang, setSelectedLang] = useState("en");
   const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus>({
     online: false,
@@ -264,8 +264,10 @@ export default function QuestionsPage() {
               onChange={(e) => setSelectedModel(e.target.value)}
               className="cursor-pointer bg-transparent text-xs font-medium text-white outline-none"
             >
-              <optgroup label="Cloud Legal Frontier Models" className="bg-bg text-white">
-                <option value="claude-3-5-sonnet">Claude 3.5 Sonnet (High Precision Legal)</option>
+              <optgroup label="Ultra-Fast Legal Models" className="bg-bg text-white">
+                <option value="llama-3.3-70b">Llama 3.3 70B (Ultra-Fast Groq)</option>
+                <option value="gpt-4o-mini">GPT-4o Mini (Fast OpenAI)</option>
+                <option value="claude-3-5-sonnet">Claude 3.5 Sonnet (High Precision)</option>
                 <option value="gpt-4o">GPT-4o (Enterprise Legal Reasoner)</option>
                 <option value="deepseek-r1">DeepSeek R1 (Deep Legal CoT Logic)</option>
               </optgroup>
