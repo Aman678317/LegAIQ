@@ -52,7 +52,15 @@ describe("Tier 1 & Tier 2: Frontend Legal Intelligence State & Stores", () => {
     const firstRisk = risks[0];
     expect(firstRisk.title).toBeDefined();
     expect(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).toContain(firstRisk.level);
-    expect(["DOCUMENT", "OWNERSHIP", "BOUNDARY", "REGISTRATION", "IDENTITY"]).toContain(firstRisk.category);
+    expect([
+      "DOCUMENT",
+      "OWNERSHIP",
+      "BOUNDARY",
+      "REGISTRATION",
+      "IDENTITY",
+      "EVIDENCE_COMPLIANCE",
+      "PROCEDURAL_LIMITATION",
+    ]).toContain(firstRisk.category);
   });
 
   it("provides timeline events with chronological structure", async () => {

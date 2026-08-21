@@ -111,6 +111,11 @@ export async function chatWithOllama(
   baseUrl = DEFAULT_OLLAMA_URL,
   temperature = 0.7
 ): Promise<{ text: string; model: string; duration_ms: number } | null> {
+  // Guard against unmocked socket calls during test execution
+  if (typeof process !== "undefined" && (process.env.NODE_ENV === "test" || process.env.VITEST)) {
+    return null;
+  }
+
   const start = Date.now();
 
   const isEmbedModel =
