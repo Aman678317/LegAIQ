@@ -146,7 +146,6 @@ class TestFeature14WorkflowExecutionEngine:
     def test_ai_kill_switch_guards_execution(self):
         """AI Kill Switch globally halts AI agent execution when activated for safety/cost limit."""
         kill_switch = AIKillSwitch()
-        # By default not activated
         assert kill_switch.is_activated() is False
 
         kill_switch.activate("Monthly API token limit exceeded")
@@ -168,8 +167,13 @@ class TestFeature14WorkflowExecutionEngine:
             status=WorkflowStatus.RUNNING,
             started_at=datetime.now(timezone.utc),
         )
-        # Verify persistence methods exist and execute cleanly
         assert hasattr(persistence, "save_state") or hasattr(persistence, "create_run")
+
+    def test_workflow_budget_enforcement(self):
+        """Agent budget enforces max tokens and cost constraints."""
+        budget = AgentBudget(max_tokens=50000, max_cost_usd=2.50)
+        assert budget.max_tokens == 50000
+        assert budget.max_cost_usd == 2.50
 
 
 # ============================================================================

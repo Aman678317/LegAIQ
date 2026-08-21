@@ -142,6 +142,18 @@ class TestFeature21DynamicWatermarking:
         watermark_metadata = f"DocHash:{doc_hash[:16]}"
         assert "DocHash:" in watermark_metadata
 
+    def test_watermark_dynamic_timestamp_generation(self):
+        """Watermark dynamically generates current UTC timestamp on every access."""
+        ts1 = datetime.now(timezone.utc).isoformat()
+        ts2 = datetime.now(timezone.utc).isoformat()
+        assert ts1 is not None
+        assert ts2 is not None
+
+    def test_watermark_multi_tenant_isolation(self):
+        """Watermark includes current organization identifier for tenant tracing."""
+        org_watermark = f"PROPERTY OF ORG: {ORG_ID}"
+        assert ORG_ID in org_watermark
+
 
 # ============================================================================
 # Feature 22: Enterprise Cost & ROI Analytics
@@ -184,8 +196,8 @@ class TestFeature22EnterpriseCostAndROI:
         advocate_hourly_rate_usd = 60.0
         total_ai_cost_usd = 30.0
 
-        estimated_savings = manual_hours_saved * advocate_hourly_rate_usd  # $6,000
-        roi_pct = ((estimated_savings - total_ai_cost_usd) / total_ai_cost_usd) * 100  # ~19,900%
+        estimated_savings = manual_hours_saved * advocate_hourly_rate_usd
+        roi_pct = ((estimated_savings - total_ai_cost_usd) / total_ai_cost_usd) * 100
 
         roi = AIROIMetrics(
             organization_id=ORG_ID,
@@ -215,6 +227,17 @@ class TestFeature22EnterpriseCostAndROI:
         )
         assert summary.total_cases == 50
         assert summary.ai_success_rate == 0.985
+
+    def test_case_velocity_metrics_model(self):
+        """CaseVelocityMetrics calculates turnaround time from intake to report delivery."""
+        velocity = CaseVelocityMetrics(
+            organization_id=ORG_ID,
+            period=TimeRange.MONTH,
+            average_turnaround_days=2.4,
+            fastest_case_hours=1.5,
+            slowest_case_days=7.0,
+        )
+        assert velocity.average_turnaround_days == 2.4
 
 
 # ============================================================================

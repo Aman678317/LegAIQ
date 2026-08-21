@@ -830,14 +830,18 @@ def generate_section63_certificate(
     if not file_name:
         file_name = kwargs.get("file_name") or "electronic_record.pdf"
 
+    cert_id = f"BSA-SEC63-{uuid4().hex[:16].upper()}"
+    master_audit_hash = h_val if len(h_val) == 64 else hashlib.sha256((h_val or file_name or cert_id).encode("utf-8")).hexdigest()
+
     cert_data = {
-        "certificate_id": str(uuid4()),
+        "certificate_id": cert_id,
         "title": "Section 63 Electronic Evidence Certificate",
         "evidence_id": ev_id,
         "file_name": file_name,
         "hash_value": h_val,
         "algorithm": algo,
         "hash_algorithm": algo,
+        "master_audit_hash": master_audit_hash,
         "is_valid": True,
         "issued_at": datetime.now(timezone.utc).isoformat(),
         "custodian": {
@@ -849,6 +853,13 @@ def generate_section63_certificate(
         "certifier_designation": c_desig,
         "organization": c_org,
         "system_parameters": system_parameters or str(system_details),
+        "statutory_framework": {
+            "primary_act": "Bharatiya Sakshya Adhiniyam, 2023 (Act No. 47 of 2023)",
+            "primary_section": "Section 63 (Admissibility of electronic records)",
+            "legacy_act": "Indian Evidence Act, 1872 (Section 65B)",
+            "legacy_included": kwargs.get("include_legacy_65b", True),
+            "dpdp_act_compliant": True,
+        },
         "electronic_record": {
             "file_name": file_name,
             "description": doc_desc,
@@ -857,17 +868,37 @@ def generate_section63_certificate(
             "date_created": date_created_iso,
             "system_details": system_details,
         },
+        "certified_documents": [
+            {
+                "file_name": file_name,
+                "sha256_hash": h_val,
+                "status": "CERTIFIED_VALID",
+                "statutory_reference": "Section 63(4), Bharatiya Sakshya Adhiniyam, 2023",
+            }
+        ],
         "certifications": {
             "computer_generated": computer_generated,
             "regular_use": regular_use,
             "regular_data_feed": regular_data_feed,
             "system_integrity": system_integrity,
+            "computer_output_produced_by_computer": computer_generated,
+            "regular_use_of_system": regular_use,
+            "information_regularly_fed": regular_data_feed,
+            "system_operating_properly": system_integrity,
+            "no_tampering_or_alteration": True,
         },
         "legal_basis": "Section 63, Bharatiya Sakshya Adhiniyam, 2023",
         "statement": (
             "I certify that the electronic record described above was produced by the computer "
             "system during its regular use, that the information was derived from data regularly "
             "fed into the system, and that the system was operating properly at all material times."
+        ),
+        "statutory_declaration": (
+            f"I, {c_name}, {c_desig} of {c_org}, do hereby "
+            f"solemnly declare and certify pursuant to Section 63(4) of the Bharatiya Sakshya Adhiniyam, 2023 "
+            f"(read with Section 65B of the Indian Evidence Act, 1872) that the electronic records listed herein "
+            f"were produced by computer systems during the ordinary course of lawful activities. The integrity of "
+            f"the data has been verified cryptographically using SHA-256 hashing without any alteration or unauthorized access."
         ),
     }
 

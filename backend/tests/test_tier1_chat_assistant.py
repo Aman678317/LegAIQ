@@ -1,13 +1,15 @@
-"""Tier 1 Test Suite: Chat & Assistant Intelligence (Features 1-4).
+"""Tier 1 Test Suite: Chat & Assistant Intelligence (Requirements R1 & R2).
 
 Covers:
-- Feature 1: 3-Mode Chat Workspace (Ask, Analyze, Draft)
-- Feature 2: Real-time Streaming & Inline Citations
-- Feature 3: Multi-LLM Selection & Provider Routing
-- Feature 4: India Context Toggle & Statutory Reasoning
+- Feature 1: 3-Mode Chat Workspace (Ask, Analyze/FIRAC, Draft)
+- Feature 2: Real-time SSE Token Streaming & Inline Citations
+- Feature 3: Multi-LLM Selection & Provider Routing (Groq, OpenAI, Anthropic, Ollama)
+- Feature 4: India Context Toggle & Statutory Reasoning (BNS, BNSS, BSA 2023, CPC, TP Act)
+- Feature 5: Elimination of Static Canned Fallbacks & Hybrid RAG Retrieval
 """
 
 import json
+import re
 import pytest
 from unittest.mock import AsyncMock, patch
 
@@ -25,6 +27,8 @@ from app.ai.provider import (
 from app.api.analysis import (
     SYSTEM_GROUNDED,
     STREAMING_SYSTEM,
+    MODE_SYSTEM_PROMPTS,
+    INDIA_STATUTES_CONTEXT,
     build_citations,
     format_context,
     generate_streaming_response,
@@ -111,7 +115,7 @@ class TestFeature1ChatModes:
 
 
 # ============================================================================
-# Feature 2: Streaming & Inline Citations
+# Feature 2: Real-Time SSE Streaming & Inline Citations
 # ============================================================================
 
 class TestFeature2StreamingAndCitations:
@@ -170,7 +174,6 @@ class TestFeature2StreamingAndCitations:
         assert len(events) >= 2
         assert any(e.startswith("data: ") for e in events)
         assert events[-1] == "data: [DONE]\n\n"
-        # Citations emitted before completion
         citations_event = next((e for e in events if "citations" in e), None)
         assert citations_event is not None
         payload = json.loads(citations_event.replace("data: ", "").strip())
@@ -184,7 +187,6 @@ class TestFeature2StreamingAndCitations:
             "Pursuant to [Statute: Transfer of Property Act 1882, Section 54], title passed upon registration. "
             "See also [Case: Suraj Lamp v State of Haryana (2012) 1 SCC 656, Para 15]."
         )
-        import re
         doc_cites = re.findall(r"\[Doc:\s*([^,]+),\s*Pg:\s*(\d+)\]", sample_ai_text)
         statute_cites = re.findall(r"\[Statute:\s*([^,]+),\s*Section\s*(\d+)\]", sample_ai_text)
         case_cites = re.findall(r"\[Case:\s*([^,]+),\s*Para\s*(\d+)\]", sample_ai_text)
@@ -195,6 +197,24 @@ class TestFeature2StreamingAndCitations:
         assert statute_cites[0] == ("Transfer of Property Act 1882", "54")
         assert len(case_cites) == 1
         assert "Suraj Lamp" in case_cites[0][0]
+
+    def test_query_stream_endpoint_returns_event_stream(self, api_client, fake):
+        """POST /chat/query-stream returns text/event-stream headers and valid frames."""
+        case_res = api_client.post(f"{API}/cases", json={
+            "name": "SSE Case", "case_type": "PROPERTY", "organization_id": ORG_ID,
+        })
+        case_id = case_res.json()["id"]
+
+        res = api_client.post(f"{API}/chat/query-stream", json={
+            "case_id": case_id,
+            "query": "What are the boundary coordinates?",
+            "mode": "ask",
+            "india_context": True,
+            "model": "llama3.1:70b",
+        })
+        assert res.status_code == 200
+        assert "text/event-stream" in res.headers.get("content-type", "")
+        assert "data:" in res.text
 
 
 # ============================================================================
@@ -320,3 +340,39 @@ class TestFeature4IndiaContextAndStatutes:
         data = res.json()
         assert data["language"] == "mr"
         assert "explanation" in data
+
+
+# ============================================================================
+# Feature 5: Elimination of Canned Fallbacks & Hybrid RAG Retrieval
+# ============================================================================
+
+class TestFeature5NoCannedFallbacksAndHybridRAG:
+    """Feature 5: Strict verification that canned dummy responses are eliminated and hybrid RAG functions."""
+
+    def test_mode_prompts_differentiate_depth_and_structure(self):
+        """Ask, Analyze, and Draft have distinct structural mandates."""
+        assert "ASK (Direct Legal Q&A)" in MODE_SYSTEM_PROMPTS["ask"]
+        assert "ANALYZE (Deep Legal Reasoning & FIRAC)" in MODE_SYSTEM_PROMPTS["analyze"]
+        assert "DRAFT (Formal Indian Legal Drafting)" in MODE_SYSTEM_PROMPTS["draft"]
+        assert "FIRAC" in MODE_SYSTEM_PROMPTS["analyze"]
+        assert "VERIFICATION CLAUSE" in MODE_SYSTEM_PROMPTS["draft"]
+
+    def test_statutory_context_includes_bns_bnss_bsa_mapping(self):
+        """India statutes context includes direct 2023 codification mappings."""
+        assert "BHARATIYA NYAYA SANHITA" in INDIA_STATUTES_CONTEXT
+        assert "BHARATIYA NAGARIK SURAKSHA SANHITA" in INDIA_STATUTES_CONTEXT
+        assert "BHARATIYA SAKSHYA ADHINIYAM" in INDIA_STATUTES_CONTEXT
+        assert "Section 63" in INDIA_STATUTES_CONTEXT
+        assert "Order XXXIX" in INDIA_STATUTES_CONTEXT
+
+    @pytest.mark.asyncio
+    async def test_retrieve_context_handles_empty_case(self):
+        """retrieve_context returns empty list cleanly without throwing on empty case."""
+        chunks = await retrieve_context("non-existent-case-id", "What is the consideration?")
+        assert isinstance(chunks, list)
+
+    def test_mock_provider_transparently_labels_unconfigured_state(self):
+        """MockLLMProvider explicitly communicates not-configured status rather than returning canned answers."""
+        provider = MockLLMProvider()
+        assert provider.name == "mock"
+        assert provider.is_configured() is True

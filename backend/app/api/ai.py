@@ -141,7 +141,7 @@ async def get_providers():
         "ollama": ollama_status,
         "openai": bool(settings.OPENAI_API_KEY),
         "anthropic": bool(settings.ANTHROPIC_API_KEY),
-        "groq": bool(settings.STT_API_KEY),
+        "groq": bool(settings.GROQ_API_KEY or settings.STT_API_KEY),
         "default_provider": settings.DEFAULT_LLM_PROVIDER,
         "default_model": settings.DEFAULT_MODEL,
     }

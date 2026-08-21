@@ -1,54 +1,38 @@
-# E2E Test Infra: LegAIQ / Jurisiva AI
+# E2E Test Infra: India Legal Intelligence OS (Jurisiva AI / LegAIQ)
 
 ## Test Philosophy
-- Opaque-box, requirement-driven, multi-tier testing.
-- Hermetic test harness for backend pytest with zero network/database dependencies.
-- Browser/Happy-DOM simulated test harness for frontend Vitest.
-- Methodology: Category-Partition + Boundary Value Analysis + Pairwise Combinatorial + Real-World Workload Testing.
+- Opaque-box, requirement-driven testing covering R1 through R5.
+- Methodology: Category-Partition + Boundary Value Analysis (BVA) + Pairwise Combinatorial Testing + Real-World Workload Testing (Tiers 1-4) + Adversarial Hardening (Tier 5).
 
 ## Feature Inventory & Test Mapping
-| # | Feature | Source | Tier 1 (Unit/Feature) | Tier 2 (Boundary/Edge) | Tier 3 (Cross-Module) | Tier 4 (Real-World) |
-|---|---------|--------|:---------------------:|:----------------------:|:---------------------:|:-------------------:|
-| 1 | Multi-Tenant Org & Auth | R1, R4 | ✓ | ✓ | ✓ | ✓ |
-| 2 | Case Management | R1 | ✓ | ✓ | ✓ | ✓ |
-| 3 | Document Ingestion | R1 | ✓ | ✓ | ✓ | ✓ |
-| 4 | Indic OCR (13 langs) | R1 | ✓ | ✓ | ✓ | ✓ |
-| 5 | pgvector Semantic Search | R1 | ✓ | ✓ | ✓ | ✓ |
-| 6 | Interactive Legal Chat | R1 | ✓ | ✓ | ✓ | ✓ |
-| 7 | Document Comparison | R1 | ✓ | ✓ | ✓ | ✓ |
-| 8 | Spreadsheet Review Tables | R2 | ✓ | ✓ | ✓ | ✓ |
-| 9 | Clause Library (29+ types) | R1 | ✓ | ✓ | ✓ | ✓ |
-| 10 | Contract Playbook Evaluation | R1 | ✓ | ✓ | ✓ | ✓ |
-| 11 | Multi-Agent Orchestration | R1 | ✓ | ✓ | ✓ | ✓ |
-| 12 | 6 Specialist Legal Agents | R1 | ✓ | ✓ | ✓ | ✓ |
-| 13 | Rajora LLM Engine | R1, R4 | ✓ | ✓ | ✓ | ✓ |
-| 14 | Multi-Provider AI Router | R1, R2 | ✓ | ✓ | ✓ | ✓ |
-| 15 | BSA 2023 Section 63 Cert | R1, R4 | ✓ | ✓ | ✓ | ✓ |
-| 16 | Title Search & Due Diligence | R1 | ✓ | ✓ | ✓ | ✓ |
-| 17 | Legal Risk Categorization | R1 | ✓ | ✓ | ✓ | ✓ |
-| 18 | Litigation Strategy (CPC/BNS) | R1 | ✓ | ✓ | ✓ | ✓ |
-| 19 | Shared Spaces & Passcodes | R1, R4 | ✓ | ✓ | ✓ | ✓ |
-| 20 | Single Sign-On (SSO) | R1, R4 | ✓ | ✓ | ✓ | ✓ |
-| 21 | Indian PII Redaction | R1, R4 | ✓ | ✓ | ✓ | ✓ |
-| 22 | SSRF Protection | R1, R4 | ✓ | ✓ | ✓ | ✓ |
-| 23 | Voice & Audio Intake | R1 | ✓ | ✓ | ✓ | ✓ |
-| 24 | Timeline & Chronology | R1 | ✓ | ✓ | ✓ | ✓ |
-| 25 | Legal Research & Citation | R1 | ✓ | ✓ | ✓ | ✓ |
-| 26 | Analytics & Audit Logs | R1, R4 | ✓ | ✓ | ✓ | ✓ |
-| 27 | Celery / Sync Background Queue | R1, R2 | ✓ | ✓ | ✓ | ✓ |
-| 28 | Statutory Export Engine | R1 | ✓ | ✓ | ✓ | ✓ |
-| 29 | PWA & Offline Store | R1, R2 | ✓ | ✓ | ✓ | ✓ |
+| # | Feature | Requirement | Tier 1 (Feature) | Tier 2 (Boundary) | Tier 3 (Pairwise) | Tier 4 (Workload) |
+|---|---------|-------------|:----------------:|:-----------------:|:-----------------:|:-----------------:|
+| 1 | Groq Llama 3.3 70B & Multi-Model Gateway | R1 | 5 | 5 | ✓ | ✓ |
+| 2 | Real-time SSE Token Streaming (Ask/Analyze/Draft/Research) | R1 | 5 | 5 | ✓ | ✓ |
+| 3 | Elimination of Static/Canned Fallbacks | R1 | 5 | 5 | ✓ | ✓ |
+| 4 | Matter-Centric Vault & Persistent Case Memory | R2 | 5 | 5 | ✓ | ✓ |
+| 5 | Interactive Strict Citation Grounding UI | R2 | 5 | 5 | ✓ | ✓ |
+| 6 | Hybrid Vector & Full-Text Search RAG | R2 | 5 | 5 | ✓ | ✓ |
+| 7 | Multi-Lingual Indic OCR (13 Languages) & Restoration | R3 | 5 | 5 | ✓ | ✓ |
+| 8 | Land Record Parsing (7/12, 8A, Ferfar, CTS) & Bigha Normalization | R3 | 5 | 5 | ✓ | ✓ |
+| 9 | 13–30 Year Title Reconstruction DAG & Cycle/Gap Detection | R3 | 5 | 5 | ✓ | ✓ |
+| 10 | BSA 2023 Section 63 Electronic Evidence SHA-256 Certificates | R3 | 5 | 5 | ✓ | ✓ |
+| 11 | 6 Specialized Legal Workflow Agents | R4 | 5 | 5 | ✓ | ✓ |
+| 12 | Contract Reviewer (36 Clause Types & Playbook Deviation) | R4 | 5 | 5 | ✓ | ✓ |
+| 13 | Statutory Court-Ready PDF/DOCX/XLSX Export Engine | R4 | 5 | 5 | ✓ | ✓ |
+| 14 | Supabase Multi-Tenant RLS & ACL Policies | R5 | 5 | 5 | ✓ | ✓ |
+| 15 | Verhoeff Aadhaar & 15+ Indian PII Redaction Engine | R5 | 5 | 5 | ✓ | ✓ |
+| 16 | SSRF & DNS Rebinding Defenses | R5 | 5 | 5 | ✓ | ✓ |
+| 17 | 100% Hermetic Backend & Frontend Test Passing (0 TS Errors) | R5 | 5 | 5 | ✓ | ✓ |
 
 ## Test Architecture
-- **Backend Test Runner**: `python -m pytest backend/tests/ -v` (40 test files, 550+ tests).
-- **Frontend Test Runner**: `cd frontend && npm test` (`npx vitest run`) (5 test files, 48 tests).
-- **Test Fixtures**: In-memory `FakeSupabase`, `FakeOCRProvider`, Happy-DOM mocking.
+- Backend Test Suite: Pytest hermetic test runner (`pytest`) using `backend/tests/conftest.py` with `FakeSupabase` and `FakeOCRProvider`.
+- Frontend Test Suite: Vitest with `happy-dom` (`npm test`) and TypeScript strict compilation (`npx tsc --noEmit`).
+- E2E Test Suite Runner: Opaque-box integration test harness verifying API endpoints, SSE streams, legal calculations, and export formatting.
 
-## Real-World Workload Scenarios (Tier 4)
-| # | Scenario | Features Exercised |
-|---|----------|--------------------|
-| 1 | Agricultural Land Title Due Diligence (30-yr chain, mutation gap, encumbrance) | F1, F2, F3, F4, F12, F16, F28 |
-| 2 | Commercial Lease Agreement Review & Playbook Deviation Redlining | F1, F2, F7, F8, F9, F10, F12, F28 |
-| 3 | BSA 2023 Section 63 Statutory Electronic Evidence Certification & Tamper-Proof Hash | F1, F2, F3, F12, F15, F26, F28 |
-| 4 | Multi-Tenant Client Collaboration Shared Space with Passcode & Expiration | F1, F19, F21, F22, F26 |
-| 5 | Indian PII Redaction across Aadhaar (Verhoeff), PAN, GSTIN, Bank Accounts | F1, F3, F21, F28 |
+## Coverage Thresholds
+- Tier 1: ≥5 tests per feature (85+ tests)
+- Tier 2: ≥5 tests per feature (85+ tests)
+- Tier 3: Pairwise coverage of major feature interactions (17+ tests)
+- Tier 4: Realistic legal case workload scenarios (10+ scenarios)
+- Total E2E test target: ~200+ comprehensive automated tests

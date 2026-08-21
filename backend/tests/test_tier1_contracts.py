@@ -1,7 +1,7 @@
 """Tier 1 Test Suite: Contract Intelligence & Redlining (Features 16-19).
 
 Covers:
-- Feature 16: 29 Clause Extraction & Risk Scoring (0-100)
+- Feature 16: 29/36 Clause Extraction & Risk Scoring (0-100)
 - Feature 17: Clause Library & Fallback Tiers (Standard, Fallback, Walkaway)
 - Feature 18: Playbook Deviation Analysis & Statutory Compliance
 - Feature 19: Redline Visual Diff Editor & Tracked Changes
@@ -26,13 +26,15 @@ from app.ai.contract_intelligence import (
     CLAUSE_PATTERNS,
     RISK_KEYWORDS,
 )
+from app.ai.clause_library import EnterpriseClauseLibrary, ClauseLibraryItem
+from app.ai.playbooks import PlaybookDeviationEngine
 from tests.conftest import ORG_ID, USER_ID
 
 API = "/api/v1"
 
 
 # ============================================================================
-# Feature 16: 29 Clause Extraction & Risk Scoring (0-100)
+# Feature 16: 29/36 Clause Extraction & Risk Scoring (0-100)
 # ============================================================================
 
 class TestFeature16ClauseExtractionAndRisk:
@@ -140,6 +142,9 @@ class TestFeature16ClauseExtractionAndRisk:
 class TestFeature17ClauseLibraryAndFallbacks:
     """Feature 17: Clause tiering (Standard, Fallback, Walkaway)."""
 
+    def setup_method(self):
+        self.library = EnterpriseClauseLibrary()
+
     def test_clause_obligation_extraction_with_parties(self):
         """Obligations are extracted with responsible and beneficiary parties."""
         text = "PAYMENT: Buyer shall pay Seller INR 25,00,000 within 15 days of invoice."
@@ -158,6 +163,26 @@ class TestFeature17ClauseLibraryAndFallbacks:
         assert len(RISK_KEYWORDS[RiskLevel.HIGH]) >= 4
         assert len(RISK_KEYWORDS[RiskLevel.MEDIUM]) >= 3
 
+    def test_clause_library_preloaded_items(self):
+        """Enterprise clause library contains pre-seeded Indian and commercial standards."""
+        items = self.library.list_clauses()
+        assert len(items) >= 5
+        types = {i.clause_type for i in items}
+        assert "indemnity" in types or "governing_law" in types
+
+    def test_clause_fallback_tiers_present(self):
+        """Clause library items define standard language and fallback tiers."""
+        items = self.library.list_clauses()
+        indemnity_items = [i for i in items if i.clause_type == "indemnity"]
+        if indemnity_items:
+            assert indemnity_items[0].standard_language
+            assert hasattr(indemnity_items[0], "fallback_tier_1") or hasattr(indemnity_items[0], "fallback_language")
+
+    def test_clause_search_and_filter(self):
+        """Clause library supports search by category and keyword."""
+        results = self.library.list_clauses(query="India")
+        assert len(results) >= 1
+
 
 # ============================================================================
 # Feature 18: Playbook Deviation Scoring
@@ -165,6 +190,9 @@ class TestFeature17ClauseLibraryAndFallbacks:
 
 class TestFeature18PlaybookDeviation:
     """Feature 18: Automated deviation scoring against enterprise negotiation playbooks."""
+
+    def setup_method(self):
+        self.playbook_engine = PlaybookDeviationEngine()
 
     def test_unilateral_arbitrator_appointment_flagged(self):
         """Arbitration clause giving one party sole discretion to appoint arbitrator violates §12(5) Arbitration Act."""
@@ -184,6 +212,38 @@ class TestFeature18PlaybookDeviation:
         term_c = next((c for c in clauses if c.clause_type == ClauseType.TERMINATION), None)
         assert term_c is not None
         assert term_c.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL)
+
+    def test_playbook_compliance_score_computation(self):
+        """Playbook evaluation calculates numerical compliance score between 0 and 100."""
+        text = """
+        MASTER SERVICES AGREEMENT
+        1. INDEMNITY: Capped at 12 months fees.
+        2. GOVERNING LAW: Laws of India.
+        """
+        engine = ContractIntelligenceEngine()
+        clauses = engine.extract_clauses(text, "MSA-PB-1")
+        res = self.playbook_engine.evaluate_contract("MSA-PB-1", "PB-MSA-001", clauses, text)
+        assert 0 <= res.compliance_score <= 100
+
+    def test_walkaway_trigger_flagged(self):
+        """Violating a critical playbook condition flags walkaway status."""
+        text = """
+        EMPLOYMENT AGREEMENT
+        NON-COMPETE: Employee shall not work for any competitor globally for 5 years.
+        """
+        engine = ContractIntelligenceEngine()
+        clauses = engine.extract_clauses(text, "EMP-PB-1")
+        res = self.playbook_engine.evaluate_contract("EMP-PB-1", "PB-EMPLOY-001", clauses, text)
+        assert res.overall_status in ("walkaway_triggered", "high_risk_deviations")
+
+    def test_redline_recommendations_generated(self):
+        """Playbook deviations provide actionable fallback replacement recommendations."""
+        text = "INDEMNITY: Unlimited indemnity for all direct and indirect damages."
+        engine = ContractIntelligenceEngine()
+        clauses = engine.extract_clauses(text, "IND-PB-1")
+        res = self.playbook_engine.evaluate_contract("IND-PB-1", "PB-MSA-001", clauses, text)
+        assert len(res.deviations) >= 1
+        assert len(res.redline_recommendations) >= 1
 
 
 # ============================================================================
@@ -257,3 +317,23 @@ class TestFeature19RedlineVisualDiff:
         assert data["case_id"] == case_id
         assert "total_changes" in data
         assert "summary" in data
+
+    def test_identical_contracts_zero_diff(self):
+        """Comparing identical contract documents returns 0 changes."""
+        doc1 = ContractDocument(contract_id="D1", title="V1", full_text="Governing law is India.")
+        doc2 = ContractDocument(contract_id="D2", title="V2", full_text="Governing law is India.")
+        changes = self.engine.compare_contracts(doc1, doc2)
+        assert len(changes) == 0
+
+    def test_redline_change_model_structure(self):
+        """RedlineChange model preserves clause_type and severity metadata."""
+        change = RedlineChange(
+            change_id="rc-101",
+            change_type="modification",
+            clause_type="indemnity",
+            original_text="Unlimited indemnity",
+            modified_text="Indemnity capped at contract value",
+            severity="high",
+        )
+        assert change.clause_type == "indemnity"
+        assert change.severity == "high"

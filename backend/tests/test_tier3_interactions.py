@@ -6,9 +6,13 @@ Covers:
 - Pipeline 3: Contract Intelligence -> Redline Diff -> Indian PII Redaction -> Watermarking
 - Pipeline 4: State Land Portal -> 30-Yr Ownership DAG -> Title Search Report -> BSA 63 Certificate
 - Pipeline 5: Multi-Agent Workflow -> Indian Kanoon Precedents -> Legal Drafting Studio -> Verification
+- Pipeline 6: SSRF Protection -> Outbound Research Fetch -> FIRAC Reasoning -> Citation Grounding
+- Pipeline 7: Matter-Centric Vault Context -> Hybrid Vector RAG -> Citation Chips -> DOCX Report Export
 """
 
 import hashlib
+import io
+import zipfile
 import pytest
 from datetime import datetime, timezone, timedelta
 from unittest.mock import AsyncMock, patch
@@ -44,6 +48,8 @@ from app.ai.agents.orchestration import (
 )
 from app.ai.agents.base import new_agent_context, Permission
 from app.ai.agents.registry import DueDiligenceAgent, LitigationStrategistAgent
+from app.security.ssrf import validate_external_url
+from app.api.analysis import build_citations, format_context
 from tests.conftest import ORG_ID, USER_ID
 
 API = "/api/v1"
@@ -266,3 +272,79 @@ class TestPipeline5MultiAgentResearchToDrafting:
         )
         assert "INJUNCTION" in draft_content.upper()
         assert "COURT" in draft_content
+
+
+# ============================================================================
+# Pipeline 6: SSRF Protected Outbound Fetch -> Kanoon Precedents -> Analysis
+# ============================================================================
+
+class TestPipeline6SSRFToKanoonPrecedents:
+    """Pipeline 6: External URL is validated by SSRF guard, then queried for Indian case law citations."""
+
+    def test_ssrf_validated_kanoon_research_flow(self):
+        # 1. SSRF URL Guard
+        target_url = "https://indiankanoon.org/doc/123456/"
+        validated = validate_external_url(target_url)
+        assert validated == target_url
+
+        # 2. Extract landmark judicial precedent
+        from app.ai.indian_kanoon import KanoonClient
+        client = KanoonClient()
+        doc = client.get_landmark_summary("suraj_lamp")
+        assert doc is not None
+        assert "Suraj Lamp" in doc.title
+
+        # 3. Build Citation metadata from precedent
+        citation_chip = {
+            "source_type": "JUDICIAL_PRECEDENT",
+            "citation": doc.citation,
+            "court": doc.court,
+            "year": doc.year,
+            "verified": True,
+        }
+        assert citation_chip["year"] == 2012
+
+
+# ============================================================================
+# Pipeline 7: Matter Vault -> Hybrid RAG -> Citation Chips -> DOCX Sealing
+# ============================================================================
+
+class TestPipeline7MatterVaultToDOCXExport:
+    """Pipeline 7: Persistent matter context grounds hybrid RAG query, builds citation chips, and exports DOCX."""
+
+    def test_matter_vault_rag_to_docx_pipeline(self):
+        # 1. Retrieved Chunks from Matter Vault
+        chunks = [
+            {
+                "id": "chk-01",
+                "document_id": "doc-01",
+                "document_name": "Sale_Deed_1987.pdf",
+                "page_number": 2,
+                "content": "Schedule property: Sy. No. 124/3 measuring 2 Acres 14 Guntas.",
+                "similarity": 0.95,
+            },
+        ]
+        context_str = format_context(chunks)
+        citations = build_citations(chunks)
+        assert len(citations) == 1
+        assert citations[0]["page_number"] == 2
+
+        # 2. Synthesize Findings with Citation Chips
+        finding = f"The property extent is confirmed as 2 Acres 14 Guntas [Doc: {citations[0]['document_name']}, Pg: {citations[0]['page_number']}]."
+        assert "Sale_Deed_1987.pdf" in finding
+
+        # 3. Generate DOCX with Escaped Content
+        docx_buf = io.BytesIO()
+        with zipfile.ZipFile(docx_buf, "w") as z:
+            doc_xml = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+                <w:body>
+                    <w:p><w:r><w:t>DUE DILIGENCE REPORT</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>{finding}</w:t></w:r></w:p>
+                </w:body>
+            </w:document>"""
+            z.writestr("word/document.xml", doc_xml)
+            z.writestr("[Content_Types].xml", '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>')
+
+        raw_docx = docx_buf.getvalue()
+        assert raw_docx.startswith(b"PK")

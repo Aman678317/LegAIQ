@@ -153,6 +153,7 @@ class OwnershipChainAnalyzer:
                     "document_name": ev.get("document_name", "Document"),
                     "page_number": ev.get("page_number", 1),
                     "source_text": ev.get("description", ""),
+                    "citation": f"[Doc: {ev.get('document_name', 'Document')}, Pg: {ev.get('page_number', 1)}]",
                 }],
             ))
 

@@ -228,76 +228,25 @@ async def generate_streaming_response(
     citations: Optional[list[dict]] = None,
     temperature: float = 0.2
 ) -> AsyncGenerator[str, None]:
-    """Generate streaming response from LLM."""
-    provider = llm_router.resolve(task)
-    
-    if provider.name == "ollama":
-        base_url = (settings.OLLAMA_BASE_URL or "http://localhost:11434").rstrip("/")
-        model_name = model or "llama3.1:70b"
-        try:
-            async with httpx.AsyncClient(timeout=180) as client:
-                async with client.stream(
-                    "POST",
-                    f"{base_url}/api/chat",
-                    json={
-                        "model": model_name,
-                        "messages": [
-                            {"role": "system", "content": system},
-                            {"role": "user", "content": prompt},
-                        ],
-                        "stream": True,
-                        "options": {"temperature": temperature, "num_ctx": 32768},
-                    },
-                ) as resp:
-                    resp.raise_for_status()
-                    async for line in resp.aiter_lines():
-                        if line:
-                            try:
-                                data = json.loads(line)
-                                content = data.get("message", {}).get("content", "")
-                                if content:
-                                    yield f"data: {json.dumps({'content': content})}\n\n"
-                            except json.JSONDecodeError:
-                                pass
-                    if citations:
-                        yield f"data: {json.dumps({'citations': citations})}\n\n"
-                    yield "data: [DONE]\n\n"
-        except Exception:
-            response = await llm_router.complete(LLMRequest(
-                system=system,
-                prompt=prompt,
-                task=task,
-                model=model,
-                temperature=temperature,
-            ))
-            words = response.content.split()
-            if not words:
-                words = ["Analysis", "completed", "based", "on", "record."]
-            for i in range(0, len(words), 5):
-                chunk = " ".join(words[i:i+5])
-                yield f"data: {json.dumps({'content': chunk + ' '})}\n\n"
-            if citations:
-                yield f"data: {json.dumps({'citations': citations})}\n\n"
-            yield "data: [DONE]\n\n"
-    else:
-        # Non-streaming fallback for other providers
-        response = await llm_router.complete(LLMRequest(
-            system=system,
-            prompt=prompt,
-            task=task,
-            model=model,
-            temperature=temperature,
-        ))
-        # Simulate streaming by chunks
-        words = response.content.split()
-        if not words:
-            words = ["Analysis", "completed", "based", "on", "record."]
-        for i in range(0, len(words), 5):
-            chunk = " ".join(words[i:i+5])
-            yield f"data: {json.dumps({'content': chunk + ' '})}\n\n"
-        if citations:
-            yield f"data: {json.dumps({'citations': citations})}\n\n"
-        yield "data: [DONE]\n\n"
+    """Generate true real-time SSE token stream from LLM."""
+    req = LLMRequest(
+        system=system,
+        prompt=prompt,
+        task=task,
+        model=model,
+        temperature=temperature,
+    )
+    try:
+        async for token in llm_router.stream_complete(req):
+            if token:
+                yield f"data: {json.dumps({'content': token})}\n\n"
+    except Exception as e:
+        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    # Emit grounding citations before completion delimiter
+    if citations:
+        yield f"data: {json.dumps({'citations': citations})}\n\n"
+    yield "data: [DONE]\n\n"
 
 
 def _build_chat_prompt(

@@ -32,6 +32,11 @@ from app.ai.bharatiya_sakshya import (
     check_section94_presumption,
     check_section97_presumption,
 )
+from app.ai.ownership_graph import (
+    LinkType,
+    OwnershipChainAnalyzer,
+    TitleBreakSeverity,
+)
 from app.ai.title_search_report import (
     TitleSearchReport,
     TitleSearchReportGenerator,
@@ -137,7 +142,6 @@ class TestFeature25OwnershipChainGraph:
         })
         case_id = case_res.json()["id"]
 
-        # Insert graph nodes in fake db
         fake.tables.rows("ownership_nodes").append({
             "id": "node-1", "case_id": case_id, "name": "Venkatarama Reddy",
             "node_type": "PERSON", "period_start": "1987-03-12", "period_end": "2005-04-10",
@@ -192,6 +196,24 @@ class TestFeature25OwnershipChainGraph:
         assert res.status_code == 200
         assert res.json()["status"] == "QUEUED"
 
+    def test_dag_analyzer_builds_connected_graph(self):
+        """OwnershipChainAnalyzer builds clean graph across sequential sales."""
+        events = [
+            {"event_date": "1995-01-01", "transaction_type": "SALE_DEED", "from_owner": "Owner A", "to_owner": "Owner B"},
+            {"event_date": "2010-01-01", "transaction_type": "SALE_DEED", "from_owner": "Owner B", "to_owner": "Owner C"},
+        ]
+        dag = OwnershipChainAnalyzer.build_chain_dag("case-1", events, [], [])
+        assert len(dag["nodes"]) >= 2
+        assert len(dag["edges"]) == 2
+        assert dag["title_status"] == "CLEAR"
+
+    def test_link_types_classification(self):
+        """LinkType enum supports major conveyance and encumbrance types."""
+        assert LinkType.SALE_DEED == "SALE_DEED"
+        assert LinkType.MORTGAGE_CHARGE == "MORTGAGE_CHARGE"
+        assert LinkType.PARTITION_DEED == "PARTITION_DEED"
+        assert LinkType.RELEASE_DEED == "RELEASE_DEED"
+
 
 # ============================================================================
 # Feature 26: Bharatiya Sakshya Adhiniyam 2023 Section 63 Certification
@@ -224,7 +246,6 @@ class TestFeature26BharatiyaSakshya2023:
 
     def test_section_94_30_year_ancient_document_presumption(self):
         """Documents over 30 years old from proper custody enjoy statutory presumption under Section 94 BSA 2023."""
-        # 35-year old document (executed 1987)
         old_evidence = EvidenceItem(
             evidence_id="ev-1987",
             evidence_type=EvidenceType.DOCUMENTARY,
@@ -253,6 +274,27 @@ class TestFeature26BharatiyaSakshya2023:
         is_presumed, reason = check_section97_presumption(revenue_copy)
         assert is_presumed is True
         assert "Section 97" in reason
+
+    def test_bsa_statutory_framework_metadata(self):
+        """BSA Engine references Act No. 47 of 2023 and Section 63 electronic record rules."""
+        cert = generate_section63_certificate(
+            file_name="Deed.pdf",
+            file_hash="a" * 64,
+            certifier_name="Counsel",
+            certifier_designation="Examiner",
+        )
+        assert "Bharatiya Sakshya" in cert.statutory_framework["primary_act"]
+        assert "Section 63" in cert.statutory_framework["primary_section"]
+
+    def test_bsa_certificate_entropy_id(self):
+        """Certificate ID is prefixed with BSA-SEC63- and contains high entropy hex string."""
+        cert = generate_section63_certificate(
+            file_name="Doc.pdf",
+            file_hash="b" * 64,
+            certifier_name="Advocate",
+            certifier_designation="Examiner",
+        )
+        assert cert.certificate_id.startswith("BSA-SEC63-")
 
 
 # ============================================================================
@@ -286,3 +328,27 @@ class TestFeature27IndianKanoonResearch:
         assert "sci.gov.in" in TRUSTED_SOURCE_HINTS
         assert "indiacode.nic.in" in TRUSTED_SOURCE_HINTS
         assert "legislative.gov.in" in TRUSTED_SOURCE_HINTS
+
+    def test_kanoon_citation_formatting(self):
+        """Indian Kanoon case references follow canonical citation formatting."""
+        from app.ai.indian_kanoon import KanoonClient, LandmarkJudgment
+        client = KanoonClient()
+        doc = client.get_landmark_summary("suraj_lamp")
+        assert doc is not None
+        assert "Suraj Lamp" in doc.title
+        assert "2012" in doc.citation
+
+    def test_kanoon_search_keywords_resolution(self):
+        """Kanoon search maps legal issues to relevant landmark precedents."""
+        from app.ai.indian_kanoon import KanoonClient
+        client = KanoonClient()
+        results = client.search_precedents("GPA sale title validity")
+        assert len(results) >= 1
+        assert any("Suraj Lamp" in r.title for r in results)
+
+    def test_statutory_section_cross_referencing(self):
+        """Precedents link to exact statutory sections."""
+        from app.ai.indian_kanoon import KanoonClient
+        client = KanoonClient()
+        doc = client.get_landmark_summary("suraj_lamp")
+        assert any("Section 54" in s for s in doc.statutes_cited)

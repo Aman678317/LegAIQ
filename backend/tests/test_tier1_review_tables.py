@@ -163,6 +163,16 @@ class TestFeature10ReviewTableSchema:
         assert update.value == "36 Months Lock-in"
         assert update.confidence_score == 1.0
 
+    def test_column_position_reordering(self):
+        """Column objects preserve explicit ordering index."""
+        cols = [
+            CreateColumnRequest(name="Col A", prompt="Prompt A", position=2),
+            CreateColumnRequest(name="Col B", prompt="Prompt B", position=1),
+        ]
+        sorted_cols = sorted(cols, key=lambda c: c.position)
+        assert sorted_cols[0].name == "Col B"
+        assert sorted_cols[1].name == "Col A"
+
 
 # ============================================================================
 # Feature 11: Cell Evidence & Confidence Linking
@@ -198,7 +208,6 @@ class TestFeature11CellEvidenceLinking:
             {"page_number": 2, "text": "B" * 1000},
             {"page_number": 3, "text": "C" * 1000},
         ]
-        # Char at 1500 is in page 2
         p_num = engine._find_page_number(pages, char_pos=1500, full_text="A"*1000 + "B"*1000 + "C"*1000)
         assert p_num == 2
 
@@ -209,6 +218,22 @@ class TestFeature11CellEvidenceLinking:
         snip = engine._build_snippet(full_text, start=31, end=84, padding=15)
         assert "Rs. 50,00,000" in snip
         assert "sell the property" in snip
+
+    def test_confidence_score_quantization(self):
+        """Confidence scores are bounded between 0.0 and 1.0."""
+        res = ExtractionResult(
+            value="Standard Term",
+            confidence_score=0.92,
+            evidence=None,
+            status="completed",
+        )
+        assert 0.0 <= res.confidence_score <= 1.0
+
+    def test_empty_evidence_fallback(self):
+        """Cell with unevidenced value serializes gracefully without error."""
+        res = ExtractionResult(value="Not Found", confidence_score=0.2, evidence=None, status="not_found")
+        assert res.evidence is None
+        assert res.status == "not_found"
 
 
 # ============================================================================
@@ -268,7 +293,6 @@ class TestFeature12ReviewTableExport:
         assert isinstance(xlsx_bytes, bytes)
         assert len(xlsx_bytes) > 500
 
-        # Verify it's a valid ZIP / XLSX structure
         bio = io.BytesIO(xlsx_bytes)
         with zipfile.ZipFile(bio, "r") as z:
             file_names = z.namelist()
@@ -276,3 +300,32 @@ class TestFeature12ReviewTableExport:
             assert "xl/workbook.xml" in file_names
             assert "xl/worksheets/sheet1.xml" in file_names
             assert "xl/styles.xml" in file_names
+
+    def test_csv_escaping_special_characters(self):
+        """Values containing commas, quotes, and newlines are escaped in CSV output."""
+        columns = [{"id": "c1", "name": "Clause"}]
+        rows = [
+            {
+                "document_name": "Deed, Special.pdf",
+                "cells": {"c1": {"value": 'Governed by "India", and courts at Mumbai'}},
+            }
+        ]
+        csv_out = ReviewTableExporter.export_csv("Special_Table", columns, rows)
+        assert "Deed, Special.pdf" in csv_out or '"Deed, Special.pdf"' in csv_out
+
+    def test_xlsx_large_dataset_generation(self):
+        """XLSX exporter handles tables with 50+ document rows cleanly."""
+        columns = [{"id": "c1", "name": "Extracted Key"}]
+        rows = [
+            {"document_name": f"Doc_{i}.pdf", "cells": {"c1": {"value": f"Val_{i}"}}}
+            for i in range(50)
+        ]
+        xlsx_bytes = ReviewTableExporter.export_xlsx("Large_Table", columns, rows)
+        assert len(xlsx_bytes) > 1000
+
+    def test_empty_review_table_export(self):
+        """Exporting a table with 0 rows returns valid empty spreadsheet bytes."""
+        columns = [{"id": "c1", "name": "Col 1"}]
+        xlsx_bytes = ReviewTableExporter.export_xlsx("Empty_Table", columns, [])
+        assert isinstance(xlsx_bytes, bytes)
+        assert len(xlsx_bytes) > 200

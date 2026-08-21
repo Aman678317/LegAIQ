@@ -3,70 +3,104 @@
 Specialized parsing, unit normalization, cross-document reconciliation,
 and risk detection across all Indian Revenue and Property instruments:
 - 7/12 Extracts (Maharashtra / Gujarat Satbara)
+- 8A Extracts (Maharashtra / Gujarat Khatauni)
+- Ferfar Mutation Entries (Maharashtra / Gujarat Hakka Patraka)
 - RTC Pahani (Karnataka Bhoomi)
 - Khasra & Khatoni Jamabandi (UP, MP, Bihar, Rajasthan, Delhi, Punjab, Haryana)
-- Property Card & CTS Extract (Urban Land Records)
+- Property Card & CTS Extract (Urban Land Records / City Survey)
 - Registered Conveyance Deeds (Sale, Gift, Partition, Release, Mortgage, GPA)
 """
 
 import re
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any, Tuple
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple, Union
+from uuid import UUID, uuid4
+
+from app.ai.bharatiya_sakshya import generate_section63_certificate as bsa_generate_cert
+from app.ai.ownership_graph import OwnershipChainAnalyzer
 
 
 # Standard land measurement conversions to Square Meters
-SQ_METER_CONVERSIONS = {
+SQ_METER_CONVERSIONS: Dict[str, float] = {
     "sq_meter": 1.0,
     "sq_m": 1.0,
+    "sqm": 1.0,
+    "square_meter": 1.0,
+    "square_meters": 1.0,
     "sq_feet": 0.092903,
     "sq_ft": 0.092903,
+    "sqft": 0.092903,
+    "square_feet": 0.092903,
+    "square_foot": 0.092903,
     "sq_yard": 0.836127,
     "sq_yd": 0.836127,
+    "sqyd": 0.836127,
+    "gaj": 0.836127,
     "acre": 4046.8564224,
+    "acres": 4046.8564224,
     "guntha": 101.17141056,
     "gunta": 101.17141056,
+    "guntas": 101.17141056,
     "cent": 40.468564,
+    "cents": 40.468564,
     "hectare": 10000.0,
-    "ground": 222.967, # 2400 sq ft
-    "bigha_standard": 2529.285, # Standard Pucca Bigha (fallback)
-    "biswa": 126.464, # 1/20 Bigha
-    "katha": 66.89, # Bengal / Bihar Katha (1/20 Bigha)
-    "kanal": 505.857, # 1/8 Acre
-    "marla": 25.293, # 1/20 Kanal
+    "hectares": 10000.0,
+    "ha": 10000.0,
+    "are": 100.0,
+    "ares": 100.0,
+    "ground": 222.967,  # 2400 sq ft
+    "grounds": 222.967,
+    "bigha_standard": 2529.285,  # Standard Pucca Bigha (fallback)
+    "bigha": 2529.285,
+    "bighas": 2529.285,
+    "biswa": 126.464,  # 1/20 Bigha
+    "biswas": 126.464,
+    "katha": 66.89,  # Bengal / Bihar Katha (1/20 Bigha)
+    "kattha": 66.89,
+    "kanal": 505.857,  # 1/8 Acre
+    "kanals": 505.857,
+    "marla": 25.293,  # 1/20 Kanal
+    "marlas": 25.293,
 }
 
 
 # State-specific Bigha conversions to Square Meters
 # Source: State Revenue Codes, local survey manuals, and land measurement standards
-STATE_BIGHA_SQ_METERS = {
+STATE_BIGHA_SQ_METERS: Dict[str, float] = {
     # North India
     "uttar pradesh": 2529.285,     # Pucca Bigha = 27,225 sq ft (standard)
-    "uttarakhand": 680.625,        # Small Bigha = 7,320 sq ft (hilly region)
-    "punjab": 2023.428,            # Bigha = 21,780 sq ft
+    "uttarakhand": 680.625,        # Small/Kaccha Bigha = 7,320 sq ft (hilly region)
+    "punjab": 2023.428,            # Bigha = 21,780 sq ft (4 kanals)
     "haryana": 2023.428,           # Same as Punjab
     "delhi": 2023.428,             # Same as Punjab/Haryana
-    "rajasthan": 2529.285,         # Pucca Bigha
-    "madhya pradesh": 1337.8,      # Bigha = 14,400 sq ft (varies by region)
+    "rajasthan": 2529.285,         # Pucca Bigha = 27,225 sq ft
+    "madhya pradesh": 1337.8,      # Bigha = 14,400 sq ft (common central MP)
+    "himachal pradesh": 809.371,   # Small Bigha = 8,712 sq ft (hilly terrain)
+    "jammu & kashmir": 2023.428,   # 4 Kanals = 21,780 sq ft
+    "jammu and kashmir": 2023.428,
+    "chhattisgarh": 1337.8,        # Bigha = 14,400 sq ft
     
     # East India
-    "bihar": 2529.285,             # Standard Pucca Bigha
+    "bihar": 2529.285,             # Standard Pucca Bigha = 20 Kathas = 27,225 sq ft
     "jharkhand": 2529.285,         # Same as Bihar
-    "west bengal": 1337.8,         # Bigha = 14,400 sq ft (common in Bengal)
-    "odisha": 1337.8,              # Bigha = 14,400 sq ft
+    "west bengal": 1337.8,         # Bigha = 20 Kathas = 14,400 sq ft (Standard Bengal)
+    "odisha": 1337.8,              # Bigha = 14,400 sq ft (Ghumao/Mana)
+    "tripura": 1337.8,             # 20 Gandas = 14,400 sq ft
     
     # West India
-    "gujarat": 1618.742,           # Bigha = 17,424 sq ft (2 bigha = 1 acre)
-    "maharashtra": 2529.285,       # Bigha rarely used; Guntha is standard
+    "gujarat": 1618.742,           # Bigha = 17,424 sq ft (2.5 bighas = 1 acre)
+    "maharashtra": 2529.285,       # Rarely used; Guntha (101.17 sq m) standard
     
-    # South India (Bigha not traditionally used, but defined for compatibility)
-    "karnataka": 0.0,              # Not used; Guntha/Acre standard
-    "tamil nadu": 0.0,             # Not used; Cent/Ground standard
-    "kerala": 0.0,                 # Not used; Cent/Hectare standard
-    "telangana": 0.0,              # Not used; Acre/Guntha standard
-    "andhra pradesh": 0.0,         # Not used; Acre/Cent standard
+    # South India (Bigha not traditionally used; standard metric/acre/guntha/cent)
+    "karnataka": 2529.285,         # Fallback (Guntha/Acre standard)
+    "tamil nadu": 2529.285,        # Fallback (Cent/Ground standard)
+    "kerala": 2529.285,            # Fallback (Cent/Hectare standard)
+    "telangana": 2529.285,         # Fallback (Acre/Guntha standard)
+    "andhra pradesh": 2529.285,    # Fallback (Acre/Cent standard)
     
     # Northeast
-    "assam": 1337.8,               # Bigha = 14,400 sq ft
+    "assam": 1337.8,               # Bigha = 5 Kathas = 14,400 sq ft
     
     # Default fallback
     "default": 2529.285,           # Standard Pucca Bigha
@@ -79,6 +113,46 @@ def get_state_bigha_sqm(state: Optional[str]) -> float:
         return STATE_BIGHA_SQ_METERS["default"]
     state_lower = state.strip().lower()
     return STATE_BIGHA_SQ_METERS.get(state_lower, STATE_BIGHA_SQ_METERS["default"])
+
+
+def normalize_land_area(value: float, unit: str, state: str = "default") -> float:
+    """Converts a given land measurement value and unit into Square Meters.
+    
+    Interface Contract:
+        normalize_land_area(value: float, unit: str, state: str) -> float (in sq meters)
+    
+    Args:
+        value: Numeric value of the area
+        unit: Unit string (e.g. 'bigha', 'acre', 'guntha', 'cent', 'hectare', 'sq_feet', 'kanal', 'marla', 'biswa', 'katha')
+        state: State name for state-specific Bigha/Biswa normalization across 10+ states
+    """
+    if value <= 0.0:
+        return 0.0
+
+    unit_clean = unit.strip().lower().replace("-", "_").replace(" ", "_").replace(".", "")
+
+    if "bigha" in unit_clean:
+        sqm_per_bigha = get_state_bigha_sqm(state)
+        return float(round(value * sqm_per_bigha, 4))
+
+    if "biswa" in unit_clean:
+        sqm_per_bigha = get_state_bigha_sqm(state)
+        return float(round(value * (sqm_per_bigha / 20.0), 4))
+
+    if "katha" in unit_clean or "kattha" in unit_clean:
+        sqm_per_bigha = get_state_bigha_sqm(state)
+        return float(round(value * (sqm_per_bigha / 20.0), 4))
+
+    conv = SQ_METER_CONVERSIONS.get(unit_clean)
+    if conv is not None:
+        return float(round(value * conv, 4))
+
+    # Partial unit matches
+    for k, multiplier in SQ_METER_CONVERSIONS.items():
+        if k in unit_clean:
+            return float(round(value * multiplier, 4))
+
+    return float(round(value, 4))
 
 
 @dataclass
@@ -109,27 +183,22 @@ class IndianPropertyProfile:
     recorded_owners: List[Dict[str, Any]] = field(default_factory=list)
     mutation_entries: List[Dict[str, Any]] = field(default_factory=list)
     encumbrances_and_liens: List[Dict[str, Any]] = field(default_factory=list)
-    land_tenure_class: Optional[str] = None # e.g. Bhogwata Varg 1, Bhumidhari with transferable rights
+    land_tenure_class: Optional[str] = None  # e.g. Bhogwata Varg 1, Bhumidhari with transferable rights
     boundary_schedule: Dict[str, str] = field(default_factory=dict)
     confidence: float = 0.0
 
 
 def parse_and_normalize_area(raw: str, state: Optional[str] = None) -> NormalizedLandArea:
-    """Parses arbitrary Indian land area strings (e.g. '2 Acres 14 Guntas',
-    '1.5 Hectare', '5 Bigha 10 Biswa', '1200 Sq.Ft') into unified metric & imperial metrics.
-    
-    Args:
-        raw: The raw area string to parse
-        state: Indian state name for state-specific Bigha conversion
-    """
+    """Parses arbitrary Indian land area strings into unified metric and imperial measurements."""
     text = raw.strip().lower()
     total_sq_meters = 0.0
-    
-    # Get state-specific Bigha value
     state_bigha_sqm = get_state_bigha_sqm(state)
 
     # 1. Acres + Guntas / Cents (e.g. 2 Acres 14 Guntas or 2-14 A-G)
-    ag_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:acre|acres|ac|a)[\s,]+(\d+(?:\.\d+)?)\s*(?:gunta|guntas|gts|g|cents|cent|c)", text)
+    ag_match = re.search(
+        r"(\d+(?:\.\d+)?)\s*(?:acre|acres|ac|a)[\s,]+(\d+(?:\.\d+)?)\s*(?:gunta|guntas|gts|g|cents|cent|c)",
+        text,
+    )
     if ag_match:
         ac = float(ag_match.group(1))
         gt = float(ag_match.group(2))
@@ -156,7 +225,6 @@ def parse_and_normalize_area(raw: str, state: Optional[str] = None) -> Normalize
         if bigha_match:
             total_sq_meters += float(bigha_match.group(1)) * state_bigha_sqm
         if biswa_match:
-            # Biswa is typically 1/20 of Bigha
             total_sq_meters += float(biswa_match.group(1)) * (state_bigha_sqm / 20.0)
 
         # Square Feet / Yards / Meters match
@@ -193,16 +261,13 @@ def parse_and_normalize_area(raw: str, state: Optional[str] = None) -> Normalize
     )
 
 
-def are_land_areas_equivalent(area_str_a: str, area_str_b: str, tolerance_ratio: float = 0.05, state: Optional[str] = None) -> Tuple[bool, str]:
-    """Compares two land area expressions under different Indian measurement units.
-    Allows for customary survey margin tolerance (default 5%).
-    
-    Args:
-        area_str_a: First area string
-        area_str_b: Second area string
-        tolerance_ratio: Maximum allowed variance ratio (default 5%)
-        state: Indian state name for state-specific Bigha conversion
-    """
+def are_land_areas_equivalent(
+    area_str_a: str,
+    area_str_b: str,
+    tolerance_ratio: float = 0.05,
+    state: Optional[str] = None,
+) -> Tuple[bool, str]:
+    """Compares two land area expressions with survey tolerance."""
     norm_a = parse_and_normalize_area(area_str_a, state)
     norm_b = parse_and_normalize_area(area_str_b, state)
 
@@ -225,23 +290,37 @@ def are_land_areas_equivalent(area_str_a: str, area_str_b: str, tolerance_ratio:
 
 
 class IndianLandExtractor:
-    """Extracts specialized Indian revenue and property entities."""
+    """Extracts specialized Indian revenue and property entities across 7/12, 8A, Ferfar, and Property Cards."""
 
     SURVEY_PATTERNS = [
         (r"\b(?:Survey\s*(?:No\.?|Number)?|Sy\.?\s*No\.?|Sy\.?|S\.No\.?)\b\s*[:#-]?\s*([\d]+[/-][\d\w/-]+|\d+)", "survey_number"),
         (r"\b(?:Gat\s*(?:No\.?|Number)?|Gat|Gut)\b\s*[:#-]?\s*([\d]+[/-][\d\w/-]+|\d+)", "gat_number"),
         (r"\b(?:Khasra\s*(?:No\.?|Number)?|Khasra|Khesra)\b\s*[:#-]?\s*([\d]+[/-][\d\w/-]+|\d+)", "khasra_number"),
-        (r"\b(?:Khatauni|Khata|Katha)\s*(?:No\.?|Number)?\b\s*[:#-]?\s*([\d/-]+)", "khata_number"),
-        (r"\b(?:City\s*Survey|CTS)\s*(?:No\.?|Number)?\b\s*[:#-]?\s*([\d/\w-]+)", "cts_number"),
+        (r"\b(?:Khatauni|Khata|Katha|Khata\s*No\.?)\b\s*[:#-]?\s*([\d/-]+)", "khata_number"),
+        (r"\b(?:City\s*Survey|CTS|C\.T\.S\.?)\s*(?:No\.?|Number)?\b\s*[:#-]?\s*([\d/\w-]+)", "cts_number"),
         (r"\b(?:Sub-division|Hissa|Hisse)\s*(?:No\.?|Number)?\b\s*[:#-]?\s*([\d/\w]+)", "hissa"),
         (r"\b(?:Plot|Site)\s*(?:No\.?|Number)?\b\s*[:#-]?\s*([\d/\w-]+)", "plot_number"),
+        (r"\b(?:Sheet\s*(?:No\.?|Number)?)\b\s*[:#-]?\s*([\d/\w-]+)", "sheet_number"),
         (r"\b(?:Document|Doc|Reg\.?\s*No\.?)\b\s*[:#-]?\s*([\d/\w-]+)", "registration_number"),
+    ]
+
+    MUTATION_PATTERNS = [
+        (r"\b(?:Ferfar|Ferfar\s*Kramank|Mutation\s*Entry|MR\s*No\.?|M\.R\.?\s*No\.?)\b\s*[:#-]?\s*([\d/\w-]+)", "mutation_entry_number"),
+        (r"\b(?:Pencil\s*Entry|Kaccha\s*Ferfar|Provisional\s*Mutation)\b\s*[:#-]?\s*([^\n;.]+)", "pencil_mutation_entry"),
+        (r"\b(?:Sanctioned|Certified|Khareed|Virasat|Waris|Succession|Partition|Takseem)\s*Mutation\b\s*[:#-]?\s*([^\n;.]+)", "mutation_sanction_order"),
+    ]
+
+    TENURE_PATTERNS = [
+        (r"\b(?:Bhogwata\s*Varg|Tenure\s*Class|Class\s*of\s*Occupant)\s*[:#-]?\s*([^\n;.]+)", "tenure_class"),
+        (r"\b(?:Bhumidhari\s*with\s*transferable\s*rights|Bhumidhari\s*with\s*non-transferable\s*rights|Asami|Occupancy\s*Right)\b", "tenure_class"),
+        (r"\b(?:Potkharab|Pot\s*Kharab|Uncultivable|Kharaba)\s*(?:Class\s*[AB])?\s*[:#-]?\s*([^\n;.]+)", "potkharab_area"),
     ]
 
     LOCATION_PATTERNS = [
         (r"\b(?:Village|Mauza|Grama|Gao)\b\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "village"),
         (r"\b(?:Taluka|Taluk|Tehsil|Hobli)\b\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "taluk"),
         (r"\b(?:District|Dist\b\.?|Jilha)\s*[:#-]?\s*([A-Za-z]+(?:[^\S\r\n]+[A-Za-z]+)?)", "district"),
+        (r"\b(?:Ward|Division|Zone)\s*[:#-]?\s*([A-Za-z\d]+(?:[^\S\r\n]+[A-Za-z\d]+)?)", "ward"),
     ]
 
     BOUNDARY_PATTERNS = [
@@ -251,78 +330,122 @@ class IndianLandExtractor:
         (r"\b(?:South\s+side\s+by|South\s+by|South\s*[:-])\s*([^\n;.,]+)", "south"),
     ]
 
-    def extract_from_text(self, text: str, page_number: int = 1) -> List[Dict[str, Any]]:
+    def extract_from_text(
+        self,
+        text: str,
+        page_number: int = 1,
+        document_name: str = "Document.pdf",
+    ) -> List[Dict[str, Any]]:
         results = []
 
         # 1. Survey & Identification Numbers
         for pattern, etype in self.SURVEY_PATTERNS:
             for m in re.finditer(pattern, text, re.IGNORECASE):
                 val = m.group(1).split("\n")[0].split(",")[0].strip()
-                snippet = text[max(0, m.start() - 30):min(len(text), m.end() + 30)]
+                snippet = text[max(0, m.start() - 30):min(len(text), m.end() + 30)].strip()
                 results.append({
                     "entity_type": etype,
                     "value": val,
                     "source_text": snippet,
                     "page_number": page_number,
+                    "document_name": document_name,
+                    "citation": f"[Doc: {document_name}, Pg: {page_number}]",
+                    "confidence": 0.88,
+                })
+
+        # 2. Mutation & Ferfar Entries
+        for pattern, etype in self.MUTATION_PATTERNS:
+            for m in re.finditer(pattern, text, re.IGNORECASE):
+                val = m.group(1).split("\n")[0].split(",")[0].strip()
+                snippet = text[max(0, m.start() - 30):min(len(text), m.end() + 30)].strip()
+                results.append({
+                    "entity_type": etype,
+                    "value": val,
+                    "source_text": snippet,
+                    "page_number": page_number,
+                    "document_name": document_name,
+                    "citation": f"[Doc: {document_name}, Pg: {page_number}]",
                     "confidence": 0.85,
                 })
 
-        # 2. Location
-        for pattern, etype in self.LOCATION_PATTERNS:
+        # 3. Tenure & Potkharab
+        for pattern, etype in self.TENURE_PATTERNS:
             for m in re.finditer(pattern, text, re.IGNORECASE):
-                val = m.group(1).split("\n")[0].split(",")[0].strip()
-                snippet = text[max(0, m.start() - 30):min(len(text), m.end() + 30)]
+                val = m.group(1).strip() if m.groups() else m.group(0).strip()
+                snippet = text[max(0, m.start() - 30):min(len(text), m.end() + 30)].strip()
                 results.append({
                     "entity_type": etype,
                     "value": val,
                     "source_text": snippet,
                     "page_number": page_number,
-                    "confidence": 0.80,
+                    "document_name": document_name,
+                    "citation": f"[Doc: {document_name}, Pg: {page_number}]",
+                    "confidence": 0.85,
                 })
 
-        # 3. Boundaries (Schedules)
+        # 4. Location
+        for pattern, etype in self.LOCATION_PATTERNS:
+            for m in re.finditer(pattern, text, re.IGNORECASE):
+                val = m.group(1).split("\n")[0].split(",")[0].strip()
+                snippet = text[max(0, m.start() - 30):min(len(text), m.end() + 30)].strip()
+                results.append({
+                    "entity_type": etype,
+                    "value": val,
+                    "source_text": snippet,
+                    "page_number": page_number,
+                    "document_name": document_name,
+                    "citation": f"[Doc: {document_name}, Pg: {page_number}]",
+                    "confidence": 0.82,
+                })
+
+        # 5. Boundaries (Schedules)
         for pattern, direct in self.BOUNDARY_PATTERNS:
             for m in re.finditer(pattern, text, re.IGNORECASE):
                 val = m.group(1).strip()
                 results.append({
                     "entity_type": f"boundary_{direct}",
                     "value": val,
-                    "source_text": text[max(0, m.start() - 20):min(len(text), m.end() + 20)],
+                    "source_text": text[max(0, m.start() - 20):min(len(text), m.end() + 20)].strip(),
                     "page_number": page_number,
+                    "document_name": document_name,
+                    "citation": f"[Doc: {document_name}, Pg: {page_number}]",
                     "confidence": 0.85,
                 })
 
-        # Extract state from location patterns first (for state-aware Bigha conversion)
-        extracted_state = None
-        for pattern, etype in self.LOCATION_PATTERNS:
-            if etype == "district" or etype == "taluk":
-                m = re.search(pattern, text, re.IGNORECASE)
-                if m:
-                    # We can't easily determine state from district alone, but we'll try
-                    pass
-        
-        # 4. Land Area
-        area_match = re.search(r"(?:measuring|extent\s*of|area|shetra)\s*[:#-]?\s*([^\n;.]+?(?:acre|acres|gunta|guntas|sq\.?\s*ft|sq\.?\s*meter|hectare|bigha|cents)\b[^\n;.]*)", text, re.IGNORECASE)
+        # 6. Land Area
+        area_match = re.search(
+            r"(?:measuring|extent\s*of|area|shetra|rakba)\s*[:#-]?\s*([^\n;.]+?(?:acre|acres|gunta|guntas|sq\.?\s*ft|sq\.?\s*meter|hectare|bigha|biswa|katha|cents)\b[^\n;.]*)",
+            text,
+            re.IGNORECASE,
+        )
         if area_match:
             raw_area = area_match.group(1).strip()
-            norm = parse_and_normalize_area(raw_area, extracted_state)
+            norm = parse_and_normalize_area(raw_area)
             results.append({
                 "entity_type": "area",
                 "value": norm.formatted_standard if norm.sq_meters > 0 else raw_area,
-                "source_text": text[max(0, area_match.start() - 20):min(len(text), area_match.end() + 20)],
+                "source_text": text[max(0, area_match.start() - 20):min(len(text), area_match.end() + 20)].strip(),
                 "page_number": page_number,
+                "document_name": document_name,
+                "citation": f"[Doc: {document_name}, Pg: {page_number}]",
                 "confidence": 0.90,
             })
 
-        # 5. Encumbrances / Bojha / Bank charges
-        enc_match = re.search(r"(?:mortgage|hypothecation|bank\s+charge|encumbrance|bojha|itar\s+adhikar)\s*[:#-]?\s*([^\n;.]+)", text, re.IGNORECASE)
+        # 7. Encumbrances / Bojha / Bank charges
+        enc_match = re.search(
+            r"(?:mortgage|hypothecation|bank\s+charge|encumbrance|bojha|itar\s+adhikar|lien)\s*[:#-]?\s*([^\n;.]+)",
+            text,
+            re.IGNORECASE,
+        )
         if enc_match:
             results.append({
                 "entity_type": "encumbrance",
                 "value": enc_match.group(1).strip()[:200],
-                "source_text": text[max(0, enc_match.start() - 20):min(len(text), enc_match.end() + 20)],
+                "source_text": text[max(0, enc_match.start() - 20):min(len(text), enc_match.end() + 20)].strip(),
                 "page_number": page_number,
-                "confidence": 0.80,
+                "document_name": document_name,
+                "citation": f"[Doc: {document_name}, Pg: {page_number}]",
+                "confidence": 0.82,
             })
 
         return results
@@ -332,13 +455,16 @@ class IndianLandExtractor:
         case_name: str,
         entities: List[Dict[str, Any]],
         mismatches: List[Dict[str, Any]],
-        risks: List[Dict[str, Any]]
+        risks: List[Dict[str, Any]],
     ) -> List[str]:
         """Generates tailored legal due diligence inquiry questions for an Indian property advocate."""
         questions = []
 
         # Survey mismatch questions
-        survey_mismatches = [m for m in mismatches if "survey" in m.get("field_name", "").lower() or "gat" in m.get("field_name", "").lower()]
+        survey_mismatches = [
+            m for m in mismatches
+            if "survey" in m.get("field_name", "").lower() or "gat" in m.get("field_name", "").lower()
+        ]
         if survey_mismatches:
             questions.append(
                 "Survey Number Mismatch Detected: Request certified 11E survey sketch / Tippani and Akarbandh from the Taluk Survey Office to verify official sub-division and hissa bifurcation."
@@ -364,7 +490,7 @@ class IndianLandExtractor:
 
         # Revenue Mutation & Chain of Title
         questions.append(
-            "Mutation Register Verification: Verify certified copies of all J-Slips / MR entries (Mutation Register) corresponding to each historic conveyance in the chain of title."
+            "Mutation Register Verification: Verify certified copies of all J-Slips / MR entries (Mutation Register / Ferfar) corresponding to each historic conveyance in the chain of title."
         )
 
         # Conversion & Land Use
@@ -373,6 +499,46 @@ class IndianLandExtractor:
         )
 
         return questions
+
+
+def reconstruct_title_chain(
+    deeds: List[Any],
+    case_id: str = "case-title-chain",
+    entities: Optional[List[Dict[str, Any]]] = None,
+    risks: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """Interface contract function: Reconstructs 13-30 year title ownership chain DAG."""
+    events: List[Dict[str, Any]] = []
+    for deed in deeds:
+        if isinstance(deed, dict):
+            events.append(deed)
+        elif hasattr(deed, "model_dump"):
+            events.append(deed.model_dump())
+        elif hasattr(deed, "__dict__"):
+            events.append(deed.__dict__)
+
+    return OwnershipChainAnalyzer.build_chain_dag(
+        case_id=case_id,
+        events=events,
+        entities=entities or [],
+        risks=risks or [],
+    )
+
+
+def generate_bsa_certificate(
+    case_id: Union[UUID, str],
+    document_id: Union[UUID, str],
+    operator_info: Optional[Dict[str, Any]] = None,
+) -> Any:
+    """Interface contract function: Generates BSA 2023 Section 63 Electronic Evidence Certificate with SHA-256 seal."""
+    op = operator_info or {}
+    return bsa_generate_cert(
+        file_name=op.get("file_name", f"Doc_{document_id}.pdf"),
+        file_hash=op.get("file_hash", "0" * 64),
+        custodian_name=op.get("custodian_name", "System Custodian"),
+        custodian_designation=op.get("custodian_designation", "Legal Counsel / System Custodian"),
+        organization=op.get("organization", "Jurisiva Legal Intelligence Systems"),
+    )
 
 
 land_extractor = IndianLandExtractor()

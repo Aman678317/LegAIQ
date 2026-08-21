@@ -1,5 +1,6 @@
 """Legal research agent API with SSRF-protected web research - Harvey AI-style multi-source research."""
 import hashlib
+import json
 import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -7,6 +8,7 @@ from urllib.parse import quote_plus
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from supabase import create_client
 
@@ -390,6 +392,96 @@ async def start_research(case_id: str, body: ResearchRequest, _=Depends(get_case
             except Exception:
                 pass
         raise HTTPException(500, f"Research failed: {e}")
+
+
+@router.post("/cases/{case_id}/research/stream")
+async def stream_research(
+    case_id: str,
+    body: ResearchRequest,
+    _=Depends(get_case_access),
+):
+    """Stream research findings and memorandum tokens in real time via SSE."""
+    ctx, case = _
+
+    depth_configs = {
+        "quick": ["statutes", "judgments"],
+        "standard": ["statutes", "judgments", "regulations"],
+        "deep": ["statutes", "judgments", "regulations", "commentary"],
+    }
+    source_types = body.source_types or depth_configs.get(body.depth, ["statutes", "judgments", "regulations"])
+
+    # Multi-source search & fetch top sources
+    sources = await multi_source_search(
+        body.question,
+        body.jurisdiction or case.get("jurisdiction_state"),
+        source_types,
+    )
+    fetched_sources = await fetch_sources_parallel(sources, max_fetch=12)
+
+    source_block = ""
+    if fetched_sources:
+        source_block = "\n\n".join(
+            f"=== Source [{f['source_type'].upper()}] {'✓ VERIFIED' if f['verified'] else ''}: {f['title']} ({f['url']}) ===\n{f['text']}"
+            for f in fetched_sources
+        )
+
+    lang_instruction = ""
+    if body.language and body.language != "en":
+        lang_instruction = f"\nRespond in the language '{body.language}', maintaining formal Indian legal terminology."
+
+    depth_instruction = {
+        "quick": "Provide a concise answer with key statutory provisions and 2-3 landmark cases.",
+        "standard": "Provide comprehensive analysis with statutes, cases, regulations, and practical implications.",
+        "deep": "Provide exhaustive research with all source types, comparative analysis, and detailed citations.",
+    }.get(body.depth, "Provide comprehensive analysis.")
+
+    prompt_str = (
+        f"RESEARCH QUESTION: {body.question}\n"
+        f"JURISDICTION: {body.jurisdiction or case.get('jurisdiction_state') or 'India'}\n"
+        f"DEPTH: {body.depth}\n\n"
+        f"<retrieved_sources>\n{source_block}\n</retrieved_sources>\n\n"
+        f"Synthesize an authoritative Indian legal research memorandum following the Harvey AI methodology. "
+        f"{depth_instruction} "
+        f"Cite specific sources from the retrieved sources above using [Source: title, URL] format. "
+        f"For any claim without a source, explicitly state 'No authoritative source found'.{lang_instruction}"
+        if source_block
+        else f"INDIAN LEGAL RESEARCH QUESTION: {body.question}\n"
+             f"JURISDICTION: {body.jurisdiction or case.get('jurisdiction_state') or 'India'}\n"
+             f"DEPTH: {body.depth}\n\n"
+             f"Provide comprehensive statutory and landmark precedent legal analysis under Indian law. "
+             f"Since no external sources were retrieved, rely on your training knowledge of Indian law. "
+             f"Clearly indicate when a statement is based on general legal knowledge vs. specific authority. "
+             f"{depth_instruction}{lang_instruction}"
+    )
+
+    async def event_generator():
+        # Emit discovered sources first
+        yield f"data: {json.dumps({'event': 'sources', 'sources': fetched_sources})}\n\n"
+        # Stream research synthesis tokens
+        req = LLMRequest(
+            system=RESEARCH_SYSTEM,
+            prompt=prompt_str,
+            task="research",
+            model=body.model,
+            max_tokens=4000 if body.depth == "deep" else 3000,
+        )
+        try:
+            async for token in llm_router.stream_complete(req):
+                if token:
+                    yield f"data: {json.dumps({'content': token})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/cases/{case_id}/research")

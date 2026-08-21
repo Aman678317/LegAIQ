@@ -1,11 +1,13 @@
 """Tier 4 Test Suite: Real-World Enterprise Workload Scenarios.
 
-Covers 5 Full Realistic Legal Workloads:
+Covers 7 Full Realistic Legal Workloads:
 1. Scenario 1: Agricultural Land Title Due Diligence (Karnataka & Maharashtra)
 2. Scenario 2: High-Volume Commercial Lease Portfolio Review (20 Leases)
 3. Scenario 3: M&A Regulatory & PII Redaction Deal Room with Watermarking
 4. Scenario 4: Multi-Agent Litigation Strategy Formulation & Pleadings
 5. Scenario 5: Cross-Border SaaS Master Services Agreement Negotiation
+6. Scenario 6: 30-Year Maharashtra Ferfar & 7/12 Mutation Chain Reconstruction
+7. Scenario 7: High Court Commercial Suit Plaint Drafting with CPC Order VII & Kanoon Precedents
 """
 
 import hashlib
@@ -172,14 +174,13 @@ class TestScenario2CommercialLeasePortfolioReview:
             {"id": "col-5", "name": "Termination Notice"},
         ]
 
-        # Simulate 20 commercial lease agreements across an IT park portfolio
         rows = []
         for i in range(1, 21):
             lease_text = f"""
             LEASE DEED FOR UNIT {i}01, TOWER {chr(65 + (i % 4))}
             1. PREMISES: Unit {i}01, Tech Park, Whitefield.
             2. TERM: Lock-in period is {24 if i % 2 == 0 else 36} months.
-            3. RENT: Monthly rent of INR {1,50,000 + (i * 10000)}.
+            3. RENT: Monthly rent of INR {150000 + (i * 10000)}.
             4. INDEMNITY: Aggregate indemnity capped at INR 50,00,000.
             5. TERMINATION: Either party may terminate with 90 days notice after lock-in.
             """
@@ -202,7 +203,6 @@ class TestScenario2CommercialLeasePortfolioReview:
             })
 
         assert len(rows) == 20
-        # Verify columns extracted
         assert "Lease_Unit_101.pdf" in rows[0]["document_name"]
 
         # Export to OpenXML XLSX
@@ -353,3 +353,80 @@ class TestScenario5CrossBorderSaaSContractNegotiation:
         redline_report = engine.generate_redline_document(doc_v1, doc_v2, changes)
         assert "REDLINE COMPARISON REPORT" in redline_report
         assert "MODIFICATION" in redline_report or "Total Changes" in redline_report
+
+
+# ============================================================================
+# Scenario 6: 30-Year Maharashtra Ferfar & 7/12 Mutation Chain Reconstruction
+# ============================================================================
+
+class TestScenario6MaharashtraFerfarTitleReconstruction:
+    """Scenario 6: 30-year Maharashtra agricultural land title search with encumbrance release and 7/12 Ferfar."""
+
+    @pytest.mark.asyncio
+    async def test_maharashtra_ferfar_title_audit(self):
+        # 1. Query Mahabhulekh
+        maha = MahabhulekhConnector(mock_mode=True)
+        res = await maha.search_by_survey_number(
+            district="Pune",
+            taluk="Haveli",
+            village="Hinjewadi",
+            survey_number="45/2",
+        )
+        assert res.success is True
+        record = res.records[0]
+
+        # 2. Reconstruct Ferfar Mutation Entries
+        mutations = [
+            {"year": 1994, "ferfar_no": "M-102", "mutation_type": "SALE", "transferor": "Pandurang Patil", "transferee": "Suresh Deshmukh"},
+            {"year": 2008, "ferfar_no": "M-215", "mutation_type": "MORTGAGE", "transferor": "Suresh Deshmukh", "transferee": "Bank of Maharashtra"},
+            {"year": 2012, "ferfar_no": "M-290", "mutation_type": "RELEASE", "transferor": "Bank of Maharashtra", "transferee": "Suresh Deshmukh"},
+            {"year": 2024, "ferfar_no": "M-410", "mutation_type": "SALE", "transferor": "Suresh Deshmukh", "transferee": "Kiran Developers LLP"},
+        ]
+        assert len(mutations) == 4
+
+        # 3. Verify BSA 2023 Digital Sealing of Mutation Extract
+        sha256_seal = hashlib.sha256(b"7/12 Extract Gat No 45/2 Hinjewadi Pune").hexdigest()
+        bsa_cert = generate_section63_certificate(
+            file_name="7_12_Extract_Gat_45_2_Pune.pdf",
+            file_hash=sha256_seal,
+            hash_algorithm="SHA-256",
+            certifier_name="Adv. Sneha Kulkarni",
+            certifier_designation="Title Advocate",
+        )
+        assert bsa_cert.hash_value == sha256_seal
+        assert bsa_cert.is_valid is True
+
+
+# ============================================================================
+# Scenario 7: Commercial Injunction Plaint Drafting with CPC Order VII
+# ============================================================================
+
+class TestScenario7CommercialInjunctionPlaintDrafting:
+    """Scenario 7: Full Plaint drafting for commercial property encroachment with CPC Order VII & Kanoon citations."""
+
+    def test_commercial_plaint_statutory_grounding(self):
+        from app.ai.indian_kanoon import KanoonClient
+        client = KanoonClient()
+        precedent = client.get_landmark_summary("suraj_lamp")
+
+        plaint_body = f"""
+        IN THE COURT OF THE PRINCIPAL CITY CIVIL JUDGE AT BENGALURU
+        COMMERCIAL SUIT NO. _____ OF 2026
+
+        ABC INFRASTRUCTURE PVT LTD ... PLAINTIFF
+        VERSUS
+        XYZ REALTY LLP ... DEFENDANT
+
+        PLAINT UNDER ORDER VII RULE 1 & ORDER XXXIX RULES 1 & 2 OF CPC, 1908
+        FOR DECLARATION OF TITLE AND PERMANENT INJUNCTION
+
+        1. The Plaintiff is the absolute owner in possession of Sy. No. 124/3, Varthur.
+        2. Pursuant to the law laid down by the Hon'ble Supreme Court in {precedent.title} ({precedent.citation}),
+           transfer of title in immovable property can only be effected by a duly registered deed of conveyance.
+        3. PRAYER:
+           a) Declare Plaintiff as absolute owner.
+           b) Ad-interim ex-parte injunction restraining Defendant from creating third-party rights.
+        """
+        assert "COMMERCIAL SUIT" in plaint_body
+        assert "ORDER XXXIX" in plaint_body
+        assert precedent.citation in plaint_body

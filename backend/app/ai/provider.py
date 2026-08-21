@@ -3,10 +3,12 @@
 Providers: OpenAI, Anthropic, Ollama (local). A mock provider is used when no keys
 are configured so every feature still works end-to-end (clearly labelled).
 """
+import asyncio
+import json
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import AsyncIterator, Optional
 
 import httpx
 
@@ -68,11 +70,133 @@ class BaseLLMProvider(ABC):
     async def complete(self, request: LLMRequest) -> LLMResponse: ...
 
     @abstractmethod
+    async def stream_complete(self, request: LLMRequest) -> AsyncIterator[str]: ...
+
+    @abstractmethod
     def is_configured(self) -> bool: ...
 
     async def list_models(self) -> list[str]:
         """List available models. Override in subclasses."""
         return []
+
+
+class GroqProvider(BaseLLMProvider):
+    name = "groq"
+    BASE_URL = settings.GROQ_BASE_URL or "https://api.groq.com/openai/v1"
+
+    def is_configured(self) -> bool:
+        return bool(settings.GROQ_API_KEY or settings.STT_API_KEY)
+
+    def _get_api_key(self) -> str:
+        return settings.GROQ_API_KEY or settings.STT_API_KEY or ""
+
+    async def list_models(self) -> list[str]:
+        return [
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant",
+            "mixtral-8x7b-32768",
+            "llama-guard-3-8b",
+        ]
+
+    def _resolve_model(self, request: LLMRequest) -> str:
+        if request.model:
+            m = request.model.lower()
+            if "70b" in m or "llama-3.3" in m or "versatile" in m:
+                return "llama-3.3-70b-versatile"
+            if "8b" in m or "instant" in m:
+                return "llama-3.1-8b-instant"
+            if "mixtral" in m:
+                return "mixtral-8x7b-32768"
+            return request.model
+
+        if request.task in ("extraction", "classification", "summarization", "translation"):
+            return "llama-3.1-8b-instant"
+        return settings.GROQ_MODEL or "llama-3.3-70b-versatile"
+
+    async def complete(self, request: LLMRequest) -> LLMResponse:
+        model = self._resolve_model(request)
+        start = time.monotonic()
+        base_url = (settings.GROQ_BASE_URL or "https://api.groq.com/openai/v1").rstrip("/")
+        headers = {
+            "Authorization": f"Bearer {self._get_api_key()}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": request.system},
+                {"role": "user", "content": request.prompt},
+            ],
+            "max_tokens": request.max_tokens,
+            "temperature": request.temperature,
+        }
+        if request.json_mode:
+            payload["response_format"] = {"type": "json_object"}
+
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(
+                f"{base_url}/chat/completions",
+                headers=headers,
+                json=payload,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        usage = data.get("usage", {})
+        content = data["choices"][0]["message"]["content"]
+        return LLMResponse(
+            content=content,
+            provider=self.name,
+            model=model,
+            latency_ms=int((time.monotonic() - start) * 1000),
+            prompt_tokens=usage.get("prompt_tokens", 0),
+            completion_tokens=usage.get("completion_tokens", 0),
+            estimated_cost_usd=0.0,
+        )
+
+    async def stream_complete(self, request: LLMRequest) -> AsyncIterator[str]:
+        model = self._resolve_model(request)
+        base_url = (settings.GROQ_BASE_URL or "https://api.groq.com/openai/v1").rstrip("/")
+        headers = {
+            "Authorization": f"Bearer {self._get_api_key()}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": request.system},
+                {"role": "user", "content": request.prompt},
+            ],
+            "max_tokens": request.max_tokens,
+            "temperature": request.temperature,
+            "stream": True,
+        }
+        if request.json_mode:
+            payload["response_format"] = {"type": "json_object"}
+
+        async with httpx.AsyncClient(timeout=60) as client:
+            async with client.stream(
+                "POST",
+                f"{base_url}/chat/completions",
+                headers=headers,
+                json=payload,
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        raw = line[6:].strip()
+                        if raw == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(raw)
+                            delta = chunk.get("choices", [{}])[0].get("delta", {})
+                            token = delta.get("content", "")
+                            if token:
+                                yield token
+                        except json.JSONDecodeError:
+                            continue
 
 
 class NvidiaProvider(BaseLLMProvider):
@@ -139,6 +263,56 @@ class NvidiaProvider(BaseLLMProvider):
             estimated_cost_usd=0.0,
         )
 
+    async def stream_complete(self, request: LLMRequest) -> AsyncIterator[str]:
+        model = request.model
+        if not model:
+            if request.task in ("reasoning", "research"):
+                model = "deepseek-ai/deepseek-r1"
+            else:
+                model = settings.NVIDIA_MODEL or "meta/llama-3.3-70b-instruct"
+
+        base_url = (settings.NVIDIA_BASE_URL or "https://integrate.api.nvidia.com/v1").rstrip("/")
+        headers = {
+            "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": request.system},
+                {"role": "user", "content": request.prompt},
+            ],
+            "max_tokens": request.max_tokens,
+            "temperature": request.temperature,
+            "stream": True,
+        }
+        if request.json_mode:
+            payload["response_format"] = {"type": "json_object"}
+
+        async with httpx.AsyncClient(timeout=180) as client:
+            async with client.stream(
+                "POST",
+                f"{base_url}/chat/completions",
+                headers=headers,
+                json=payload,
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        raw = line[6:].strip()
+                        if raw == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(raw)
+                            delta = chunk.get("choices", [{}])[0].get("delta", {})
+                            token = delta.get("content", "")
+                            if token:
+                                yield token
+                        except json.JSONDecodeError:
+                            continue
+
 
 class OpenAIProvider(BaseLLMProvider):
     name = "openai"
@@ -177,6 +351,42 @@ class OpenAIProvider(BaseLLMProvider):
             completion_tokens=usage.get("completion_tokens", 0),
         )
 
+    async def stream_complete(self, request: LLMRequest) -> AsyncIterator[str]:
+        model = request.model or TASK_MODEL_MAP.get(request.task, ("openai", settings.DEFAULT_MODEL))[1]
+        async with httpx.AsyncClient(timeout=120) as client:
+            async with client.stream(
+                "POST",
+                f"{self.BASE_URL}/chat/completions",
+                headers={"Authorization": f"Bearer {settings.OPENAI_API_KEY}"},
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": request.system},
+                        {"role": "user", "content": request.prompt},
+                    ],
+                    "max_tokens": request.max_tokens,
+                    "temperature": request.temperature,
+                    "stream": True,
+                    **({"response_format": {"type": "json_object"}} if request.json_mode else {}),
+                },
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        raw = line[6:].strip()
+                        if raw == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(raw)
+                            delta = chunk.get("choices", [{}])[0].get("delta", {})
+                            token = delta.get("content", "")
+                            if token:
+                                yield token
+                        except json.JSONDecodeError:
+                            continue
+
 
 class AnthropicProvider(BaseLLMProvider):
     name = "anthropic"
@@ -214,6 +424,43 @@ class AnthropicProvider(BaseLLMProvider):
             prompt_tokens=usage.get("input_tokens", 0),
             completion_tokens=usage.get("output_tokens", 0),
         )
+
+    async def stream_complete(self, request: LLMRequest) -> AsyncIterator[str]:
+        model = request.model or "claude-sonnet-4-20250514"
+        async with httpx.AsyncClient(timeout=120) as client:
+            async with client.stream(
+                "POST",
+                f"{self.BASE_URL}/messages",
+                headers={
+                    "x-api-key": settings.ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                },
+                json={
+                    "model": model,
+                    "system": request.system,
+                    "messages": [{"role": "user", "content": request.prompt}],
+                    "max_tokens": request.max_tokens,
+                    "temperature": request.temperature,
+                    "stream": True,
+                },
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        raw = line[6:].strip()
+                        if raw == "[DONE]":
+                            break
+                        try:
+                            data = json.loads(raw)
+                            event_type = data.get("type", "")
+                            if event_type == "content_block_delta":
+                                text = data.get("delta", {}).get("text", "")
+                                if text:
+                                    yield text
+                        except json.JSONDecodeError:
+                            continue
 
 
 class OllamaProvider(BaseLLMProvider):
@@ -317,6 +564,44 @@ class OllamaProvider(BaseLLMProvider):
                 latency_ms=int((time.monotonic() - start) * 1000),
             )
 
+    async def stream_complete(self, request: LLMRequest) -> AsyncIterator[str]:
+        if not request.model:
+            _, task_model = TASK_MODEL_MAP.get(request.task, ("ollama", "llama3.1:8b"))
+            model = task_model
+        else:
+            model = request.model
+
+        base_url = (settings.OLLAMA_BASE_URL or "http://localhost:11434").rstrip("/")
+        async with httpx.AsyncClient(timeout=180) as client:
+            async with client.stream(
+                "POST",
+                f"{base_url}/api/chat",
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": request.system},
+                        {"role": "user", "content": request.prompt},
+                    ],
+                    "stream": True,
+                    "options": {
+                        "temperature": request.temperature,
+                        "num_ctx": 32768,
+                    },
+                    **({"format": "json"} if request.json_mode else {}),
+                },
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line:
+                        continue
+                    try:
+                        data = json.loads(line)
+                        token = data.get("message", {}).get("content", "")
+                        if token:
+                            yield token
+                    except json.JSONDecodeError:
+                        continue
+
 
 class MockLLMProvider(BaseLLMProvider):
     """Deterministic fallback used when no real provider keys are configured.
@@ -344,8 +629,18 @@ class MockLLMProvider(BaseLLMProvider):
             latency_ms=0,
         )
 
+    async def stream_complete(self, request: LLMRequest) -> AsyncIterator[str]:
+        if request.json_mode:
+            text = '{"status": "ok", "message": "Jurisiva AI mock response (run Ollama locally or configure API keys)."}'
+        else:
+            text = f"Jurisiva AI Mock Legal Reasoning: Analysis for {request.task} task grounded in Indian law."
+        for word in text.split(" "):
+            yield word + " "
+            await asyncio.sleep(0.005)
+
 
 _PROVIDERS: dict[str, BaseLLMProvider] = {
+    "groq": GroqProvider(),
     "nvidia": NvidiaProvider(),
     "ollama": OllamaProvider(),
     "openai": OpenAIProvider(),
@@ -355,32 +650,60 @@ _PROVIDERS: dict[str, BaseLLMProvider] = {
 
 
 class ModelRouter:
-    """Routes a task type to the best available provider with NVIDIA NIM priority when configured."""
+    """Routes LLM requests across Groq, NVIDIA NIM, Ollama, OpenAI, Anthropic, and hermetic Mock."""
 
-    def resolve(self, task: str) -> BaseLLMProvider:
-        # Check NVIDIA first when configured (user configured NVIDIA API key for all work)
+    def resolve(self, task: str, model_preference: Optional[str] = None) -> BaseLLMProvider:
+        # 1. Explicit model preference matching
+        if model_preference:
+            pref = model_preference.lower()
+            if any(k in pref for k in ("groq", "llama-3.3", "versatile", "instant")):
+                groq = _PROVIDERS.get("groq")
+                if groq and groq.is_configured():
+                    return groq
+            if any(k in pref for k in ("nvidia", "nemotron", "deepseek-r1")):
+                nvidia = _PROVIDERS.get("nvidia")
+                if nvidia and nvidia.is_configured():
+                    return nvidia
+            if any(k in pref for k in ("claude", "anthropic", "sonnet")):
+                anthropic = _PROVIDERS.get("anthropic")
+                if anthropic and anthropic.is_configured():
+                    return anthropic
+            if any(k in pref for k in ("gpt", "openai", "o1", "o3")):
+                openai = _PROVIDERS.get("openai")
+                if openai and openai.is_configured():
+                    return openai
+            if any(k in pref for k in ("ollama", "local", "llama3.1", "qwen")):
+                ollama = _PROVIDERS.get("ollama")
+                if ollama and ollama.is_configured():
+                    return ollama
+
+        # 2. Priority Hierarchy: Groq (sub-600ms latency) -> NVIDIA NIM -> Ollama -> Cloud -> Mock
+        groq = _PROVIDERS.get("groq")
+        if groq and groq.is_configured():
+            return groq
+
         nvidia = _PROVIDERS.get("nvidia")
         if nvidia and nvidia.is_configured():
             return nvidia
 
-        # Check Ollama if configured
         ollama = _PROVIDERS.get("ollama")
         if ollama and ollama.is_configured():
             return ollama
 
-        # Check cloud providers
+        # Cloud standard fallback
         preferred, _ = TASK_MODEL_MAP.get(task, ("openai", settings.DEFAULT_MODEL))
         provider = _PROVIDERS.get(preferred)
         if provider and provider.is_configured():
             return provider
-        # Fall back to any configured provider, then mock
+
         for p in _PROVIDERS.values():
             if p.is_configured() and p.name != "mock":
                 return p
+
         return _PROVIDERS["mock"]
 
     async def complete(self, request: LLMRequest) -> LLMResponse:
-        provider = self.resolve(request.task)
+        provider = self.resolve(request.task, request.model)
         try:
             resp = await provider.complete(request)
         except Exception as err:
@@ -396,6 +719,30 @@ class ModelRouter:
                     except Exception:
                         pass
         return resp
+
+    async def stream_complete(self, request: LLMRequest) -> AsyncIterator[str]:
+        provider = self.resolve(request.task, request.model)
+        try:
+            async for token in provider.stream_complete(request):
+                yield token
+            return
+        except Exception:
+            pass
+
+        # Fallback to secondary configured providers
+        for p in _PROVIDERS.values():
+            if p.is_configured() and p.name != provider.name and p.name != "mock":
+                try:
+                    async for token in p.stream_complete(request):
+                        yield token
+                    return
+                except Exception:
+                    pass
+
+        # Final fallback: Mock
+        mock = _PROVIDERS["mock"]
+        async for token in mock.stream_complete(request):
+            yield token
 
 
 router = ModelRouter()

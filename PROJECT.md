@@ -1,76 +1,86 @@
-# Project: LegAIQ / Jurisiva AI Comprehensive Production Hardening
+# Project: India Legal Intelligence OS (Jurisiva AI / LegAIQ)
 
 ## Architecture
-- **Frontend**: Next.js 16.3.1 (App Router), React 19.2.8, Tailwind CSS v4, Zustand 5, Supabase SSR client, Vitest 4 test harness.
-- **Backend**: FastAPI (Python 3.11+), Pydantic v2, unified AI `ModelRouter` (Rajora, Nvidia, Ollama, OpenAI, Anthropic, Mock), Celery / sync worker, LangGraph multi-agent DAG engine, hermetic Pytest test harness (`FakeSupabase`, `FakeOCRProvider`).
-- **Database & Storage**: Supabase PostgreSQL migrations (001–015), `pgvector` (1536-dim IVFFlat + GIN FTS indexes), PostgreSQL RPCs, multi-tenant RLS with `WITH CHECK` integrity.
-- **Security & Compliance**: Bharatiya Sakshya Adhiniyam (BSA) 2023 Section 63 certificates, Verhoeff-verified Indian PII redaction (15+ identifiers), dual-layer SSRF protection with DNS rebinding defense, timing-safe auth via `hmac.compare_digest`.
+The India Legal Intelligence OS is a production-grade, Harvey-class legal intelligence platform grounded in Indian statutes (BNS, BNSS, BSA 2023, CPC, Income Tax Act, RERA, Companies Act), land records (7/12, 8A, Ferfar, Property Cards, RTC, Patta Chitta), and court workflows.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Next.js 16 App Router UI                          │
+│  (Chatbot, Matter Workspace, 3-Mode Legal Assistant, Review Tables,         │
+│   Contract Playbooks, Property Due Diligence, Multi-Deed Diff, Exporters)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTP / SSE Streaming
+┌──────────────────────────────────────▼──────────────────────────────────────┐
+│                             FastAPI API Gateway                             │
+│  ├── Live Multi-Model Router (Groq Llama 3.3 70B, OpenAI, Anthropic, Ollama)│
+│  ├── Matter-Centric Vault & Evidence Graph (LegalContext grounder)          │
+│  ├── Indian Document Intelligence & OCR Engine (13 Indic Languages, CLAHE)  │
+│  ├── Land Record & 13–30 Yr Title Reconstruction DAG (Cycle/Gap detection)  │
+│  ├── BSA 2023 Section 63 Electronic Evidence Certificate (SHA-256 sealing)  │
+│  ├── 6 Specialized Workflow Agents (Due Diligence, Title, Contract, etc.)   │
+│  └── Security & DPDP Guardrails (Verhoeff PII, SSRF/DNS Rebinding, RLS)     │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────▼──────────────────────────────────────┐
+│                    Supabase PostgreSQL + pgvector + Auth                    │
+│  (Cases, Documents, Chunks, Embeddings, Ownership Nodes/Edges, BSA Certs)   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ## Feature Inventory
 | # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
-| 1 | Multi-Tenant Org & Auth | Supabase Auth + RLS policies isolating by `organization_id` & `auth.uid()` | M1, M3 | survey |
-| 2 | Case Management & Matter Workspace | Dynamic case routing, metadata, state management, search | M1, M2 | survey |
-| 3 | Document Ingestion & Storage | Multi-format upload, deduplication, storage bucket isolation | M1, M2 | survey |
-| 4 | Indic & Multi-Language OCR | 13 Indian languages, dual-pass OCR, CLAHE/deskew restoration | M1, M2 | survey |
-| 5 | Semantic & Hybrid Search | 1536-dim pgvector cosine similarity + GIN full-text search ts_rank | M1, M4 | survey |
-| 6 | Interactive Chat & Legal Assistant | Ask/Analyze/Draft modes, citations grounded in uploaded documents | M1, M2 | survey |
-| 7 | Document Comparison & Redlining | Direct side-by-side comparison, structural diffing | M1, M2 | survey |
-| 8 | Spreadsheet Review Tables | Dynamic columns, cell editing, confidence chips, CSV/JSON export | M1, M2 | survey |
-| 9 | Clause Extraction & Library | 29+ legal clause extraction, risk assessment, standard clause repo | M1, M2 | survey |
-| 10 | Contract Playbook Evaluation | Deviation scoring, unacceptable terms flag, redline suggestions | M1, M2 | survey |
-| 11 | Multi-Agent Orchestration | DAG execution, cycle detection, topological sorting, state persistence | M1, M4 | survey |
-| 12 | Specialist Legal Agents | 6 First-Class Agents (Due Diligence, Title Examiner, Risk Auditor, Litigation Strategist, Contract Reviewer, BSA Compliance) | M1, M4 | survey |
-| 13 | Rajora LLM Private Engine | Self-hosted zero-cost LLM inference, failover, timeout, internal auth | M1, M4 | survey |
-| 14 | Multi-Provider AI Routing | Nvidia NIM, Ollama local, OpenAI, Anthropic, deterministic Mock | M1, M4 | survey |
-| 15 | BSA 2023 Evidence Certification | Section 63 electronic evidence certificate with SHA-256 tamper-evident sealing | M1, M3 | survey |
-| 16 | Property Title Due Diligence | 13–30 year chain analysis, mutation gap detection, encumbrance search | M1, M4 | survey |
-| 17 | Legal Risk Categorization | 9-category risk taxonomy, severity scoring, mitigation recommendations | M1, M4 | survey |
-| 18 | Litigation Strategy & Limitation | CPC/BNS causes of action, limitation period calculations | M1, M4 | survey |
-| 19 | External Shared Spaces | Client collaboration rooms, passcode protection, expiration, watermarking | M1, M3 | survey |
-| 20 | Single Sign-On (SSO) | SAML/OIDC configuration, admin-only access control | M1, M3 | survey |
-| 21 | Indian PII Redaction Engine | 15+ Indian identifiers, Verhoeff Aadhaar validation, 5 redaction strategies | M1, M3 | survey |
-| 22 | SSRF Protection | DNS rebinding prevention, private IP / cloud metadata blocking | M1, M3 | survey |
-| 23 | Voice Agent & Audio Intake | Indic audio intake, transcription pipeline | M1, M2 | survey |
-| 24 | Timeline & Chronology Builder | Interactive event timeline extraction from case records | M1, M2 | survey |
-| 25 | Legal Research & Citations | Indian case law, statutes, acts citation verification | M1, M4 | survey |
-| 26 | Analytics & Audit Trail | Usage telemetry, token accounting, security audit logs | M1, M3 | survey |
-| 27 | Background Task Queue | Celery / Redis background worker, synchronous test runner fallback | M1, M4 | survey |
-| 28 | Statutory Export Engine | PDF, DOCX, CSV, Excel reports | M1, M2 | survey |
-| 29 | PWA & Offline Database | IndexedDB offline cache, Service Worker | M2, M4 | survey |
+| 1 | Groq LPU Llama 3.3 70B Gateway | First-class sub-600ms latency reasoning provider in backend `provider.py` & `config.py` | M1 | Survey & R1 |
+| 2 | Multi-Model Dynamic Fallback | Seamless routing across Groq, OpenAI GPT-4o, Claude 3.5 Sonnet, Ollama | M1 | Survey & R1 |
+| 3 | Real-Time SSE Token Streaming | Async generator token streaming for Ask, Analyze (FIRAC), Draft, Research modes | M1 | Survey & R1 |
+| 4 | Elimination of Canned Fallbacks | Purge static canned answers and hardcoded mock templates repository-wide | M1 | Survey & R1 |
+| 5 | Matter-Centric Vault Context | "One matter, one workspace, one evidence graph" persistent case memory | M2 | Survey & R2 |
+| 6 | Interactive Citation Grounding | Interactive citation chips linking findings to `[Doc, Page, Source]` with modal preview | M2 | Survey & R2 |
+| 7 | Hybrid Vector + Keyword RAG | pgvector cosine similarity + full-text search with `ts_rank` on `document_chunks` | M2 | Survey & R2 |
+| 8 | Multi-Lingual Indic OCR (13 Lang) | OCR & VLM parsing for 13 Indian languages with deskewing, CLAHE, uncertainty tags | M3 | Survey & R3 |
+| 9 | Indian Land Records Engine | Parsers for 7/12, 8A, Ferfar, Property Cards, CTS, RTC, Patta Chitta & Bigha normalization | M3 | Survey & R3 |
+| 10 | 13–30 Year Title Reconstruction | Ownership chain DAG with circular conveyance DFS cycle detection & gap analysis | M3 | Survey & R3 |
+| 11 | BSA 2023 Section 63 Certification | Electronic Evidence Certificates with SHA-256 tamper-evident sealing & presumptions | M3 | Survey & R3 |
+| 12 | 6 Specialized Legal Agents | Due Diligence, Title Examiner, Contract Reviewer, Litigation Strategist, BSA, Research | M4 | Survey & R4 |
+| 13 | Contract Playbook & 36 Clauses | 36 clause extraction, negotiation playbook deviation scoring, redline diff generation | M4 | Survey & R4 |
+| 14 | Court-Ready Export Engine | Native Vector PDF, Word DOCX, and multi-sheet Excel (.xlsx) review tables | M4 | Survey & R4 |
+| 15 | Multi-Tenant Supabase RLS | Organization-scoped and `is_case_member()` PostgreSQL RLS across migrations 001–015 | M5 | Survey & R5 |
+| 16 | Verhoeff Indian PII Redaction | Mathematical checksum validation for Aadhaar + 15 Indian PII entities (5 strategies) | M5 | Survey & R5 |
+| 17 | SSRF & DNS Rebinding Defense | Dual-layer IP validation and DNS resolution checks for outbound requests | M5 | Survey & R5 |
+| 18 | Hermetic Backend & Frontend Tests | 100% passing test suites across Pytest (37+ test files) and Vitest (0 TS errors) | M5 | Survey & R5 |
+| 19 | 100% E2E Test Suite Acceptance | Complete Tier 1-4 test pass and Tier 5 adversarial coverage hardening | M6 | Survey & Acceptance Criteria |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| 1 | Backend Hardening & API Hermeticity | Fix duplicate router mount in `main.py`, update `conftest.py` `PATCH_TARGETS`, clean unused backend dependencies | none | DONE |
-| 2 | Frontend Dependency & Type Verification | Clean unused frontend dependencies, verify zero type errors, verify all 5 Vitest suites pass | none | DONE |
-| 3 | Security, RLS & Secret Guardrail Hardening | Verify zero committed secrets, validate multi-tenant RLS isolation across 001-015, validate SSRF, PII, BSA 2023 | M1 | DONE |
-| 4 | Final E2E Suite, Adversarial Testing & Forensic Audit | Run full 550+ backend pytest suite, all Vitest suites, challenger adversarial testing, and forensic integrity audit | M1, M2, M3 | DONE |
+| M1 | Live Multi-Model AI Gateway & Streaming Engine | GroqProvider, real-time SSE token streaming for Ask/Analyze/Draft/Research, removal of canned fallbacks | None | DONE |
+| M2 | Matter-Centric Vault & Evidence Workspace | Persistent matter memory, strict interactive citation grounding UI, hybrid RAG integration | M1 | DONE |
+| M3 | Indian Document Intelligence & Property Title Engine | 13 Indic language OCR, historical restoration, land record parsers, 13-30 yr title DAG, BSA 2023 Sec 63 SHA-256 certs | M1 | DONE |
+| M4 | Specialized Legal Workflow Agents & Litigation Suite | 6 workflow agents, 36 clause contract reviewer, playbooks, CPC litigation strategy, court-ready PDF/DOCX/XLSX export | M2, M3 | DONE |
+| M5 | Security, DPDP Compliance & Production Hardening | Supabase RLS policies, Verhoeff Aadhaar PII redaction, SSRF defense, 0 TS errors, 100% test pass | M1, M2, M3, M4 | DONE |
+| M6 | Final Acceptance: 100% E2E Pass & Adversarial Hardening | Pass 100% E2E test suite (Tiers 1-4) and Tier 5 adversarial coverage hardening | M1, M2, M3, M4, M5 | DONE |
 
 ## Interface Contracts
-### Frontend ↔ Backend API
-- Base URL: `/api/v1` (with `/api` compatibility for SSR/health proxies)
-- Authentication: Bearer JWT token in `Authorization` header
-- Content Type: `application/json` (or `multipart/form-data` for uploads)
-- Error Response Format: `{"detail": str, "error_code": Optional[str], "status_code": int}`
 
-### Backend ↔ Supabase Database
-- PostgreSQL with `pgvector` extension
-- Authentication & Auth UID: `auth.uid()` via JWT claims
-- Tenant Isolation: Scoped by `organization_id` (`is_org_member`) or `case_id` (`is_case_member`)
+### AI Gateway Provider Contract (`backend/app/ai/provider.py`)
+- `BaseLLMProvider.complete(prompt: str, system_prompt: str | None = None, **kwargs) -> LLMResponse`
+- `BaseLLMProvider.stream_complete(prompt: str, system_prompt: str | None = None, **kwargs) -> AsyncIterator[str]`
+- `ModelRouter.route(mode: str, query: str, model_preference: str | None = None) -> BaseLLMProvider`
 
-### Backend ↔ AI Providers
-- `BaseLLMProvider.generate(prompt, options) -> LLMResponse`
-- Rajora Provider: `http://localhost:8000/generate` (or configured host), zero cost invariant
-- Fallback: Deterministic Mock provider when offline/testing
+### Matter-Centric Context Contract (`backend/app/schemas/case.py`)
+- `LegalContext`: `{ case_id: UUID, client_name: str, jurisdiction: str, court: str, acts_applicable: list[str], document_ids: list[UUID], evidence_graph_id: UUID }`
+- Grounding Citation: `{ document_id: UUID, document_name: str, page_number: int, source_passage: str, confidence: float, bounding_box: dict | None }`
+
+### Indian Land Intelligence Contract (`backend/app/ai/land_intelligence.py`)
+- `normalize_land_area(value: float, unit: str, state: str) -> float` (in sq meters)
+- `reconstruct_title_chain(deeds: list[DeedRecord]) -> TitleChainDAG`
+- `generate_bsa_certificate(case_id: UUID, document_id: UUID, operator_info: dict) -> BSACertificate` (with SHA-256 seal)
 
 ## Code Layout
-- `backend/app/api/`: 28 FastAPI routers
-- `backend/app/ai/`: ModelRouter, Providers (Rajora, Nvidia, Ollama, OpenAI, Anthropic, Mock), Multi-Agent Orchestrator, Specialist Agents
-- `backend/app/security/`: Auth, PII redaction, SSRF filtering, Permissions
-- `backend/app/services/`: OCR, Ingestion, Documents, Search, Export, Billing
-- `backend/tests/`: 40 pytest test files, hermetic test harness `conftest.py`
-- `frontend/app/`: Next.js App Router pages and API routes
-- `frontend/components/`: Reusable UI components and modals
-- `frontend/lib/`: API client, Rajora utilities, stores, Vitest tests (`rajora.test.ts`, `tier_comprehensive.test.ts`, `mockStore.test.ts`, `utils.test.ts`, `m1_m2_features.test.ts`)
-- `supabase/migrations/`: Migrations `001_...` through `015_...`
+- `backend/app/api/`: FastAPI route handlers (`analysis.py`, `cases.py`, `bsa.py`, `research.py`, `workflows.py`, `chat.py`, `review.py`, `contracts.py`)
+- `backend/app/ai/`: Core AI & legal intelligence modules (`provider.py`, `indic_ocr.py`, `historical_ocr.py`, `land_intelligence.py`, `ownership_graph.py`, `bharatiya_sakshya.py`, `contract_intelligence.py`, `playbooks.py`, `title_search_report.py`, `review_tables.py`, `agents/`)
+- `backend/app/security/`: Security & compliance (`pii.py`, `ssrf.py`, `auth.py`)
+- `backend/tests/`: Pytest hermetic suites with `FakeSupabase` and `FakeOCRProvider` (38 test files, 400+ test cases)
+- `frontend/app/`: Next.js 16 App Router views (`cases/`, `chat/`, `contracts/`, `property/`, `review/`, `comparison/`, `reports/`)
+- `frontend/lib/`: Client SDKs, API adapters, formatters, and export engines (`api.ts`, `aiEngine.ts`, `legalTranslator.ts`, `reportExporter.ts`)
+- `supabase/migrations/`: PostgreSQL schema DDL, RLS policies, vector indices, and RPC functions (001–015)
