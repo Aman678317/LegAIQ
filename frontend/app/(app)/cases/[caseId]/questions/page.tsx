@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import {
   Send, Loader2, MessageSquare, FileText, Languages, Cpu, Sparkles,
   HelpCircle, Scale, PenTool, CheckCircle2, ExternalLink,
-  ChevronRight, X, BookOpen, AlertTriangle
+  ChevronRight, X, BookOpen, AlertTriangle, ShieldCheck
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, Badge, Button } from "@/components/ui";
