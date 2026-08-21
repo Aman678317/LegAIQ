@@ -10,10 +10,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { messages = [], model = "llama3", temperature = 0.7, system } = body;
 
-    // 1. Try local Ollama instance if reachable
+    const groqKey = process.env.GROQ_API_KEY;
+    const nvidiaKey = process.env.NVIDIA_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
+
+    // 1. Try local Ollama instance if reachable (with short 1.5s timeout)
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const timeoutId = setTimeout(() => controller.abort(), 1500);
 
       const formattedMessages = system
         ? [{ role: "system", content: system }, ...messages]
@@ -44,13 +48,8 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch {
-      // Ollama unreachable, continue
+      // Ollama unreachable, continue to cloud providers
     }
-
-    // 2. Try NVIDIA NIM if configured in environment
-    const nvidiaKey = process.env.NVIDIA_API_KEY;
-    const openaiKey = process.env.OPENAI_API_KEY;
-    const groqKey = process.env.GROQ_API_KEY;
 
     if (nvidiaKey) {
       try {
