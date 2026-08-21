@@ -167,6 +167,13 @@ export const api = {
   },
 
   deleteCase: async (caseId: string) => {
+    mockStore.deleteDemoCase(caseId);
+    try {
+      const supabase = createClient();
+      await supabase.from("cases").delete().eq("id", caseId);
+    } catch {
+      // Supabase delete fallback
+    }
     if (isDemoMode(caseId)) {
       return { success: true };
     }

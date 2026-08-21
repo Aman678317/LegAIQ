@@ -269,6 +269,16 @@ export function createDemoCase(body: {
   return c;
 }
 
+export function deleteDemoCase(caseId: string): boolean {
+  const cases = getStorage<Record<string, DemoCase>>("cases", {});
+  if (cases[caseId]) {
+    delete cases[caseId];
+    setStorage("cases", cases);
+    return true;
+  }
+  return false;
+}
+
 export function getDemoSummary(caseId: string) {
   const c = getOrCreateDemoCase(caseId);
   const docs = listDemoDocuments(caseId);

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Plus, FolderOpen, FileText, AlertTriangle, ArrowRight, Loader2,
+  Plus, FolderOpen, FileText, AlertTriangle, ArrowRight, Loader2, Trash2,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { ensureDefaultOrg } from "@/lib/auth";
@@ -16,6 +16,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [caseToDelete, setCaseToDelete] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Create form state
   const [name, setName] = useState("");
@@ -61,6 +63,20 @@ export default function DashboardPage() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to create case");
       setCreating(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!caseToDelete) return;
+    setDeleting(true);
+    try {
+      await api.deleteCase(caseToDelete.id);
+      setCases((prev) => prev.filter((c) => c.id !== caseToDelete.id));
+      setCaseToDelete(null);
+    } catch (err) {
+      setError("Failed to delete case");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -183,9 +199,23 @@ export default function DashboardPage() {
                   <Badge className="border-primary/30 bg-primary/10 text-blue-300">
                     {CASE_TYPES.find((t) => t.value === c.case_type)?.label || c.case_type}
                   </Badge>
-                  {c.status === "ARCHIVED" && (
-                    <Badge className="border-slate-500/30 bg-slate-500/15 text-slate-400">Archived</Badge>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {c.status === "ARCHIVED" && (
+                      <Badge className="border-slate-500/30 bg-slate-500/15 text-slate-400">Archived</Badge>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setCaseToDelete(c);
+                      }}
+                      title="Delete case"
+                      className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-red-500/15 hover:text-red-400"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
                 <h3 className="mt-3 line-clamp-2 text-base font-semibold text-white group-hover:text-blue-300">
                   {c.name}
@@ -207,6 +237,48 @@ export default function DashboardPage() {
               </Card>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {caseToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
+          <Card className="w-full max-w-md border-red-500/30 bg-bg p-6 shadow-2xl">
+            <div className="flex items-center gap-3 text-red-400">
+              <div className="rounded-full bg-red-500/15 p-2.5">
+                <AlertTriangle size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">Delete Case Workspace</h3>
+                <p className="text-xs text-text-muted">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-text-secondary">
+              Are you sure you want to delete <strong className="text-white">&ldquo;{caseToDelete.name}&rdquo;</strong>? All associated deeds, ownership graphs, and risk audits will be permanently removed.
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setCaseToDelete(null)}
+                disabled={deleting}
+                className="text-xs text-text-secondary hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="border border-red-500/40 bg-red-600 text-xs text-white hover:bg-red-700"
+              >
+                {deleting ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Trash2 size={14} />
+                )}
+                Delete Case
+              </Button>
+            </div>
+          </Card>
         </div>
       )}
     </div>

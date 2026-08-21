@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   FileText, AlertTriangle, Activity, Loader2, Upload, ArrowRight,
-  BrainCircuit, Network, Search, Radio,
+  BrainCircuit, Network, Search, Radio, Trash2,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Card, Badge, Button } from "@/components/ui";
@@ -14,11 +14,14 @@ import { useCaseEvents } from "@/lib/useCaseEvents";
 
 export default function CaseHomePage() {
   const { caseId } = useParams<{ caseId: string }>();
+  const router = useRouter();
   const [summary, setSummary] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [activity, setActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Real-time job/document updates (SSE with polling fallback)
   const { documents: liveDocs, status: streamStatus } = useCaseEvents(caseId);
@@ -31,6 +34,17 @@ export default function CaseHomePage() {
       setActivity((await api.caseActivity(caseId)).slice(0, 8));
     } catch (e: any) {
       setError(e.message || "Failed to load case");
+    }
+  }
+
+  async function handleDeleteCase() {
+    setDeleting(true);
+    try {
+      await api.deleteCase(caseId);
+      router.push("/dashboard");
+    } catch {
+      setError("Failed to delete case");
+      setDeleting(false);
     }
   }
 
@@ -80,22 +94,35 @@ export default function CaseHomePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold text-white">{caseData.name}</h1>
-          <Badge className={
-            caseData.status === "ACTIVE"
-              ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
-              : "border-slate-500/30 bg-slate-500/15 text-slate-400"
-          }>
-            {caseData.status}
-          </Badge>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold text-white">{caseData.name}</h1>
+            <Badge className={
+              caseData.status === "ACTIVE"
+                ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
+                : "border-slate-500/30 bg-slate-500/15 text-slate-400"
+            }>
+              {caseData.status}
+            </Badge>
+          </div>
+          <p className="mt-1 text-sm text-text-secondary">
+            {caseData.jurisdiction_state || "Jurisdiction not set"}
+            {caseData.jurisdiction_district ? ` · ${caseData.jurisdiction_district}` : ""}
+            {` · Created ${formatDateTime(caseData.created_at)}`}
+          </p>
         </div>
-        <p className="mt-1 text-sm text-text-secondary">
-          {caseData.jurisdiction_state || "Jurisdiction not set"}
-          {caseData.jurisdiction_district ? ` · ${caseData.jurisdiction_district}` : ""}
-          {` · Created ${formatDateTime(caseData.created_at)}`}
-        </p>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => setShowDeleteModal(true)}
+            className="flex items-center gap-1.5 border border-red-500/20 bg-red-500/5 text-xs text-red-400 hover:border-red-500/40 hover:bg-red-500/15 hover:text-red-300"
+          >
+            <Trash2 size={14} />
+            Delete Case
+          </Button>
+        </div>
       </div>
 
       <div
@@ -109,6 +136,48 @@ export default function CaseHomePage() {
         <Radio size={11} className={streamStatus === "live" ? "animate-pulse" : ""} />
         {streamStatus === "live" ? "Live" : "Synced"}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
+          <Card className="w-full max-w-md border-red-500/30 bg-bg p-6 shadow-2xl">
+            <div className="flex items-center gap-3 text-red-400">
+              <div className="rounded-full bg-red-500/15 p-2.5">
+                <AlertTriangle size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">Delete Case Workspace</h3>
+                <p className="text-xs text-text-muted">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-text-secondary">
+              Are you sure you want to delete <strong className="text-white">&ldquo;{caseData.name}&rdquo;</strong>? All associated deeds, ownership graphs, and risk audits will be permanently removed.
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                className="text-xs text-text-secondary hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteCase}
+                disabled={deleting}
+                className="border border-red-500/40 bg-red-600 text-xs text-white hover:bg-red-700"
+              >
+                {deleting ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Trash2 size={14} />
+                )}
+                Delete Case
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

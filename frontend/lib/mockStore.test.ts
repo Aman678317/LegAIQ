@@ -134,4 +134,16 @@ describe("mockStore localStorage integration", () => {
     expect(heatmap.categories["Liability & Indemnity"]).toBeDefined();
     expect(heatmap.categories["Restrictive Covenants"].highest_risk).toBe("critical");
   });
+
+  it("deletes a demo case from store", async () => {
+    const mockStore = await import("./mockStore");
+    const caseToDel = mockStore.getOrCreateDemoCase("delete-me-case");
+    expect(caseToDel.id).toBe("delete-me-case");
+
+    const deleted = mockStore.deleteDemoCase("delete-me-case");
+    expect(deleted).toBe(true);
+
+    const nonExistent = mockStore.deleteDemoCase("already-deleted-case");
+    expect(nonExistent).toBe(false);
+  });
 });
