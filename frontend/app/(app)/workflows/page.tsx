@@ -19,17 +19,28 @@ import {
 import { Button, Card } from "@/components/ui";
 import { api } from "@/lib/api";
 import { WorkflowCanvas } from "@/components/workflows/WorkflowCanvas";
+import { FolderOpen } from "lucide-react";
 
 export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<any[]>([]);
+  const [cases, setCases] = useState<any[]>([]);
+  const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [activeWorkflow, setActiveWorkflow] = useState<any | null>(null);
 
   useEffect(() => {
-    api.listWorkflows().then((res) => {
-      setWorkflows(res.workflows || []);
-      if (res.workflows?.length > 0) {
-        setActiveWorkflow(res.workflows[0]);
+    Promise.all([
+      api.listWorkflows(),
+      api.listCases("default-org").catch(() => ({ items: [] })),
+    ]).then(([wfRes, casesRes]) => {
+      setWorkflows(wfRes.workflows || []);
+      if (wfRes.workflows?.length > 0) {
+        setActiveWorkflow(wfRes.workflows[0]);
+      }
+      const fetchedCases = casesRes.items || [];
+      setCases(fetchedCases);
+      if (fetchedCases.length > 0) {
+        setSelectedCaseId(fetchedCases[0].id);
       }
       setLoading(false);
     });
@@ -60,6 +71,23 @@ export default function WorkflowsPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          {cases.length > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-white">
+              <FolderOpen size={14} className="text-primary" />
+              <span className="text-text-muted">Target Matter:</span>
+              <select
+                value={selectedCaseId}
+                onChange={(e) => setSelectedCaseId(e.target.value)}
+                className="cursor-pointer bg-transparent text-xs font-medium text-white outline-none"
+              >
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id} className="bg-bg text-white">
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <Button
             onClick={() => {
               const customWf = {
@@ -148,6 +176,7 @@ export default function WorkflowsPage() {
           </div>
           <WorkflowCanvas
             workflow={activeWorkflow}
+            caseId={selectedCaseId}
             onSave={(updated) => {
               setWorkflows(workflows.map((w) => (w.id === updated.id ? updated : w)));
               setActiveWorkflow(updated);
