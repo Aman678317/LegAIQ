@@ -71,8 +71,8 @@ async def get_auth_context(request: Request) -> AuthContext:
             detail="Missing or invalid Authorization header",
         )
 
-    # Handle local / dev / demo tokens gracefully
-    if token in ("demo-token", "dev-token", "mock-token", "placeholder-key") or token.startswith("demo-"):
+    # Handle local / dev / demo tokens gracefully (debug mode only)
+    if settings.DEBUG and (token in ("demo-token", "dev-token", "mock-token", "placeholder-key") or token.startswith("demo-")):
         return AuthContext(
             user_id="demo-user-id",
             email="demo@jurisiva.ai",
@@ -94,8 +94,8 @@ async def get_auth_context(request: Request) -> AuthContext:
         except Exception:
             pass
 
-    # 2. Fall back to direct JWT claims decoding
-    if not payload:
+    # 2. Fall back to direct JWT claims decoding (debug/dev mode only)
+    if not payload and settings.DEBUG:
         claims = _decode_jwt_payload(token)
         if claims:
             # Check expiration with a generous 300s clock-skew leeway
@@ -112,8 +112,8 @@ async def get_auth_context(request: Request) -> AuthContext:
                     "email": str(email),
                 }
 
-    # 3. Fall back to PyJWT decode if available
-    if not payload:
+    # 3. Fall back to PyJWT decode if available in debug/dev mode
+    if not payload and settings.DEBUG:
         try:
             unverified = jwt.decode(
                 token,

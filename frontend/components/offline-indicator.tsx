@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { WifiOff, Wifi, RotateCcw, Download, CheckCircle, AlertCircle, Info, X } from "lucide-react";
-import { useSyncStatus } from "@/lib/background-sync";
+import { useSyncStatus, backgroundSync } from "@/lib/background-sync";
 import { usePWA, formatSyncStatus, getSyncStatusColor } from "@/lib/pwa";
 import { cn } from "@/lib/utils";
 
@@ -400,6 +400,3 @@ export function OfflineBanner() {
     </div>
   );
 }
-
-// Need to import backgroundSync for the forceSyncNow call
-import { backgroundSync } from "@/lib/background-sync";

@@ -19,8 +19,14 @@ from app.ai.bharatiya_sakshya import (
     EvidenceType,
     generate_section63_certificate,
 )
+from app.security.auth import (
+    AuthContext,
+    get_auth_context,
+    get_case_access,
+    require_role,
+    resolve_case_access,
+)
 from app.config import get_settings
-from app.security.auth import AuthContext, get_auth_context, get_case_access, require_role
 
 settings = get_settings()
 router = APIRouter(prefix="/bsa", tags=["bharatiya-sakshya-2023"])
@@ -80,7 +86,7 @@ async def generate_bsa_certificate(
     # Enforce deterministic ordering across all documents for reproducible master audit hash
     docs = sorted(docs, key=lambda d: str(d.get("id") or d.get("file_name") or ""))
 
-    certificate_id = f"BSA-SEC63-{uuid.uuid4().hex[:8].upper()}"
+    certificate_id = f"BSA-SEC63-{uuid.uuid4().hex[:16].upper()}"
     certified_items = []
     combined_hash_material = ""
 
@@ -169,39 +175,67 @@ async def generate_bsa_certificate(
 
 
 @router.get("/cases/{case_id}/certificates")
-async def list_case_certificates(case_id: str, ctx: AuthContext = Depends(get_auth_context)):
+async def list_case_certificates(case_id: str, _ = Depends(get_case_access)):
     """List all generated Section 63 certificates for a case."""
+    ctx, case = _
     certs = [v for k, v in _BSA_CERTIFICATES.items() if v.get("case_id") == case_id]
     return {"case_id": case_id, "certificates": certs}
 
 
 @router.get("/certificate/{certificate_id}")
 async def get_certificate(certificate_id: str, ctx: AuthContext = Depends(get_auth_context)):
-    """Get Section 63 certificate by certificate ID."""
-    if certificate_id in _BSA_CERTIFICATES:
-        return _BSA_CERTIFICATES[certificate_id]
+    """Get Section 63 certificate by certificate ID with case access enforcement."""
+    cert = _BSA_CERTIFICATES.get(certificate_id)
+    if not cert:
+        db = _db()
+        if db:
+            try:
+                row = db.table("bsa_certificates").select("*").eq("id", certificate_id).single().execute().data
+                if row and row.get("certificate_data"):
+                    cert = row["certificate_data"]
+            except Exception:
+                pass
 
-    db = _db()
-    try:
-        row = db.table("bsa_certificates").select("*").eq("id", certificate_id).single().execute().data
-        if row and row.get("certificate_data"):
-            return row["certificate_data"]
-    except Exception:
-        pass
+    if not cert:
+        raise HTTPException(404, f"Certificate '{certificate_id}' not found")
 
-    raise HTTPException(404, f"Certificate '{certificate_id}' not found")
+    case_id = cert.get("case_id")
+    if not case_id:
+        raise HTTPException(404, "Certificate has no associated case")
+
+    await resolve_case_access(ctx, case_id)
+    return cert
 
 
 @router.get("/certificate/{certificate_id}/download")
-async def download_certificate_html(certificate_id: str):
-    """Download official printable HTML certificate under Section 63 BSA 2023."""
-    if certificate_id not in _BSA_CERTIFICATES:
+async def download_certificate_html(
+    certificate_id: str,
+    ctx: AuthContext = Depends(get_auth_context),
+):
+    """Download official printable HTML certificate under Section 63 BSA 2023 (authenticated)."""
+    cert = _BSA_CERTIFICATES.get(certificate_id)
+    if not cert:
+        db = _db()
+        if db:
+            try:
+                row = db.table("bsa_certificates").select("*").eq("id", certificate_id).single().execute().data
+                if row and row.get("certificate_data"):
+                    cert = row["certificate_data"]
+            except Exception:
+                pass
+
+    if not cert:
         raise HTTPException(404, f"Certificate '{certificate_id}' not found")
 
-    cert = _BSA_CERTIFICATES[certificate_id]
+    case_id = cert.get("case_id")
+    if not case_id:
+        raise HTTPException(404, "Certificate has no associated case")
+
+    await resolve_case_access(ctx, case_id)
+
     doc_rows = "".join(
         f"<tr><td>{d['file_name']}</td><td style='font-family:monospace;font-size:11px;'>{d['sha256_hash']}</td><td>{d['status']}</td></tr>"
-        for d in cert["certified_documents"]
+        for d in cert.get("certified_documents", [])
     )
 
     html = f"""<!DOCTYPE html>

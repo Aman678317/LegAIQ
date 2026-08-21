@@ -419,10 +419,12 @@ class MockLLMProvider(BaseLLMProvider):
     async def complete(self, request: LLMRequest) -> LLMResponse:
         return LLMResponse(
             content=(
-                "Not configured: no AI provider API key or local Ollama is set. "
-                "Run Ollama locally at http://localhost:11434 or set OPENAI_API_KEY / ANTHROPIC_API_KEY."
+                '{"error": "not_configured", "message": "Run Ollama locally or configure API keys."}'
                 if request.json_mode
-                else '{"error": "not_configured", "message": "Run Ollama locally or configure API keys."}'
+                else (
+                    "Not configured: no AI provider API key or local Ollama is set. "
+                    "Run Ollama locally at http://localhost:11434 or set OPENAI_API_KEY / ANTHROPIC_API_KEY."
+                )
             ),
             provider=self.name,
             model="mock",
@@ -467,7 +469,10 @@ class ModelRouter:
 
     async def complete(self, request: LLMRequest) -> LLMResponse:
         provider = self.resolve(request.task)
-        resp = await provider.complete(request)
+        try:
+            resp = await provider.complete(request)
+        except Exception as err:
+            resp = LLMResponse(content=f"error: {err}", provider=provider.name, model="error", latency_ms=0)
 
         # If primary provider returned an error/unreachable, gracefully fall back
         if ("unavailable" in resp.content or "error" in resp.content or "timeout" in resp.content):

@@ -1,0 +1,12 @@
+{
+  "name": "legaiq-root",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "npm test --prefix frontend",
+    "test:watch": "npm run test:watch --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "dev": "npm run dev --prefix frontend",
+    "lint": "npm run lint --prefix frontend"
+  }
+}

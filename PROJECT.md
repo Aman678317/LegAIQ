@@ -1,53 +1,76 @@
-# Project: LegAIQ / Jurisiva AI — Enterprise Legal Intelligence Platform
+# Project: LegAIQ / Jurisiva AI Comprehensive Production Hardening
 
 ## Architecture
-- **Backend**: FastAPI (Python 3.11/3.12) with Pydantic v2, Celery task queue, LangGraph multi-agent orchestration, PaddleOCR + Tesseract Indic OCR engine.
-- **Database & Storage**: PostgreSQL 15 / Supabase with Row Level Security (RLS), pgvector for semantic legal embeddings.
-- **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Lucide icons, SSE streaming client.
-- **Security & Compliance**: Bharatiya Sakshya Adhiniyam (BSA) 2023 Section 63 electronic evidence compliance, DPDP Act 2023 PII auto-redaction (Aadhaar, PAN, GSTIN, IFSC), role-based access control, SHA-256 tamper-evident matter audit logs.
+- **Frontend**: Next.js 16.3.1 (App Router), React 19.2.8, Tailwind CSS v4, Zustand 5, Supabase SSR client, Vitest 4 test harness.
+- **Backend**: FastAPI (Python 3.11+), Pydantic v2, unified AI `ModelRouter` (Rajora, Nvidia, Ollama, OpenAI, Anthropic, Mock), Celery / sync worker, LangGraph multi-agent DAG engine, hermetic Pytest test harness (`FakeSupabase`, `FakeOCRProvider`).
+- **Database & Storage**: Supabase PostgreSQL migrations (001–015), `pgvector` (1536-dim IVFFlat + GIN FTS indexes), PostgreSQL RPCs, multi-tenant RLS with `WITH CHECK` integrity.
+- **Security & Compliance**: Bharatiya Sakshya Adhiniyam (BSA) 2023 Section 63 certificates, Verhoeff-verified Indian PII redaction (15+ identifiers), dual-layer SSRF protection with DNS rebinding defense, timing-safe auth via `hmac.compare_digest`.
 
 ## Feature Inventory
-| # | Feature | Description | Milestone | Status |
+| # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
-| 1 | 3-Mode Chat Workspace | Ask, Analyze, Draft modes with mode-specific system prompts & behavior | M1 | DONE |
-| 2 | Real-time Streaming & Citations | SSE token streaming with clickable inline citations `[Doc: name, Pg: N]` | M1 | DONE |
-| 3 | Multi-LLM Selection | Runtime switching (Claude 3.5, GPT-4o, DeepSeek R1, Ollama local) | M1 | DONE |
-| 4 | India Context Toggle | Dedicated toggle injecting Indian statutes (BNS, BNSS, BSA, CPC, CrPC, RERA, IBC) | M1 | DONE |
-| 5 | Dual-Pass Indic OCR & Viewer | PaddleOCR + Tesseract for 13 Indic languages with confidence layer | M2 | DONE |
-| 6 | Multi-Format Document Ingestion | PDF, Scan, DOCX, XLSX parsing with CLAHE contrast & deskew preprocessing | M2 | DONE |
-| 7 | Document Classification & Entity Ext | Auto-classification badges (Sale Deed, Partition, 7/12, RTC, Mutation) & parties | M2 | DONE |
-| 8 | Side-by-Side Version Compare | Visual diffing across document versions with change highlight | M2 | DONE |
-| 9 | Spreadsheet Review Tables Backend | Database tables & API endpoints for bulk prompt extraction across documents | M3 | DONE |
-| 10 | Interactive Review Table UI | Handsontable/Ag-Grid style spreadsheet UI with dynamic prompt columns | M3 | DONE |
-| 11 | Cell Evidence & Confidence Linking | Cell click popover jumping to exact document page/snippet with confidence chips | M3 | DONE |
-| 12 | Review Table Export | One-click export to formatted Excel (.xlsx) and CSV with formula sanitization | M3 | DONE |
-| 13 | Visual Workflow Builder Canvas | Drag-and-drop node graph canvas for chaining specialist legal agents | M4 | DONE |
-| 14 | Workflow Execution Engine | Async execution engine with topological sort & SSE step-by-step progress | M4 | DONE |
-| 15 | Specialist Agent Library | 6 pre-built agents (Due Diligence, Title Examiner, Risk Auditor, Litigation Strategist, Contract Reviewer, BSA Compliance) | M4 | DONE |
-| 16 | 29+ Clause Extraction & Risk 0-100 | Clause extraction across standard & Indian clauses with risk severity rating | M5 | DONE |
-| 17 | Clause Library & Fallback Tiers | Enterprise clause repository with Standard, Fallback, and Walkaway options | M5 | DONE |
-| 18 | Playbook Deviation Analysis | Compare contracts against firm playbooks with automated deviation flags | M5 | DONE |
-| 19 | Redline Visual Diff Editor | Redline suggestion engine with visual addition/deletion diff view | M5 | DONE |
-| 20 | Matter Shared Spaces & Access Links | External collaboration spaces with 1h/24h/7d expiry, constant-time passcodes & rate-limiting | M6 | DONE |
-| 21 | Dynamic Document Watermarking | Configurable watermarking on document download/view with viewer identity | M6 | DONE |
-| 22 | Enterprise Cost/ROI Analytics | Token usage, cost per matter, time saved metrics, and billing breakdown | M6 | DONE |
-| 23 | Indian PII Auto-Redaction | Auto-masking Aadhaar (Verhoeff D5), PAN, Passport, Voter ID, GSTIN, Bank A/C with preview | M6 | DONE |
-| 24 | 5+ State Land Portal Connectors | Direct connectors for Mahabhulekh, Bhoomi, Dharani, AnyRoR, TNREGINET | M7 | DONE |
-| 25 | 13-30 Yr Ownership Chain Graph | Interactive visual DAG of title flow, 3-color DFS cycle check & encumbrance separation | M7 | DONE |
-| 26 | BSA 2023 Evidence Certification | Section 63 compliance hash generator, audit log, and 65B/63 certificate PDF | M7 | DONE |
-| 27 | Indian Kanoon Legal Research | Integrated case law search with citation graph & judgment summaries | M7 | DONE |
-| 28 | Comprehensive Zero-Regression Tests | Hermetic pytest, vitest, and E2E test suites with 100% pass rate | M8 | DONE |
-| 29 | Rajora AI Private LLM Sovereign Infrastructure | Self-hosted inference provider, database schema & RLS, timing-safe key verification, admin key management, and sovereign frontend UI | M9 | DONE |
+| 1 | Multi-Tenant Org & Auth | Supabase Auth + RLS policies isolating by `organization_id` & `auth.uid()` | M1, M3 | survey |
+| 2 | Case Management & Matter Workspace | Dynamic case routing, metadata, state management, search | M1, M2 | survey |
+| 3 | Document Ingestion & Storage | Multi-format upload, deduplication, storage bucket isolation | M1, M2 | survey |
+| 4 | Indic & Multi-Language OCR | 13 Indian languages, dual-pass OCR, CLAHE/deskew restoration | M1, M2 | survey |
+| 5 | Semantic & Hybrid Search | 1536-dim pgvector cosine similarity + GIN full-text search ts_rank | M1, M4 | survey |
+| 6 | Interactive Chat & Legal Assistant | Ask/Analyze/Draft modes, citations grounded in uploaded documents | M1, M2 | survey |
+| 7 | Document Comparison & Redlining | Direct side-by-side comparison, structural diffing | M1, M2 | survey |
+| 8 | Spreadsheet Review Tables | Dynamic columns, cell editing, confidence chips, CSV/JSON export | M1, M2 | survey |
+| 9 | Clause Extraction & Library | 29+ legal clause extraction, risk assessment, standard clause repo | M1, M2 | survey |
+| 10 | Contract Playbook Evaluation | Deviation scoring, unacceptable terms flag, redline suggestions | M1, M2 | survey |
+| 11 | Multi-Agent Orchestration | DAG execution, cycle detection, topological sorting, state persistence | M1, M4 | survey |
+| 12 | Specialist Legal Agents | 6 First-Class Agents (Due Diligence, Title Examiner, Risk Auditor, Litigation Strategist, Contract Reviewer, BSA Compliance) | M1, M4 | survey |
+| 13 | Rajora LLM Private Engine | Self-hosted zero-cost LLM inference, failover, timeout, internal auth | M1, M4 | survey |
+| 14 | Multi-Provider AI Routing | Nvidia NIM, Ollama local, OpenAI, Anthropic, deterministic Mock | M1, M4 | survey |
+| 15 | BSA 2023 Evidence Certification | Section 63 electronic evidence certificate with SHA-256 tamper-evident sealing | M1, M3 | survey |
+| 16 | Property Title Due Diligence | 13–30 year chain analysis, mutation gap detection, encumbrance search | M1, M4 | survey |
+| 17 | Legal Risk Categorization | 9-category risk taxonomy, severity scoring, mitigation recommendations | M1, M4 | survey |
+| 18 | Litigation Strategy & Limitation | CPC/BNS causes of action, limitation period calculations | M1, M4 | survey |
+| 19 | External Shared Spaces | Client collaboration rooms, passcode protection, expiration, watermarking | M1, M3 | survey |
+| 20 | Single Sign-On (SSO) | SAML/OIDC configuration, admin-only access control | M1, M3 | survey |
+| 21 | Indian PII Redaction Engine | 15+ Indian identifiers, Verhoeff Aadhaar validation, 5 redaction strategies | M1, M3 | survey |
+| 22 | SSRF Protection | DNS rebinding prevention, private IP / cloud metadata blocking | M1, M3 | survey |
+| 23 | Voice Agent & Audio Intake | Indic audio intake, transcription pipeline | M1, M2 | survey |
+| 24 | Timeline & Chronology Builder | Interactive event timeline extraction from case records | M1, M2 | survey |
+| 25 | Legal Research & Citations | Indian case law, statutes, acts citation verification | M1, M4 | survey |
+| 26 | Analytics & Audit Trail | Usage telemetry, token accounting, security audit logs | M1, M3 | survey |
+| 27 | Background Task Queue | Celery / Redis background worker, synchronous test runner fallback | M1, M4 | survey |
+| 28 | Statutory Export Engine | PDF, DOCX, CSV, Excel reports | M1, M2 | survey |
+| 29 | PWA & Offline Database | IndexedDB offline cache, Service Worker | M2, M4 | survey |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| M1 | Assistant & Chat Workspace | Features 1-4: 3-mode switcher, streaming, inline citations, model select, India toggle | none | DONE |
-| M2 | Secure Matter Vault & Indic OCR | Features 5-8: Dual-pass Indic OCR, DOCX/XLSX, classification badges, version compare | none | DONE |
-| M3 | Spreadsheet Review Tables | Features 9-12: Backend schema, extraction APIs, interactive UI, evidence popover, export | M1, M2 | DONE |
-| M4 | Workflow Builder & Multi-Agent | Features 13-15: Visual canvas, execution engine SSE, specialist agent library | M1, M2 | DONE |
-| M5 | Contract Intelligence & Playbooks | Features 16-19: 29 clause types, risk 0-100, clause library, playbooks, redline diff | M2 | DONE |
-| M6 | Shared Spaces, Command Center & PII | Features 20-23: Expiring links, watermarking, cost analytics, Indian PII redaction | M2 | DONE |
-| M7 | India Property Moat & BSA 2023 | Features 24-27: 5 state portals, 13-30 yr ownership DAG, BSA 2023 cert, Kanoon search | M2 | DONE |
-| M8 | E2E Testing & Verification Hardening | Feature 28: Full test runner, 4-tier test cases, coverage verification, zero regressions | M1-M7 | DONE |
-| M9 | Rajora AI Private LLM Integration | Features 29: Backend provider, DB migration 014, internal key verification, admin APIs, frontend client & health proxy, sovereign model selectors, settings card, and hermetic tests | M1-M8 | DONE |
+| 1 | Backend Hardening & API Hermeticity | Fix duplicate router mount in `main.py`, update `conftest.py` `PATCH_TARGETS`, clean unused backend dependencies | none | DONE |
+| 2 | Frontend Dependency & Type Verification | Clean unused frontend dependencies, verify zero type errors, verify all 5 Vitest suites pass | none | DONE |
+| 3 | Security, RLS & Secret Guardrail Hardening | Verify zero committed secrets, validate multi-tenant RLS isolation across 001-015, validate SSRF, PII, BSA 2023 | M1 | DONE |
+| 4 | Final E2E Suite, Adversarial Testing & Forensic Audit | Run full 550+ backend pytest suite, all Vitest suites, challenger adversarial testing, and forensic integrity audit | M1, M2, M3 | DONE |
+
+## Interface Contracts
+### Frontend ↔ Backend API
+- Base URL: `/api/v1` (with `/api` compatibility for SSR/health proxies)
+- Authentication: Bearer JWT token in `Authorization` header
+- Content Type: `application/json` (or `multipart/form-data` for uploads)
+- Error Response Format: `{"detail": str, "error_code": Optional[str], "status_code": int}`
+
+### Backend ↔ Supabase Database
+- PostgreSQL with `pgvector` extension
+- Authentication & Auth UID: `auth.uid()` via JWT claims
+- Tenant Isolation: Scoped by `organization_id` (`is_org_member`) or `case_id` (`is_case_member`)
+
+### Backend ↔ AI Providers
+- `BaseLLMProvider.generate(prompt, options) -> LLMResponse`
+- Rajora Provider: `http://localhost:8000/generate` (or configured host), zero cost invariant
+- Fallback: Deterministic Mock provider when offline/testing
+
+## Code Layout
+- `backend/app/api/`: 28 FastAPI routers
+- `backend/app/ai/`: ModelRouter, Providers (Rajora, Nvidia, Ollama, OpenAI, Anthropic, Mock), Multi-Agent Orchestrator, Specialist Agents
+- `backend/app/security/`: Auth, PII redaction, SSRF filtering, Permissions
+- `backend/app/services/`: OCR, Ingestion, Documents, Search, Export, Billing
+- `backend/tests/`: 40 pytest test files, hermetic test harness `conftest.py`
+- `frontend/app/`: Next.js App Router pages and API routes
+- `frontend/components/`: Reusable UI components and modals
+- `frontend/lib/`: API client, Rajora utilities, stores, Vitest tests (`rajora.test.ts`, `tier_comprehensive.test.ts`, `mockStore.test.ts`, `utils.test.ts`, `m1_m2_features.test.ts`)
+- `supabase/migrations/`: Migrations `001_...` through `015_...`

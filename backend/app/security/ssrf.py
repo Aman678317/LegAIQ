@@ -28,6 +28,8 @@ def _is_blocked_ip(ip_str: str) -> bool:
         ip = ipaddress.ip_address(ip_str)
     except ValueError:
         return True
+    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+        return _is_blocked_ip(str(ip.ipv4_mapped))
     return (
         ip.is_private
         or ip.is_loopback

@@ -373,3 +373,128 @@ class TestSharedSpacesSecurity:
 
         assert hmac.compare_digest(hashed.encode("utf-8"), correct_attempt.encode("utf-8")) is True
         assert hmac.compare_digest(hashed.encode("utf-8"), wrong_attempt.encode("utf-8")) is False
+
+
+# ============================================================================
+# 8. Authentication & Multi-Tenant RLS Hardening (Milestone 10)
+# ============================================================================
+
+import os
+from unittest.mock import MagicMock
+from fastapi import HTTPException
+from app.config import get_settings
+from app.security.auth import get_auth_context, AuthContext
+
+
+class TestAuthAndAccessHardening:
+    @pytest.mark.asyncio
+    async def test_demo_token_bypass_guarded_by_debug(self, monkeypatch):
+        settings = get_settings()
+
+        req = MagicMock()
+        req.headers = {"Authorization": "Bearer demo-token"}
+        req.query_params = {}
+
+        # When DEBUG=True, demo tokens are accepted
+        monkeypatch.setattr(settings, "DEBUG", True)
+        ctx = await get_auth_context(req)
+        assert ctx.user_id == "demo-user-id"
+        assert ctx.role == "OWNER"
+
+        # When DEBUG=False, demo tokens are rejected
+        monkeypatch.setattr(settings, "DEBUG", False)
+        with pytest.raises(HTTPException) as exc_info:
+            await get_auth_context(req)
+        assert exc_info.value.status_code == 401
+        assert "Invalid authentication token" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_unverified_jwt_guarded_by_debug(self, monkeypatch):
+        settings = get_settings()
+
+        # Incomplete/fake JWT token
+        fake_jwt = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhdHRhY2tlci0xMjMiLCJlbWFpbCI6ImF0dGFja0BleGFtcGxlLmNvbSJ9."
+
+        req = MagicMock()
+        req.headers = {"Authorization": f"Bearer {fake_jwt}"}
+        req.query_params = {}
+
+        # When DEBUG=True, fallback unverified decode is allowed
+        monkeypatch.setattr(settings, "DEBUG", True)
+        ctx = await get_auth_context(req)
+        assert ctx.user_id == "attacker-123"
+
+        # When DEBUG=False, unverified decode is disabled and raises 401
+        monkeypatch.setattr(settings, "DEBUG", False)
+        with pytest.raises(HTTPException) as exc_info:
+            await get_auth_context(req)
+        assert exc_info.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_forged_jwt_with_custom_claims_rejected_in_prod(self, monkeypatch):
+        settings = get_settings()
+        monkeypatch.setattr(settings, "DEBUG", False)
+        forged_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdHRhY2tlci0xMjMiLCJlbWFpbCI6ImF0dGFja0BleGFtcGxlLmNvbSJ9.invalidsig"
+        req = MagicMock()
+        req.headers = {"Authorization": f"Bearer {forged_token}"}
+        req.query_params = {}
+        with pytest.raises(HTTPException) as exc_info:
+            await get_auth_context(req)
+        assert exc_info.value.status_code == 401
+
+
+class TestRLSMigration015Verification:
+    @classmethod
+    def setup_class(cls):
+        migration_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "supabase", "migrations", "015_security_and_rls_hardening.sql"
+        )
+        assert os.path.exists(migration_path)
+        with open(migration_path, "r", encoding="utf-8") as f:
+            cls.sql = f.read().lower()
+
+    def test_migration_015_file_and_rls_coverage(self):
+        required_tables = [
+            "review_tables",
+            "review_table_columns",
+            "review_table_cells",
+            "clause_library",
+            "contract_playbooks",
+            "contract_evaluations",
+            "shared_spaces",
+            "bsa_certificates",
+            "agent_workflows",
+            "sso_providers",
+        ]
+
+        for table in required_tables:
+            assert table in self.sql
+        assert "enable row level security" in self.sql
+        assert "is_case_member" in self.sql
+        assert "is_org_member" in self.sql
+
+    def test_migration_015_with_check_clauses_on_updates(self):
+        # All update policies must have WITH CHECK to prevent unauthorized ID mutation
+        assert 'create policy "case members update review_tables"' in self.sql
+        assert 'with check (public.is_case_member(case_id));' in self.sql
+
+        assert 'create policy "case members update review_table_columns"' in self.sql
+        assert 'create policy "case members update review_table_cells"' in self.sql
+        assert 'create policy "case members update contract_evaluations"' in self.sql
+        assert 'create policy "case members update shared_spaces"' in self.sql
+
+    def test_migration_015_sso_providers_admin_restriction(self):
+        # SSO providers SELECT must require org manager/admin role
+        assert 'create policy "org admins read sso_providers"' in self.sql
+        assert "public.can_manage_org(organization_id)" in self.sql
+
+    def test_migration_015_agent_workflows_conjunction_checks(self):
+        # agent_workflows policies must use conjunctions (AND) across org, case and user
+        assert 'create policy "org members read agent_workflows"' in self.sql
+        assert 'create policy "org members manage agent_workflows"' in self.sql
+        assert "(organization_id is null or public.is_org_member(organization_id))\n    and (case_id is null or public.is_case_member(case_id))" in self.sql
+
+    def test_migration_015_contract_evaluations_null_case_rejection(self):
+        # Contract evaluations must require case_id is not null
+        assert 'create policy "case members read contract_evaluations"' in self.sql
+        assert "case_id is not null and public.is_case_member(case_id)" in self.sql

@@ -9,7 +9,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": "./src",
+      "@": "./",
       "@/components": "./components",
       "@/lib": "./lib",
       "@/hooks": "./hooks",

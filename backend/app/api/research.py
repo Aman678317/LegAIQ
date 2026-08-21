@@ -140,7 +140,7 @@ async def web_search(query: str, limit: int = 8) -> list[dict]:
 async def fetch_page_text(url: str) -> str:
     """Fetch external web page; protected by SSRF validator and size cap."""
     validate_external_url(url)
-    async with httpx.AsyncClient(timeout=20, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
         resp = await client.get(url, headers={"User-Agent": "JurisivaLegalBot/0.1"})
         resp.raise_for_status()
         text = re.sub(r"<[^>]+>", " ", resp.text[:50_000])

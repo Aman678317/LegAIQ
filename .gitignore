@@ -43,6 +43,10 @@ frontend/playwright-report/
 # Agent/IDE session data
 .zcode/
 .mimosa/
+.qodo/
+.agents/
+.pytest_cache/
 
 # OneDrive stray files
 *.url
+

@@ -17,24 +17,36 @@ PATCH_TARGETS = [
     "app.api.ownership",
     "app.api.comparison",
     "app.api.risks",
+    "app.api.research",
     "app.api.drafts",
     "app.api.reports",
     "app.api.properties",
     "app.api.jobs",
+    "app.api.events",
     "app.api.admin",
     "app.api.org",
     "app.api.billing",
     "app.api.voice",
-    "app.api.review_tables",
+    "app.api.sso",
+    "app.api.pii",
+    "app.api.analytics",
     "app.api.contract_intelligence",
+    "app.api.review_tables",
+    "app.api.workflows",
+    "app.api.shared_spaces",
     "app.api.rajora",
+    "app.api.bsa",
     "app.workers.tasks",
     "app.workers.dispatcher",
     "app.ai.agents.base",
     "app.ai.agents.tools",
     "app.ai.agents.registry",
+    "app.ai.agents.orchestration",
+    "app.ai.title_search_report",
     "app.security.audit",
     "app.security.auth",
+    "app.security.pii",
+    "app.security.sso",
     "app.services.billing",
 ]
 
@@ -132,6 +144,11 @@ def fake(monkeypatch):
     fake = FakeSupabase()
     seed(fake)
     import importlib
+    try:
+        import supabase
+        monkeypatch.setattr(supabase, "create_client", lambda *a, **k: fake, raising=False)
+    except ModuleNotFoundError:
+        pass
 
     for target in PATCH_TARGETS:
         try:

@@ -384,11 +384,9 @@ class ContractIntelligenceEngine:
 
         # Normalize text
         normalized = self._normalize_text(text)
-        print(f"DEBUG extract_clauses: normalized length = {len(normalized)}")
 
         # Find clause boundaries
         clause_positions = self._find_clause_boundaries(normalized)
-        print(f"DEBUG extract_clauses: clause_positions = {len(clause_positions)}")
 
         for i, (clause_type, start_pos, end_pos, title) in enumerate(clause_positions):
             content = normalized[start_pos:end_pos].strip()

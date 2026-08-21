@@ -6,6 +6,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { prefetchCaseForOffline } from '@/lib/offline-db';
 import { useSyncStatus } from '@/lib/background-sync';
+import { usePWA } from '@/lib/pwa';
 
 export interface PrefetchStatus {
   isPrefetching: boolean;
@@ -173,7 +174,6 @@ export function useMultiCasePrefetch(caseIds: string[]) {
  */
 export function OfflineAvailabilityBadge({ caseId }: { caseId: string }) {
   const { status } = useCasePrefetch(caseId);
-  const { isOnline } = require('@/lib/pwa').usePWA();
 
   if (!status?.completed) return null;
 
