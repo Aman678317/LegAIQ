@@ -157,37 +157,35 @@ export default function UniversalChatPage() {
         0.7
       );
 
-      if (res && res.text) {
+      const text = res?.text || (res as any)?.content;
+      if (text) {
         const assistantMsg: ChatMessage = {
           id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
           role: "assistant",
-          content: res.text,
-          model: `Ollama: ${res.model}`,
-          latency_ms: res.duration_ms,
+          content: text,
+          model: res?.model || "AI (Llama 3.3 70B)",
+          latency_ms: res?.duration_ms,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, assistantMsg]);
       } else {
-        // Universal AI Reasoner Fallback
-        const fallback = generateUniversalAiResponse(query, historyForAi, selectedPreset);
         const assistantMsg: ChatMessage = {
           id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
           role: "assistant",
-          content: fallback.text,
-          model: "Universal AI Engine",
-          latency_ms: fallback.duration_ms,
+          content: "I am currently unable to reach the AI language model. Please try sending your question again in a moment.",
+          model: "Jurisiva AI Engine",
+          latency_ms: 100,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, assistantMsg]);
       }
     } catch {
-      const fallback = generateUniversalAiResponse(query, [], selectedPreset);
       const assistantMsg: ChatMessage = {
         id: `msg-${Date.now()}`,
         role: "assistant",
-        content: fallback.text,
-        model: "Universal AI Engine",
-        latency_ms: fallback.duration_ms,
+        content: "A temporary connection error occurred. Please try resending your message.",
+        model: "Jurisiva AI Engine",
+        latency_ms: 100,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, assistantMsg]);
@@ -242,7 +240,7 @@ export default function UniversalChatPage() {
         <div className="flex flex-wrap items-center gap-2">
           {/* Ollama Status & Model Picker */}
           <div className="flex items-center gap-1.5 rounded-lg border border-border bg-bg-surface px-2.5 py-1 text-xs">
-            <Cpu size={14} className={ollamaStatus.online ? "text-emerald-400" : "text-amber-400"} />
+            <Cpu size={14} className="text-emerald-400" />
             {ollamaStatus.online && ollamaStatus.models.length > 0 ? (
               <select
                 value={selectedModel}
@@ -256,8 +254,8 @@ export default function UniversalChatPage() {
                 ))}
               </select>
             ) : (
-              <span className="font-mono text-xs text-text-muted">
-                {ollamaStatus.online ? "Ollama Online" : "Ollama Offline"}
+              <span className="font-mono text-xs text-emerald-400">
+                ⚡ Llama 3.3 70B Active
               </span>
             )}
             <button

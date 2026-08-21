@@ -21,7 +21,7 @@ const SIDEBAR_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/workflows", label: "Agent Workflows", icon: GitBranch },
   { href: "/command-center", label: "Command Center", icon: BarChart3 },
-  { href: "/chat", label: "AI Chatbot (Ollama)", icon: Bot },
+  { href: "/chat", label: "AI Chatbot", icon: Bot },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

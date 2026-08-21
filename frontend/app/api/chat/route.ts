@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
           if (content) {
             return NextResponse.json({
               text: content,
+              content: content,
               model: "Groq Llama 3.3 70B (Fast)",
               provider: "groq",
             });
