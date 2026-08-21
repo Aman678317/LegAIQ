@@ -422,7 +422,7 @@ export default function UniversalChatPage() {
                   </div>
                   <div className="flex items-center gap-2.5 rounded-2xl rounded-bl-sm border border-border bg-bg-surface px-4 py-3 text-xs text-text-secondary">
                     <Loader2 size={15} className="animate-spin text-primary" />
-                    <span>Thinking and generating response via Ollama…</span>
+                    <span>AI is generating response…</span>
                   </div>
                 </div>
               )}
