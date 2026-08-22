@@ -131,7 +131,7 @@ export function DocumentViewer({
     const headers = new Headers(init.headers || {});
     if (!headers.has("Authorization")) {
       try {
-        const { createClient } = await import("@/lib/supabase");
+        const { createClient } = await import("../../lib/supabase");
         const client = createClient();
         const { data: { session } } = await client.auth.getSession();
         if (session?.access_token) {
