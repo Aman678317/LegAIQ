@@ -1,0 +1,75 @@
+id: msa-playbook-001
+name: "MSA review against buyer playbook"
+workflow: comparison
+practice_area: commercial_contracts
+difficulty: advanced
+version: 1
+instructions: |
+  You are outside counsel to Kestrel Systems, Inc. ("Kestrel"), the customer.
+  Kestrel is signing a Master Subscription Agreement with Draco Cloud
+  Services, Inc. ("Draco"), a vendor of hosted logistics software. Kestrel's
+  negotiating playbook and Draco's proposed MSA are attached.
+
+  Produce a deviation chart in markdown:
+
+  1. One row per term in the proposed MSA that deviates from the playbook,
+     with columns: Term · Playbook position · Proposed terms · Severity
+     (High / Medium / Low) · Recommended counter.
+  2. Mark as High any deviation that creates uncapped or asymmetric exposure
+     for Kestrel, removes Kestrel's control over renewal or pricing, or
+     weakens Kestrel's IP or data protections.
+  3. Do not list terms where the MSA already meets the playbook.
+  4. Close with a two- to three-sentence negotiation note to the client on
+     which items to hold firm on and why.
+documents:
+  - file: buyer_playbook.txt
+    role: Kestrel's approved negotiating positions
+  - file: proposed_msa.txt
+    role: Draco's proposed master subscription agreement
+rubric:
+  - id: MSA-1
+    criterion: "Flags the liability cap (12 months of fees) as below the playbook floor and recommends raising toward 2x annual fees / $500,000 floor"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["2x annual", "two times annual", "2x fees", "floor"]
+  - id: MSA-2
+    criterion: "Flags the 3-year evergreen auto-renewal and recommends affirmative renewal"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["auto-renew", "auto renew", "automatic renewal", "evergreen"]
+  - id: MSA-3
+    criterion: "Flags net-90 payment terms vs. the playbook's net-30"
+    weight: 1
+    check:
+      any_of:
+        - contains_any: ["net 90", "net-90", "ninety (90) days"]
+  - id: MSA-4
+    criterion: "Flags that IP infringement indemnity is capped (playbook: uncapped / excluded from the cap)"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["ip indemnity", "intellectual property indemnity", "infringement indemnity"]
+  - id: MSA-5
+    criterion: "Flags the 10-business-day data breach notice vs. the playbook's 48 hours"
+    weight: 1
+    check:
+      any_of:
+        - contains_any: ["48 hours", "forty-eight hours", "10 business days", "ten (10) business days"]
+  - id: MSA-6
+    criterion: "Flags Draco's unilateral price escalation (CPI + 4% annually) vs. the playbook's 5% cap on increases"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["cpi", "price increase", "price escalation", "pricing escalat"]
+  - id: MSA-7
+    criterion: "Severity ratings are defensible: the uncapped-adjacent and control-removing deviations are High, minor timing mismatches are not"
+    weight: 1
+    judge: true
+    hint: "Check the Severity column against the instructions' High criteria. Inconsistent application of the severity rules scores 1; no discernible logic scores 0."
+  - id: MSA-8
+    criterion: "Lists only genuine deviations — no false positives on terms that already meet the playbook"
+    weight: 2
+    judge: true
+    hint: "Cross-check each chart row against the playbook and the MSA. Any row that is not a real deviation caps this at 0; one arguable row scores 1."

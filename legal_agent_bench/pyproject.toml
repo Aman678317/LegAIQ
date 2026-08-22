@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "legal-agent-bench"
+version = "0.1.0"
+description = "An open benchmark for AI agents on real legal work: tasks with documents and rubrics, agent runners, scoring, and run comparison."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["PyYAML>=6.0"]
+
+[project.optional-dependencies]
+openai = ["openai>=1.60"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+labench = "legal_agent_bench.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["legal_agent_bench*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

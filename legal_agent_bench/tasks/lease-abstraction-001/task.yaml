@@ -1,0 +1,71 @@
+id: lease-abstraction-001
+name: "Commercial lease abstraction"
+workflow: abstraction
+practice_area: real_estate
+difficulty: beginner
+version: 1
+instructions: |
+  You are a real-estate associate. Abstract the office lease below for the firm's
+  lease-management database.
+
+  Produce a markdown table with exactly these rows (one row per field, in this
+  order), filling each value from the lease:
+
+    Premises (including RSF) · Lease date · Commencement date · Expiration date
+    · Term length · Base rent (Year 1) · Escalation · Security deposit
+    · Renewal option (length and notice window) · Holdover rent · TI allowance
+    · Permitted use · Broker commission obligation · SNDA obligations
+
+  Rules:
+  - Keep the entire abstraction under 600 words.
+  - If the lease is silent on a field, write "Not specified in lease" — do not infer.
+  - Quote amounts and dates exactly as they appear in the lease.
+documents:
+  - file: office_lease.txt
+    role: Executed office lease to abstract
+rubric:
+  - id: LA-1
+    criterion: "States Year 1 base rent of $6,850 per month"
+    weight: 1
+    check: { contains_any: ["6,850"] }
+  - id: LA-2
+    criterion: "States the commencement date of October 1, 2026"
+    weight: 1
+    check:
+      any_of: ["October 1, 2026", "2026-10-01", "1 October 2026"]
+  - id: LA-3
+    criterion: "States the 3% annual escalation"
+    weight: 1
+    check: { contains_any: ["3%"] }
+  - id: LA-4
+    criterion: "States the $40,000 security deposit"
+    weight: 1
+    check: { contains_any: ["40,000"] }
+  - id: LA-5
+    criterion: "States the full renewal notice window: no earlier than 15 months and no later than 9 months before expiration"
+    weight: 2
+    check:
+      all:
+        - contains_any: ["15 months", "fifteen (15) months"]
+        - contains_any: ["9 months", "nine (9) months"]
+  - id: LA-6
+    criterion: "States the 150% holdover rent"
+    weight: 1
+    check: { contains_any: ["150%"] }
+  - id: LA-7
+    criterion: "States the $85,000 tenant improvement allowance"
+    weight: 1
+    check: { contains_any: ["85,000"] }
+  - id: LA-8
+    criterion: "States the premises size of 12,400 rentable square feet"
+    weight: 1
+    check: { contains_any: ["12,400"] }
+  - id: LA-9
+    criterion: "Abstraction stays under 600 words"
+    weight: 1
+    check: { max_words: 600 }
+  - id: LA-10
+    criterion: "Covers all required fields, marks silent fields 'Not specified in lease', and invents no values"
+    weight: 2
+    judge: true
+    hint: "Compare the table against the 14 required fields and the lease text. Any invented value caps this at 0; a missing field or two scores 1."

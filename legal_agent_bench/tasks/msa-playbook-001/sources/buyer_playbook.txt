@@ -1,0 +1,62 @@
+KESTREL SYSTEMS, INC. — VENDOR CONTRACT NEGOTIATION PLAYBOOK
+Approved by Legal and Procurement, January 2026
+Classification: Internal — Attorney Work Product
+
+HOW TO USE THIS PLAYBOOK
+Apply these positions to all vendor master subscription agreements. Fall-back
+positions require General Counsel sign-off. Any term worse than a fall-back
+position requires CEO approval.
+
+TERM AND RENEWAL
+   Position:   Initial term of 12 months. Renewal only by mutual written
+               agreement (affirmative renewal). No automatic renewal.
+   Fall-back:  12-month auto-renewal with a 60-day written opt-out.
+   Walk-away:  Any term longer than 36 months; evergreen auto-renewal with
+               an opt-out window shorter than 60 days.
+
+PRICING AND PAYMENT
+   Position:   Net-30 payment terms. Annual price increases capped at 5% by
+               contract; no CPI-linked or unilateral escalators.
+   Fall-back:  Net-45; increases capped at 7% with 90 days' notice.
+   Walk-away:  Net-90 payment terms; uncapped or CPI-plus escalators.
+
+LIMITATION OF LIABILITY
+   Position:   Mutual cap at 2x the annual fees paid or payable in the
+               preceding 12 months, with a floor of $500,000. IP
+               infringement indemnity and data-breach liability excluded
+               from the cap.
+   Fall-back:  Cap at 1.5x annual fees, floor $350,000, IP indemnity
+               excluded from the cap.
+   Walk-away:  Any cap below $350,000; IP indemnity subject to the cap.
+
+INDEMNIFICATION
+   Position:   Vendor indemnifies for third-party IP infringement claims and
+               for vendor's breach of data-protection obligations. IP
+               indemnity is uncapped (see LoL above).
+   Fall-back:  None — do not concede.
+
+DATA PROTECTION AND SECURITY
+   Position:   Vendor notifies Kestrel of any personal-data breach within
+               48 hours of discovery; breach costs borne by vendor.
+   Fall-back:  72 hours' notice.
+   Walk-away:  Notice longer than 5 business days.
+
+TERMINATION
+   Position:   Kestrel may terminate for convenience on 30 days' notice with
+               pro-rata refund of prepaid fees.
+   Fall-back:  Termination for convenience with 60 days' notice, no refund.
+   Walk-away:  No termination-for-convenience right.
+
+GOVERNING LAW
+   Position:   Delaware law; state or federal courts in Delaware.
+   Fall-back:  Any U.S. state with a mutually acceptable forum.
+   Walk-away:  Exclusive forum in the vendor's home jurisdiction.
+
+INSURANCE
+   Position:   Vendor maintains cyber liability coverage of at least $5
+   (cont.)      million per claim.
+
+SUPPORT AND SLAs
+   Position:   99.9% uptime commitment with service credits; credits are
+               not the exclusive remedy for chronic failure (3+ breaches
+               in a quarter).

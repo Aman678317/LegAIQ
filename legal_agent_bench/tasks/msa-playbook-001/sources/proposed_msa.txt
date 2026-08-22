@@ -1,0 +1,77 @@
+MASTER SUBSCRIPTION AGREEMENT
+Proposed by Draco Cloud Services, Inc. — Draft 3, August 2026
+
+This Master Subscription Agreement (this "Agreement") is entered into by and
+between Draco Cloud Services, Inc., a Delaware corporation ("Draco"), and
+Kestrel Systems, Inc. ("Customer").
+
+1. SUBSCRIPTION; TERM. Draco grants Customer a subscription to the hosted
+logistics software (the "Service") for an initial term of thirty-six (36)
+months (the "Initial Term"). This Agreement renews automatically for
+successive thirty-six (36) month terms unless either party gives written
+notice of non-renewal at least ninety (90) days before the end of the
+then-current term.
+
+2. FEES; PAYMENT. Customer shall pay the fees in the applicable Order Form.
+   Invoices are due ninety (90) days after receipt (net-90). Fees for any
+   renewal term may be increased by Draco, effective upon renewal, by the
+   greater of four percent (4%) plus the annual change in the Consumer Price
+   Index (CPI-U) or ten percent (10%).
+
+3. ACCEPTABLE USE. Customer shall use the Service in accordance with the
+   Acceptable Use Policy. Draco may suspend the Service for violations after
+   written notice and a five (5) business day cure period.
+
+4. CUSTOMER DATA. Customer retains ownership of Customer Data. Draco may
+   use aggregated, de-identified usage data to improve the Service.
+
+5. SECURITY; BREACH NOTIFICATION. Draco maintains administrative, technical,
+   and physical safeguards consistent with industry standards. Draco shall
+   notify Customer of any confirmed security incident affecting Customer Data
+   within ten (10) business days of confirmation.
+
+6. IP INDEMNIFICATION. Draco shall defend and indemnify Customer against
+   third-party claims that the Service, as provided by Draco and used within
+   the scope of this Agreement, infringes such third party's intellectual
+   property rights. Draco's obligations under this Section 6 are subject to
+   the limitation of liability in Section 8.
+
+7. DATA-BREACH REMEDIES. If Customer Data is lost or corrupted due to Draco's
+   negligence, Draco's sole obligation is to use commercially reasonable
+   efforts to restore the data from backup.
+
+8. LIMITATION OF LIABILITY. EXCEPT FOR CUSTOMER'S PAYMENT OBLIGATIONS,
+   NEITHER PARTY'S AGGREGATE LIABILITY SHALL EXCEED THE FEES PAID OR PAYABLE
+   BY CUSTOMER IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM (THE "CAP").
+   THE CAP APPLIES TO ALL CLAIMS, INCLUDING SECTION 6 INDEMNIFICATION AND
+   SECTION 7 DATA OBLIGATIONS. NEITHER PARTY IS LIABLE FOR INDIRECT,
+   INCIDENTAL, OR CONSEQUENTIAL DAMAGES.
+
+9. TERMINATION. Either party may terminate for material breach uncured
+   thirty (30) days after written notice. Otherwise, this Agreement may be
+   terminated only by mutual written agreement.
+
+10. GOVERNING LAW; FORUM. This Agreement is governed by the laws of the
+    State of Delaware. The exclusive forum for any dispute is the state and
+    federal courts located in New Castle County, Delaware.
+
+11. INSURANCE. Draco maintains commercial general liability insurance of
+    $2,000,000 per occurrence and cyber liability insurance of $5,000,000
+    per claim.
+
+12. SUPPORT. Draco targets 99.5% monthly uptime. If uptime falls below
+    99.5%, Customer receives a service credit of 5% of the monthly fee,
+    capped at 15% of the monthly fee per quarter. Service credits are
+    Customer's exclusive remedy for availability failures.
+
+13. GENERAL. This Agreement is the entire agreement of the parties regarding
+    its subject matter. Amendments must be in writing and signed by both
+    parties. Neither party may assign this Agreement without the other's
+    written consent, except to a successor in a merger or sale of the
+    business.
+
+DRACO CLOUD SERVICES, INC.          KESTREL SYSTEMS, INC.
+
+By: ________________________        By: ________________________
+Name:                               Name:
+Title:                              Title:

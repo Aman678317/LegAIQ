@@ -1,0 +1,82 @@
+id: nda-review-001
+name: "Mutual NDA red-flag review"
+workflow: document_review
+practice_area: corporate
+difficulty: intermediate
+version: 1
+instructions: |
+  You are a corporate associate at outside counsel. Your client, Northwind Robotics, Inc.
+  ("Northwind"), is entering into a mutual non-disclosure agreement with Vantage Analytics
+  Ltd. ("Vantage") to explore a potential supply partnership. A near-final draft (v2) is
+  attached.
+
+  Review the NDA from Northwind's perspective and produce a red-flag memo in markdown:
+
+  1. For each material issue: the section reference, a one-sentence statement of the
+     off-market or asymmetric term, a risk level (High / Medium / Low), and a concrete
+     recommended edit (not just "revise").
+  2. Cover both legal and commercial risk. Think about term, residuals, indemnity,
+     equitable relief, non-solicit, assignment, and dispute-resolution mechanics.
+  3. Do not flag provisions that are customary and balanced, and do not invent provisions
+     that are not in the document.
+  4. End with a one-line overall recommendation (sign as-is / negotiate items first).
+documents:
+  - file: nda.txt
+    role: Draft v2 of the mutual NDA under review
+rubric:
+  - id: NDA-1
+    criterion: "Flags the ten-year confidentiality term as far beyond market for a commercial mutual NDA, with a shorter recommended term"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["ten (10) years", "10-year", "ten-year", "10 years"]
+  - id: NDA-2
+    criterion: "Identifies the residuals exclusion as materially weakening protection for Northwind's confidential information"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["residual"]
+  - id: NDA-3
+    criterion: "Identifies the uncapped indemnification for breach (including lost profits) as a serious risk"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["lost profit"]
+  - id: NDA-4
+    criterion: "Flags the asymmetric injunctive-relief clause (Northwind must prove irreparable harm and post a bond; Vantage need not)"
+    weight: 1
+    check:
+      any_of:
+        - all:
+            - contains_any: ["injunctive"]
+            - contains_any: ["asymmetr", "one-way", "one way", "unilateral", "irreparable harm"]
+  - id: NDA-5
+    criterion: "Flags the asymmetric assignment clause (Vantage may assign freely; Northwind needs written consent)"
+    weight: 1
+    check:
+      any_of:
+        - all:
+            - contains_any: ["assign"]
+            - contains_any: ["without consent", "without the consent", "without prior written consent"]
+  - id: NDA-6
+    criterion: "Notes the non-solicitation clause and its lack of customary carve-outs (general solicitations, employees who apply independently)"
+    weight: 1
+    check:
+      any_of:
+        - contains_any: ["non-solicit", "non solicit", "solicitation of", "solicit employees", "nonsolicit"]
+  - id: NDA-7
+    criterion: "Catches the governing-law / forum mismatch (New York law but exclusive jurisdiction in Singapore courts)"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["Singapore"]
+  - id: NDA-8
+    criterion: "Memo quality: every flagged issue carries a section reference, a risk level, and a concrete recommended edit"
+    weight: 2
+    judge: true
+    hint: "Score 2 only if section references AND risk levels AND specific edits appear consistently; score 1 if any one element is missing or applied inconsistently; score 0 if the memo is unstructured."
+  - id: NDA-9
+    criterion: "Does not fabricate provisions that do not appear in the NDA (e.g., inventing arbitration, exclusivity, or pricing clauses)"
+    weight: 1
+    judge: true
+    hint: "Cross-check each flagged issue against the source document. Any invented provision caps this at 0; a single arguable characterization scores 1."

@@ -1,0 +1,128 @@
+MUTUAL NON-DISCLOSURE AGREEMENT
+Draft v2 — for discussion
+
+This Mutual Non-Disclosure Agreement (this "Agreement") is entered into as of
+[●], 2026 (the "Effective Date"), by and between Northwind Robotics, Inc., a
+Delaware corporation ("Northwind"), and Vantage Analytics Ltd., a company
+organized under the laws of England and Wales ("Vantage"). Northwind and
+Vantage are each a "Party" and together the "Parties."
+
+RECITALS
+
+The Parties wish to explore a potential partnership relating to warehouse
+logistics robotics (the "Purpose"). In connection with the Purpose, each Party
+may disclose certain confidential information to the other.
+
+1. DEFINITIONS
+
+1.1 "Confidential Information" means all non-public information disclosed by
+or on behalf of a Party ("Disclosing Party") to the other ("Receiving Party"),
+whether orally, visually, or in tangible form, that is designated as
+confidential or that reasonably should be understood to be confidential given
+the nature of the information and the circumstances of disclosure.
+
+1.2 Exclusions. Confidential Information does not include information that:
+(a) is or becomes publicly available through no fault of the Receiving Party;
+(b) was known to the Receiving Party without restriction before disclosure;
+(c) is independently developed by the Receiving Party without use of or
+reference to the Disclosing Party's Confidential Information; or (d) is
+Disclosed by a third party without breach of any obligation of confidence.
+
+1.3 Residuals. Notwithstanding anything to the contrary, the Receiving Party
+shall have no obligation with respect to Confidential Information retained in
+the unaided memory of its employees, contractors, or advisors ("Residuals"),
+and Residuals shall not constitute a breach of this Agreement.
+
+2. OBLIGATIONS
+
+2.1 The Receiving Party shall (a) use the same degree of care it uses for its
+own confidential information, but no less than reasonable care; (b) not
+disclose Confidential Information to any third party except to its employees,
+contractors, and advisors who need to know for the Purpose and who are bound
+by obligations at least as protective as those in this Agreement; and (c) use
+Confidential Information solely for the Purpose.
+
+3. TERM
+
+This Agreement commences on the Effective Date and continues for ten (10)
+years, after which the obligations herein survive until the Confidential
+Information enters the public domain through no fault of the Receiving Party.
+
+4. NO LICENSE
+
+No license or other right under any patent, copyright, trademark, or trade
+secret is granted by this Agreement, whether expressly or by implication.
+
+5. COMPELLED DISCLOSURE
+
+If the Receiving Party is required by law, regulation, or court order to
+disclose Confidential Information, it shall (where legally permitted) give
+prompt written notice to the Disclosing Party and cooperate, at the
+Disclosing Party's expense, in seeking a protective order.
+
+6. EQUITABLE RELIEF
+
+6.1 The Parties agree that a breach of this Agreement by Vantage would cause
+Northwind irreparable harm for which monetary damages are inadequate.
+Accordingly, Northwind shall be entitled to seek injunctive or other
+equitable relief without proof of actual damages or the inadequacy of
+monetary remedies.
+
+6.2 Northwind shall not be entitled to seek injunctive or other equitable
+relief for a breach of this Agreement by Vantage unless it first demonstrates
+irreparable harm and the inadequacy of monetary damages, and posts a bond in
+an amount set by the court.
+
+7. INDEMNIFICATION
+
+The Receiving Party shall indemnify, defend, and hold harmless the Disclosing
+Party from and against any and all claims, damages, losses, costs, and
+expenses (including reasonable attorneys' fees) arising out of or relating to
+any breach of this Agreement by the Receiving Party, including lost profits
+and other consequential damages, without limitation as to amount.
+
+8. RETURN OF MATERIALS
+
+Upon the Disclosing Party's written request, the Receiving Party shall, within
+thirty (30) days, return or destroy (at the Disclosing Party's election) all
+Confidential Information in its possession or control and certify such return
+or destruction in writing; provided that the Receiving Party may retain one
+archival copy for legal compliance purposes.
+
+9. NON-SOLICITATION
+
+For three (3) years following the Effective Date, neither Party shall
+directly or indirectly solicit for employment any employee of the other Party
+who was involved in the Purpose, without the other Party's prior written
+consent.
+
+10. ASSIGNMENT
+
+Vantage may assign this Agreement, in whole or in part, to any affiliate or
+to any successor in connection with a merger, sale of all or substantially
+all of its assets, or similar transaction, without the consent of Northwind.
+Northwind may not assign this Agreement without the prior written consent of
+Vantage, which may be withheld in Vantage's sole discretion.
+
+11. GOVERNING LAW; DISPUTES
+
+This Agreement is governed by the laws of the State of New York, without
+regard to conflict-of-laws principles. The Parties submit to the exclusive
+jurisdiction of the courts of Singapore for any dispute arising out of or
+relating to this Agreement.
+
+12. MISCELLANEOUS
+
+This Agreement constitutes the entire agreement between the Parties with
+respect to its subject matter. Amendments must be in writing and signed by
+both Parties. Neither Party may waive any provision except in writing. If any
+provision is held unenforceable, the remainder continues in effect.
+
+AGREED AND ACCEPTED:
+
+NORTHWIND ROBOTICS, INC.          VANTAGE ANALYTICS LTD.
+
+By: ________________________      By: ________________________
+Name:                             Name:
+Title:                            Title:
+Date:                             Date:

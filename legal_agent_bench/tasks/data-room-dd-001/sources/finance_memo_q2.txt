@@ -1,0 +1,40 @@
+MEMORANDUM
+
+To:      Deal Team — Project Lighthouse
+From:    Priya Nair, CFO
+Date:    July 21, 2026
+Re:      Q2 2026 financial summary and deal-model inputs
+
+This memo summarizes the financial information being uploaded to the data
+room and the inputs the deal team should use in the acquisition model.
+
+TTM FINANCIALS (July 2025 – June 2026)
+   Revenue .......................... $18.4 million
+   Gross margin ..................... 31.2%
+   Adjusted EBITDA .................. $2.1 million
+   Maintenance capex ................ $0.4 million
+
+DEAL MODEL INPUTS
+   Net working capital peg .......... $1.5 million
+   Closing net-working-capital
+   true-up window ................... 90 days after closing
+   Indebtedness for payoff at close:
+     - Revolving credit facility .... $3.6 million
+     - Finance leases ................ $0.9 million
+   Transaction expense estimate ..... $0.7 million
+
+REVENUE CONCENTRATION (TTM)
+   Top customer (Western Foods Co.) .. 22% of revenue
+   Top five customers ............... 58% of revenue
+   No customer contract exceeds 24 months in remaining term.
+
+NOTES FOR THE DEAL TEAM
+   1. Adjusted EBITDA excludes $0.3 million of one-time Ferris Cartage
+      integration costs booked in Q1 2026.
+   2. The revolving credit facility matures March 2028; the payoff figure
+      above assumes a signing date of October 1, 2026.
+   3. Q2 revenue includes $0.8 million recognized under the new Western
+      Foods statement of work; the customer has not yet countersigned
+      the SOW amendment (see contracts folder, tab 14).
+
+Questions on any input should go to me directly before the model is locked.

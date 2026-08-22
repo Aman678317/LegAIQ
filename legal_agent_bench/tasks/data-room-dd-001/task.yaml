@@ -1,0 +1,100 @@
+id: data-room-dd-001
+name: "Data room diligence assignment (Project Lighthouse)"
+workflow: data_room
+practice_area: m&a
+difficulty: intermediate
+version: 1
+instructions: |
+  You are a due-diligence associate on Project Lighthouse, the proposed acquisition of
+  BlueHarbor Logistics, Inc. ("Target") by Coral Gate Capital Fund III, L.P. The data
+  room excerpt below contains seven documents.
+
+  Produce a diligence work paper in markdown with three sections:
+
+  1. DOCUMENT INDEX — one line per document: file name, document type, date, parties.
+  2. ANSWERS — answer each of the following, citing the source file for each answer:
+     a. What is the CFO's annual base salary under her employment agreement?
+     b. What is the Target's fully diluted share count per the cap table?
+     c. What is the monthly base rent for the Target's headquarters?
+     d. What notice period must be given to exercise the HQ lease renewal option?
+     e. When does the Target's general liability policy expire, and is it current as of
+        the assumed signing date of October 1, 2026?
+     f. What price did the board approve for the Ferris Cartage acquisition?
+     g. Which employment agreement in the data room is not fully executed, and by whom
+        is the missing signature?
+  3. EXCEPTIONS LIST — anything a buyer should flag: unexecuted documents, lapsed
+     coverage, litigation or investigation references that do not appear in the
+     disclosure schedules, and any internal-consistency problems you notice between
+     documents.
+
+  Use only the data room documents. If something is not answerable from the excerpt,
+  say so rather than guessing.
+documents:
+  - file: board_minutes_2026-03.txt
+    role: Board minutes approving the Ferris Cartage acquisition
+  - file: cap_table.txt
+    role: Capitalization table as of June 30, 2026
+  - file: employment_agreement_cfo.txt
+    role: CFO employment agreement
+  - file: lease_abstract_hq.txt
+    role: Landlord's abstract of the HQ lease
+  - file: insurance_certificate.txt
+    role: Certificate of insurance
+  - file: litigation_hold_email.txt
+    role: Internal litigation-hold email
+  - file: finance_memo_q2.txt
+    role: Q2 finance memo with deal model inputs
+rubric:
+  - id: DR-1
+    criterion: "States the CFO base salary of $285,000"
+    weight: 1
+    check: { contains_any: ["285,000"] }
+  - id: DR-2
+    criterion: "States the fully diluted share count of 1,700,000"
+    weight: 1
+    check: { contains_any: ["1,700,000"] }
+  - id: DR-3
+    criterion: "States the HQ monthly base rent of $42,000"
+    weight: 1
+    check: { contains_any: ["42,000"] }
+  - id: DR-4
+    criterion: "States the nine-month renewal notice period"
+    weight: 1
+    check:
+      any_of:
+        - contains_any: ["nine (9) months", "9 months"]
+  - id: DR-5
+    criterion: "Identifies the GL policy expiry of July 31, 2026 (i.e., lapsed before the assumed October 1, 2026 signing)"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["2026-07-31", "July 31, 2026", "31 July 2026"]
+  - id: DR-6
+    criterion: "Flags the CFO employment agreement as not fully executed (missing Priya Nair's signature)"
+    weight: 2
+    check:
+      all:
+        - contains_any: ["missing", "unsigned", "unexecuted", "not executed", "not signed", "signature"]
+        - contains_any: ["Nair", "CFO"]
+  - id: DR-7
+    criterion: "Flags the wage-and-hour litigation reference from the litigation-hold email as a matter not in the disclosure schedules"
+    weight: 2
+    check:
+      any_of:
+        - contains_any: ["wage-and-hour", "wage and hour"]
+  - id: DR-8
+    criterion: "States the board-approved Ferris Cartage purchase price of $4.2 million"
+    weight: 1
+    check:
+      any_of:
+        - contains_any: ["$4.2 million", "4.2 million", "$4,200,000"]
+  - id: DR-9
+    criterion: "Document index covers all seven documents with type and date"
+    weight: 2
+    judge: true
+    hint: "Score 2 if every one of the seven files appears with at least a type and date; 1 if 4–6 are indexed or details are sparse; 0 otherwise."
+  - id: DR-10
+    criterion: "Exceptions are stated precisely with document references, without speculation or filler"
+    weight: 1
+    judge: true
+    hint: "Score 2 for precise, referenced flags only; 1 if flags are vague or unreferenced; 0 if material exceptions are absent or invented."

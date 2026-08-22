@@ -1,0 +1,54 @@
+ACME CERTIFICATE OF LIABILITY INSURANCE
+
+Date of Issue: January 15, 2026
+Certificate No: COI-2026-003187
+
+THIS CERTIFICATE IS ISSUED AS A MATTER OF INFORMATION ONLY AND CONFERS NO
+RIGHTS UPON THE CERTIFICATE HOLDER.
+
+PRODUCER
+   Bayline Insurance Services
+   400 Harrison Street, Suite 210, Oakland, CA 94607
+
+INSURED
+   BlueHarbor Logistics, Inc.
+   2200 Harbor Way, Suite 500, Oakland, CA 94607
+
+COVERAGES
+-------------------------------------------------------------------
+COMMERCIAL GENERAL LIABILITY
+   Policy No: CGL-88231-CA          Claim No: none
+   Each Occurrence: $2,000,000       General Aggregate: $4,000,000
+   Products/Completed Ops Aggregate: $2,000,000
+   Policy Period: 08/01/2025 to 07/31/2026
+
+AUTOMOBILE LIABILITY
+   Policy No: AUT-55614-CA
+   Combined Single Limit: $1,000,000
+   Policy Period: 08/01/2025 to 07/31/2026
+
+WORKERS' COMPENSATION
+   Policy No: WC-33512-CA
+   Statutory limits; Employer's Liability: $1,000,000 each accident
+   Policy Period: 08/01/2025 to 07/31/2026
+
+TECHNOLOGY ERRORS & OMISSIONS
+   Policy No: EEO-77402-CA
+   Each Claim: $1,000,000          Aggregate: $2,000,000
+   Policy Period: 01/01/2026 to 12/31/2026
+-------------------------------------------------------------------
+
+DESCRIPTION OF OPERATIONS
+   Last-mile logistics, warehousing, and dispatch services at insured
+   locations in California and Nevada.
+
+CERTIFICATE HOLDER
+   BlueHarbor Logistics, Inc. — Risk Management file
+
+CANCELLATION
+   Should any of the above-described policies be cancelled before the
+   expiration date thereof, the issuing insurer will endeavor to mail
+   30 days' written notice to the certificate holder.
+
+AUTHORIZED REPRESENTATIVE
+   /s/ J. Moreau, Bayline Insurance Services
