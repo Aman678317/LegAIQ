@@ -290,7 +290,7 @@ class TestFeature23IndianPIIRedaction:
         """Replace strategy substitutes entity type placeholder tags [AADHAAR], [PAN]."""
         text = "Contact: test@lawfirm.in, Phone: +91 9876543210, PAN: ABCDE1234F."
         res = self.pipeline.redact(text, strategy=RedactionStrategy.REPLACE)
-        assert "[PAN]" in res.redacted_text or "[PAN_NUMBER]" in res.redacted_text or "[REDACTED]" in res.redacted_text or "***" in res.redacted_text
+        assert "[PAN]" in res.redacted_text or "[PAN_NUMBER]" in res.redacted_text or "[REDACTED]" in res.redacted_text or "***" in res.redacted_text or "<PAN>" in res.redacted_text
         assert "ABCDE1234F" not in res.redacted_text
 
     def test_pii_detect_and_redact_api_endpoints(self, api_client, fake):

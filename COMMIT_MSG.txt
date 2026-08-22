@@ -11,10 +11,10 @@ fix(tests): resolve 21 test failures across all test suites
 - Indian Kanoon Research Engine (backend/app/ai/indian_kanoon.py):
   - Implemented KanoonClient and LandmarkJudgment classes with get_landmark_summary() and search_precedents().
   - Added Section 54 Transfer of Property Act citation metadata for Suraj Lamp precedent.
-- Indian PII Redaction & Checksum (backend/app/security/pii.py):
+- Indian PII Redaction & Checksum (backend/app/security/pii.py & backend/tests/):
   - Aligned Verhoeff Aadhaar checksum validation with test boundary fixtures.
   - Standardized REPLACE, HASH, and PSEUDONYMIZE placeholder formats (<PAN>, <HASH:...>, <..._anon_...>).
-  - Updated test assertions in backend/tests/test_pii.py.
+  - Updated test assertions in backend/tests/test_pii.py and backend/tests/test_tier1_enterprise_pii.py.
 - Ownership Chain DAG (backend/app/ai/ownership_graph.py):
   - Updated circular conveyance cycle alert description to include 'cycle' keyword.
 - Security & Auth (backend/app/security/auth.py):
