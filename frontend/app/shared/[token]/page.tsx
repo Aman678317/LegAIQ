@@ -226,9 +226,11 @@ export default function PublicSharedSpacePage() {
             <div className="relative flex flex-1 flex-col overflow-y-auto p-8">
               {/* Watermark Overlay Component */}
               <WatermarkOverlay
-                viewerEmail={authenticatedData.recipient_email}
-                viewerIp="127.0.0.1"
-                enabled={true}
+                config={{
+                  viewerEmail: authenticatedData.recipient_email,
+                  viewerIp: "127.0.0.1",
+                  label: "Confidential",
+                }}
               />
 
               {/* Document Content View */}

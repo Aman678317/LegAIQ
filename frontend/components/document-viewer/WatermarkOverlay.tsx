@@ -1,33 +1,46 @@
 "use client";
 
-interface WatermarkOverlayProps {
-  viewerEmail?: string;
-  viewerIp?: string;
-  timestamp?: string;
-  enabled?: boolean;
-}
+import type { WatermarkConfig } from "./types";
 
-export function WatermarkOverlay({
-  viewerEmail = "user@legaiq.in",
-  viewerIp = "127.0.0.1",
-  timestamp,
-  enabled = true,
-}: WatermarkOverlayProps) {
-  if (!enabled) return null;
-
-  const displayTime = timestamp || new Date().toISOString().replace("T", " ").substring(0, 19) + " UTC";
-  const watermarkText = `${viewerEmail} • ${viewerIp} • ${displayTime} • CONFIDENTIAL`;
+/**
+ * Confidential-style watermark tiled over the rendered document. Purely
+ * visual (pointer-events: none); it is not a security control. Colors follow
+ * the viewer theme via CSS custom properties.
+ */
+export function WatermarkOverlay({ config }: { config?: boolean | WatermarkConfig }) {
+  if (!config) return null;
+  const settings = config === true ? {} : config;
+  const time = new Date().toISOString().replace("T", " ").substring(0, 19) + " UTC";
+  const identity = [settings.viewerEmail ?? "confidential", settings.viewerIp, time]
+    .filter(Boolean)
+    .join(" • ");
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden select-none opacity-[0.14]">
-      <div className="grid h-full w-full grid-cols-2 gap-24 p-8 -rotate-12 transform scale-110">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="flex flex-col items-center justify-center font-mono text-[11px] font-bold tracking-widest text-slate-400">
-            <span className="uppercase">LegAIQ Confidential &amp; Privileged</span>
-            <span>{watermarkText}</span>
-          </div>
-        ))}
-      </div>
+    <div
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 5,
+        overflow: "hidden",
+        pointerEvents: "none",
+        userSelect: "none",
+        display: "flex",
+        flexWrap: "wrap",
+        alignContent: "center",
+        justifyContent: "center",
+        gap: "7rem 5rem",
+        transform: "rotate(-14deg) scale(1.15)",
+        opacity: 0.13,
+        color: "var(--dv-text)",
+      }}
+    >
+      {Array.from({ length: 9 }).map((_, i) => (
+        <div key={i} style={{ textAlign: "center", font: "700 0.65rem/1.5 ui-monospace, monospace", letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+          <div>{settings.label ?? "Confidential"}</div>
+          <div>{identity}</div>
+        </div>
+      ))}
     </div>
   );
 }
