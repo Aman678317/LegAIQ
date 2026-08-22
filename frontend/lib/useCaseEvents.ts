@@ -158,7 +158,7 @@ export function useCaseEvents(caseId: string | undefined, pollMs = 5000) {
           return;
         }
 
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/cases/${caseId}/events?token=${session.access_token}`;
+        const url = safeApiUrl(`/cases/${caseId}/events?token=${session.access_token}`);
         es = new EventSource(url);
 
         es.addEventListener("open", () => {

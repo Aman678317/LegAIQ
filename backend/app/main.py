@@ -21,20 +21,21 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS - stricter configuration
-# In production, CORS_ORIGINS should be set to specific frontend URLs
-allow_origins = settings.CORS_ORIGINS
-if allow_origins == ["*"] and not settings.DEBUG:
-    # In production without explicit CORS origins, restrict to same-origin only
-    allow_origins = []
+# CORS configuration
+# Automatically allows all Vercel preview & production deployments (*.vercel.app), localhost, and custom origins
+configured_origins = settings.CORS_ORIGINS
+allowed_origins = [o for o in configured_origins if o != "*"]
+if "http://localhost:3000" not in allowed_origins:
+    allowed_origins.extend(["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000"])
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,
+    allow_origins=allowed_origins if allowed_origins else ["http://localhost:3000"],
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
-    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
+    allow_headers=["*"],
+    expose_headers=["*"],
     max_age=600,
 )
 
@@ -86,6 +87,9 @@ from app.api.workflows import router as workflows_router
 from app.api.shared_spaces import router as shared_spaces_router
 from app.api.state_portals import router as state_portals_router
 from app.api.bsa import router as bsa_router
+from app.api.deep_research import router as deep_research_router
+from app.api.bsa_certificates import router as bsa_certificates_router
+from app.api.agents import router as agents_router
 
 app.include_router(cases_router, prefix=settings.API_V1_PREFIX)
 app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
@@ -113,5 +117,9 @@ app.include_router(workflows_router, prefix=settings.API_V1_PREFIX)
 app.include_router(shared_spaces_router, prefix=settings.API_V1_PREFIX)
 app.include_router(state_portals_router, prefix=settings.API_V1_PREFIX)
 app.include_router(bsa_router, prefix=settings.API_V1_PREFIX)
+app.include_router(deep_research_router, prefix=settings.API_V1_PREFIX)
+app.include_router(bsa_certificates_router, prefix=settings.API_V1_PREFIX)
+app.include_router(agents_router, prefix=settings.API_V1_PREFIX)
+
 
 

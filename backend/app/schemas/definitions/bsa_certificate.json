@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legaiq.com/schemas/bsa_certificate/v1",
+  "title": "BSA Section 63 Certificate",
+  "description": "Certificate schema for electronic evidence admissibility",
+  "type": "object",
+  "version": "v1",
+  "properties": {
+    "certificate_id": {"type": "string"},
+    "document_id": {"type": "string"},
+    "case_id": {"type": "string"},
+    "sha256_hash": {"type": "string"},
+    "status": {"type": "string"},
+    "part_b_signed": {"type": "boolean"}
+  },
+  "required": ["certificate_id", "document_id", "sha256_hash", "status"]
+}

@@ -69,9 +69,83 @@ class OCRPageResult:
     text: str
     language: str
     confidence: float
+    language_confidence: Dict[str, Any] = field(default_factory=dict)
+    bilingual_content: bool = False
+    bilingual_confidence_modifier: float = 1.0
     bounding_boxes: List[Dict] = field(default_factory=list)
     words: List[Dict] = field(default_factory=list)
     script: str = "Latin"
+
+    @staticmethod
+    def calibrate_confidence_for_bilingual(
+        page_text: str,
+        primary_language: str = "en",
+        secondary_language: str = "mr",
+    ) -> Tuple[float, bool, float]:
+        """Calibrate OCR confidence for bilingual documents.
+        
+        Returns: (calibrated_confidence, is_bilingual, modifier)
+        """
+        if not page_text:
+            return 1.0, False, 1.0
+
+        script_transitions = 0
+        prev_script = None
+        for char in page_text:
+            if char.isspace() or not char.isalnum():
+                continue
+            curr_script = "Latin" if char.isascii() else "Indic"
+            if prev_script and curr_script != prev_script:
+                script_transitions += 1
+            prev_script = curr_script
+
+        total_chars = len(page_text)
+        transition_ratio = script_transitions / total_chars if total_chars > 0 else 0
+        is_bilingual = transition_ratio > 0.05 or (any(c.isascii() for c in page_text) and any(not c.isascii() for c in page_text if c.isalnum()))
+        modifier = 0.95 if is_bilingual else 1.0
+        return modifier, is_bilingual, modifier
+
+
+class DocumentTypeDetector:
+    """Detect document type and state jurisdiction for Indian land and legal records."""
+
+    KEYWORDS = {
+        "7_12_extract": ["GOVERNMENT OF MAHARASHTRA", "7/12", "SATBARA", "VILLAGE FORM VII", "TALUKA", "ZILLA PARISHAD", "SUB-REGISTRAR"],
+        "rtc_pahani": ["KARNATAKA", "RTC", "PAHANI", "BHOOMI", "LAND TRIBUNAL"],
+        "patta_chitta": ["TAMIL NADU", "PATTA", "CHITTA", "TANGEDCO", "DISTRICT COLLECTOR"],
+        "ror_1b": ["TELANGANA", "DHARANI", "ROR-1B", "PAHANI", "MANDAL"],
+        "vf_712": ["GUJARAT", "ANYROR", "VF 7", "VF 12", "TALATI"],
+        "khasra_khatauni": ["UTTAR PRADESH", "KHASRA", "KHATAUNI", "BHULEKH", "TEHSIL"],
+        "sale_deed": ["SALE DEED", "CONVEYANCE DEED", "DEED OF ABSOLUTE SALE", "INDENTURE"],
+    }
+
+    @classmethod
+    def detect_document_type(cls, text: str, default: str = "general") -> str:
+        if not text:
+            return default
+        upper = text.upper()
+        for dtype, kws in cls.KEYWORDS.items():
+            if any(kw in upper for kw in kws):
+                return dtype
+        return default
+
+    @classmethod
+    def detect_state(cls, text: str) -> str:
+        if not text:
+            return "Unknown"
+        upper = text.upper()
+        state_map = {
+            "Maharashtra": ["MAHARASHTRA", "MUMBAI", "PUNE", "NAGPUR", "THANE"],
+            "Karnataka": ["KARNATAKA", "BENGALURU", "BANGALORE", "MYSORE"],
+            "Tamil Nadu": ["TAMIL NADU", "CHENNAI", "COIMBATORE", "MADURAI"],
+            "Telangana": ["TELANGANA", "HYDERABAD", "WARANGAL"],
+            "Gujarat": ["GUJARAT", "AHMEDABAD", "SURAT", "GANDHINAGAR"],
+            "Delhi": ["DELHI", "NEW DELHI", "NCR"],
+        }
+        for state, kws in state_map.items():
+            if any(kw in upper for kw in kws):
+                return state
+        return "Unknown"
 
 
 @dataclass

@@ -1,7 +1,8 @@
 import { createClient } from "./supabase";
 import * as mockStore from "./mockStore";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const RAW_API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").trim().replace(/\/+$/, "");
+export const API_URL = RAW_API_URL.endsWith("/api/v1") ? RAW_API_URL : `${RAW_API_URL}/api/v1`;
 
 /**
  * Checks whether the app is currently running in local demo / offline mode.
@@ -27,9 +28,13 @@ export function isDemoMode(caseId?: string): boolean {
 /**
  * Reject any path that could escape the configured API origin
  */
-function safeApiUrl(path: string): string {
+export function safeApiUrl(path: string): string {
   if (!/^\/[^/\\]/.test(path)) {
     throw new Error(`Unsafe API path: ${JSON.stringify(path.slice(0, 60))}`);
+  }
+  if (path.startsWith("/api/v1/")) {
+    const origin = API_URL.replace(/\/api\/v1$/, "");
+    return `${origin}${path}`;
   }
   return `${API_URL}${path}`;
 }
@@ -1925,5 +1930,33 @@ export const api = {
 export async function getOwnershipChainDAG(caseId: string) {
   return api.getOwnershipChainDAG(caseId);
 }
+
+export async function startDeepResearch(
+  caseId: string,
+  question: string,
+  model: string = "o4-mini-deep-research",
+  maxToolCalls: number = 0
+): Promise<{ task_id: string; status: string }> {
+  return await request<{ task_id: string; status: string }>(`/cases/${caseId}/deep-research`, {
+    method: "POST",
+    body: JSON.stringify({ question, model, max_tool_calls: maxToolCalls }),
+  });
+}
+
+export async function listDeepResearch(caseId: string): Promise<any[]> {
+  return await request<any[]>(`/cases/${caseId}/deep-research`);
+}
+
+export async function generateBsaCertificate(
+  caseId: string,
+  documentId: string,
+  format: "pdf" | "json" = "json"
+): Promise<any> {
+  return await request<any>(`/cases/${caseId}/documents/${documentId}/bsa-certificate`, {
+    method: "POST",
+    body: JSON.stringify({ format, include_hash: true }),
+  });
+}
+
 
 

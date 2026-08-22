@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legaiq.com/schemas/agent_result/v1",
+  "title": "Agent Result",
+  "description": "Output schema for orchestrated agent execution",
+  "type": "object",
+  "version": "v1",
+  "properties": {
+    "job_id": {"type": "string"},
+    "workflow_type": {"type": "string"},
+    "status": {"type": "string"},
+    "results": {"type": "object"}
+  },
+  "required": ["job_id", "status"]
+}

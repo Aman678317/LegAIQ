@@ -454,3 +454,47 @@ async def get_document_ocr_view(document_id: str, case_id: str, _=Depends(get_ca
         "extracted_entities": entities,
         "pages": formatted_pages,
     }
+
+
+@router.get("/{document_id}/download-url")
+async def get_document_download_url(
+    case_id: str,
+    document_id: str,
+    expires_in: int = 3600,
+    _=Depends(get_case_access),
+):
+    """Generate pre-signed URL for document download with token forwarding."""
+    ctx, case = _
+    db = svc()
+    if not db:
+        return {
+            "url": f"/api/v1/cases/{case_id}/documents/{document_id}/file",
+            "expires_in": expires_in,
+            "content_type": "application/pdf",
+            "cache_control": "private, max-age=3600",
+        }
+
+    doc = db.table("documents").select("id, case_id, storage_path, file_type, file_name").eq("id", document_id).single().execute()
+    if not doc.data:
+        raise HTTPException(404, "Document not found")
+
+    storage_path = doc.data.get("storage_path") or f"{case_id}/{document_id}"
+    signed_url = None
+    try:
+        signed = db.storage.from_("case-documents").create_signed_url(storage_path, expires_in)
+        if isinstance(signed, dict):
+            signed_url = signed.get("signedURL") or signed.get("signed_url")
+        elif hasattr(signed, "signed_url"):
+            signed_url = signed.signed_url
+    except Exception:
+        signed_url = None
+
+    return {
+        "url": signed_url or f"/api/v1/cases/{case_id}/documents/{document_id}/file",
+        "document_id": document_id,
+        "case_id": case_id,
+        "expires_in": expires_in,
+        "content_type": doc.data.get("file_type", "application/pdf"),
+        "cache_control": "private, max-age=3600",
+    }
+

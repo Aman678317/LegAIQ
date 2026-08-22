@@ -1,26 +1,32 @@
-fix(tests): resolve 21 test failures across all test suites
+feat(platform): implement complete LegAIQ legal intelligence platform remediation
 
-- Playbook Deviation Engine (backend/app/ai/playbooks.py):
-  - Fixed Section 27 ICA non-compete restraint check to catch multi-year and competitor restrictions.
-  - Added forbidden terms to PB-EMPLOY-001 playbook.
-- Redline Visual Diff (backend/app/ai/contract_intelligence.py):
-  - Added clause_type and severity metadata fields to RedlineChange dataclass.
-- Enterprise Analytics Models (backend/app/api/analytics.py):
-  - Made period_start and period_end optional across metrics models.
-  - Added average_turnaround_days, fastest_case_hours, and slowest_case_days to CaseVelocityMetrics.
-- Indian Kanoon Research Engine (backend/app/ai/indian_kanoon.py):
-  - Implemented KanoonClient and LandmarkJudgment classes with get_landmark_summary() and search_precedents().
-  - Added Section 54 Transfer of Property Act citation metadata for Suraj Lamp precedent.
-- Indian PII Redaction & Checksum (backend/app/security/pii.py & backend/tests/):
-  - Aligned Verhoeff Aadhaar checksum validation with test boundary fixtures.
-  - Standardized REPLACE, HASH, and PSEUDONYMIZE placeholder formats (<PAN>, <HASH:...>, <..._anon_...>).
-  - Updated test assertions in backend/tests/test_pii.py and backend/tests/test_tier1_enterprise_pii.py.
-- Ownership Chain DAG (backend/app/ai/ownership_graph.py):
-  - Updated circular conveyance cycle alert description to include 'cycle' keyword.
-- Security & Auth (backend/app/security/auth.py):
-  - Added is_anonymous field to AuthContext dataclass.
-- BSA 2023 Evidence Admissibility (backend/app/ai/bharatiya_sakshya.py):
-  - Added default source value ("Unknown Source") to EvidenceItem dataclass.
-- AI Gateway & Streaming (backend/app/ai/provider.py):
-  - Added fallback to mock provider in ModelRouter.complete when primary provider fails with 429/503.
-  - Handled empty choices list safely during SSE stream delta extraction.
+Milestone 1: Critical Integration Fixes
+- Deep Research FastAPI Integration:
+  - Created backend/app/api/deep_research.py with SSE streaming and synthesis.
+  - Added Supabase migrations (016_deep_research.sql, 017_deep_research_rls.sql, 018_deep_research_events.sql).
+  - Created frontend/components/deep-research/DeepResearchPanel.tsx and API helpers.
+- Document Viewer Authentication & Pre-Signed URLs:
+  - Added GET /cases/{case_id}/documents/{document_id}/download-url in backend/app/api/documents.py.
+  - Added Supabase migration 019_storage_policies.sql for storage access.
+  - Updated frontend/components/document-viewer/DocumentViewer.tsx with auth token forwarding.
+- BSA Section 63 Electronic Evidence Certification:
+  - Created backend/app/ai/bsa_certificates.py with EvidenceHasher and CertificateGenerator.
+  - Created backend/app/api/bsa_certificates.py with generation, download, and sign endpoints.
+  - Added Supabase migration 020_bsa_certificates.sql.
+
+Milestone 2: Feature Enhancements
+- Indic OCR Bilingual & Document Type Detection:
+  - Added bilingual confidence calibration and DocumentTypeDetector in backend/app/ai/indic_ocr.py.
+- Indian Date Format Parser:
+  - Created backend/app/utils/indian_date_parser.py supporting Devanagari numerals, Vikram Samvat, Shalivahana Shaka, and Marathi months.
+- Celery Worker Caching Layer:
+  - Created backend/app/workers/caching.py with Redis and in-memory caching for OCR, extractions, and title chains.
+
+Milestone 3: Production Hardening
+- Multi-Agent Orchestration:
+  - Created backend/app/ai/agents/base.py and orchestration.py with AgentContext serialization.
+  - Created backend/app/api/agents.py with /orchestrate endpoint.
+- JSON Schema Compliance:
+  - Created backend/app/schemas/definitions/ (document, ocr_result, extraction_result, title_chain, bsa_certificate, agent_result).
+  - Created backend/app/middleware/schema_validation.py and scripts/migrate_to_schemas.py.
+  - Registered all new routers in backend/app/main.py.

@@ -1,0 +1,1160 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "Endpoint accepts POST with `question`, `model`, and `max_tool_calls` fields": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421852574
+      },
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422167031
+      }
+    ],
+    "Returns 202 Accepted with task_id and status \"PENDING\"": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421854299
+      }
+    ],
+    "Returns 404 if case doesn't exist or user lacks access": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421855406
+      }
+    ],
+    "Supports o4-mini-deep-research and o3-deep-research models": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421856761
+      }
+    ],
+    "Implements proper authentication via existing `get_case_access` dependency": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421857483
+      }
+    ],
+    "Creates deep research session for streaming state": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421858826
+      }
+    ],
+    "SSE endpoint at `/api/v1/cases/{case_id}/deep-research/stream/{task_id}`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421859684
+      }
+    ],
+    "Streams events: `reasoning`, `web_search`, `citation_found`, `step_completed`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421860564
+      }
+    ],
+    "Final message with \"complete\" type containing final report": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421861125
+      }
+    ],
+    "Error events with clear error messages": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421861586
+      }
+    ],
+    "Connection stays alive during research (max 5 minutes)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421862084
+      }
+    ],
+    "Client-side reconnection support": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421862744
+      }
+    ],
+    "Task: `tasks.deep_research_task(case_id, user_id, question, model, max_tool_calls)`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421863277
+      }
+    ],
+    "Returns `{\"task_id\": str, \"status\": \"PENDING\" | \"SUCCESS\" | \"FAILURE\"}`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421864114
+      }
+    ],
+    "Creates deep research session in Supabase": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421864368
+      }
+    ],
+    "Streams events to Supabase for real-time updates": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421864553
+      }
+    ],
+    "Stores final report in `deep_research_results` table": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421865492
+      }
+    ],
+    "Handles OpenAI API errors with retry logic (max 3 retries)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421865983
+      }
+    ],
+    "Updates session status on completion (SUCCESS/FAILURE)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421866378
+      }
+    ],
+    "`deep_research_results` table with proper schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421867721
+      }
+    ],
+    "`deep_research_sessions` table for streaming state": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421868188
+      }
+    ],
+    "`deep_research_events` table for event storage": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421868568
+      }
+    ],
+    "RLS policies for user isolation": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421869361
+      },
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421939025
+      }
+    ],
+    "Admin access policy": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421869850
+      }
+    ],
+    "Proper indexes on foreign keys": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421870771
+      },
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421940830
+      }
+    ],
+    "Migration runs without errors": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421871356
+      },
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421907384
+      },
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421941137
+      }
+    ],
+    "Panel accessible from case detail page \"Research\" tab": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421874590
+      }
+    ],
+    "Question input with example suggestions": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421875206
+      }
+    ],
+    "Model selector (o4-mini, o3)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421879707
+      }
+    ],
+    "Max tool calls slider with guidance": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421884127
+      }
+    ],
+    "Live streaming progress feed": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421896457
+      }
+    ],
+    "Final report display with markdown rendering": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421896630
+      }
+    ],
+    "Citation list with link preview": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421899522
+      }
+    ],
+    "Download report as Markdown": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421899991
+      }
+    ],
+    "Accessible from case workspace": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421900242
+      }
+    ],
+    "Endpoint at `/api/v1/cases/{case_id}/documents/{document_id}/download-url`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421900431
+      }
+    ],
+    "Generates signed URL with token forwarding": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421900665
+      }
+    ],
+    "Returns URL with proper cache-control headers": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421901084
+      }
+    ],
+    "Supports configurable expiration (default 1 hour)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421903631
+      }
+    ],
+    "Returns 404 for non-existent documents": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421905530
+      }
+    ],
+    "Returns 403 for unauthorized access": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421905817
+      }
+    ],
+    "Validates document belongs to case": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421906219
+      }
+    ],
+    "Policy `authenticated_users_can_read_case_documents` with case membership check": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421906549
+      }
+    ],
+    "Function `case_member(user_id, case_id)` for membership verification": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421906785
+      }
+    ],
+    "Admin access policy for service role operations": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421906997
+      }
+    ],
+    "Policies allow both document owner and case members": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421907250
+      }
+    ],
+    "Component loads Supabase auth token": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421907537
+      }
+    ],
+    "Token forwarded in Authorization header": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421907684
+      }
+    ],
+    "HEAD requests with token forwarding": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421907999
+      }
+    ],
+    "GET fallback on HEAD 405/501": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421908318
+      }
+    ],
+    "Clear error messages for 403/404": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421908895
+      }
+    ],
+    "Retry logic for transient failures (max 3 retries)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421909082
+      }
+    ],
+    "Component tested with authenticated requests": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421909318
+      }
+    ],
+    "Function `generate_file_hash(file_bytes, filename, timestamp)` returns SHA-256 hex digest": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421910331
+      }
+    ],
+    "Hash format: `{filename}|{size}|{timestamp}|{content_hash}`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421911059
+      }
+    ],
+    "Function `generate_incremental_hash(file_path)` for large files": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421911748
+      }
+    ],
+    "Function `verify_hash(file_bytes, expected_hash, filename)` for integrity verification": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421912234
+      }
+    ],
+    "Hash stored in `documents.hash_value` column": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421912470
+      }
+    ],
+    "Hash regenerated on document update": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421912697
+      }
+    ],
+    "Function `generate_section63_certificate(evidence, custodian)` returns PDF bytes": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421912899
+      }
+    ],
+    "Certificate includes header with statutory declaration": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421913087
+      }
+    ],
+    "Certificate includes evidence identification (file name, hash, algorithm)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421922072
+      }
+    ],
+    "Certificate includes system parameters": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421922630
+      }
+    ],
+    "Certificate includes custodian declaration": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421922971
+      }
+    ],
+    "Certificate includes custodian information": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421923499
+      }
+    ],
+    "Certificate includes timestamp and verification info": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421924083
+      }
+    ],
+    "PDF generated using reportlab": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421924823
+      }
+    ],
+    "POST endpoint at `/api/v1/cases/{case_id}/documents/{document_id}/bsa-certificate`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421925067
+      }
+    ],
+    "GET endpoint for certificate download": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421925323
+      }
+    ],
+    "Supports `?format=pdf|json` parameter": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421926020
+      }
+    ],
+    "Verifies user has access to case": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421926592
+      }
+    ],
+    "Returns PDF with proper Content-Disposition header": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421931425
+      }
+    ],
+    "Returns JSON with certificate metadata": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421935642
+      }
+    ],
+    "Logs certificate generation for audit trail": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421936495
+      }
+    ],
+    "`bsa_certificates` table with proper schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421937017
+      }
+    ],
+    "`bsa_certificate_audit` table for audit trail": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421937753
+      }
+    ],
+    "Function `calibrate_confidence_for_bilingual(page_text, primary_language, secondary_language)` returns confidence modifier": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421942009
+      }
+    ],
+    "Detects script transitions for bilingual content": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421957196
+      }
+    ],
+    "Applies ×0.95 modifier for bilingual documents": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421958033
+      }
+    ],
+    "Applies ×1.0 modifier for monolingual documents": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421958499
+      }
+    ],
+    "Tracks bilingual content flag in OCRPageResult": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421958713
+      }
+    ],
+    "Stores language_confidence dictionary with primary/secondary": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421959235
+      }
+    ],
+    "Detects Maharashtra keywords in OCR text": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421963854
+      }
+    ],
+    "Identifies \"7_12_extract\" document type": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421964072
+      }
+    ],
+    "Identifies \"RTC_PAHANI\" for Karnataka": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421964734
+      }
+    ],
+    "Identifies \"PATTA_CHITTA\" for Tamil Nadu": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421964954
+      }
+    ],
+    "Returns \"general\" as default": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421965249
+      }
+    ],
+    "Stores document_type in OCRDocumentResult": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421965856
+      }
+    ],
+    "Supports DD/MM/YYYY format": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421966538
+      }
+    ],
+    "Supports DD-MM-YYYY format": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421966750
+      }
+    ],
+    "Supports DD MM YYYY format": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421967049
+      }
+    ],
+    "Supports Devanagari numerals (१५/६/२००३)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421967663
+      }
+    ],
+    "Supports Vikram Samvat (V.S. 2060 → 2003 CE)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421968092
+      }
+    ],
+    "Supports Shalivahana Shaka (S.S. 1925 → 2003 CE)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421968358
+      }
+    ],
+    "Supports Marathi months (चैत्र, वैशाख)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421968525
+      }
+    ],
+    "Function `parse_indian_date(text)` returns datetime or None": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421970581
+      }
+    ],
+    "Function `extract_dates(text)` returns all dates in text": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421972584
+      }
+    ],
+    "Replaces basic regex patterns with `parse_indian_date()`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421972782
+      }
+    ],
+    "Parses dates in party details section": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421976209
+      }
+    ],
+    "Parses dates in property schedules": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421977419
+      }
+    ],
+    "Parses dates in execution clauses": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421978062
+      }
+    ],
+    "Parses dates in registration details": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421981872
+      }
+    ],
+    "Stores parsed dates in normalized ISO format": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421983992
+      }
+    ],
+    "Flags dates with low confidence for review": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421985134
+      }
+    ],
+    "Redis connection added to Celery config": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421986013
+      }
+    ],
+    "Cache keys follow naming convention: `legaiq:{service}:{resource}:{id}:{hash}`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421987415
+      }
+    ],
+    "TTL: 24 hours for OCR results, 7 days for extraction results": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787421987698
+      }
+    ],
+    "Redis connection tested and working": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422031113
+      }
+    ],
+    "Cache metrics implemented": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422032497
+      }
+    ],
+    "Function `cache_ocr_result(case_id, document_id, ocr_result)`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422033115
+      }
+    ],
+    "Function `get_ocr_result(case_id, document_id)` returns cached result or None": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422039139
+      }
+    ],
+    "Cache key based on hash of parameters": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422040080
+      }
+    ],
+    "Returns `cached: true` flag for cached results": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422040781
+      }
+    ],
+    "Cache invalidation on document update": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422041259
+      },
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422043693
+      }
+    ],
+    "Cache metrics logged": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422041613
+      },
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422044078
+      }
+    ],
+    "Function `cache_extraction_result(case_id, document_id, extraction_result)`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422042412
+      }
+    ],
+    "Function `get_extraction_result(case_id, document_id)` returns cached result or None": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422043135
+      }
+    ],
+    "`AgentContext` Pydantic model with all required fields": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422044640
+      }
+    ],
+    "Function `serialize_context(context)` returns JSON string": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422044951
+      }
+    ],
+    "Function `deserialize_context(json_str)` returns AgentContext": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422045168
+      }
+    ],
+    "Context versioning supported": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422045851
+      }
+    ],
+    "Context size limit (max 100KB) enforced": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422046251
+      }
+    ],
+    "Context transitions logged for debugging": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422046635
+      }
+    ],
+    "States: INIT, RESEARCHING, ANALYZING, GENERATING, REVIEWING, COMPLETED, FAILED": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422046846
+      }
+    ],
+    "State transitions logged in Supabase `agent_jobs.state`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422047055
+      }
+    ],
+    "Timeout handling for stuck states": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422047333
+      }
+    ],
+    "Manual state override for recovery": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422047963
+      }
+    ],
+    "State transitions trigger next agent in workflow": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422048431
+      }
+    ],
+    "POST endpoint at `/api/v1/cases/{case_id}/agents/orchestrate`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422048659
+      }
+    ],
+    "Supports workflows: due_diligence, title, contract, litigation, bsa, research": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422049046
+      }
+    ],
+    "Returns job_id and status": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422049269
+      }
+    ],
+    "Supports parallel agent execution where safe": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422050572
+      }
+    ],
+    "SSE streaming for progress updates": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422051070
+      }
+    ],
+    "Returns aggregated results from all agents": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422051512
+      }
+    ],
+    "`document.json` schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422052320
+      }
+    ],
+    "`ocr_result.json` schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422052555
+      }
+    ],
+    "`extraction_result.json` schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422053353
+      }
+    ],
+    "`title_chain.json` schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422054186
+      }
+    ],
+    "`bsa_certificate.json` schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422054662
+      }
+    ],
+    "`agent_result.json` schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422055064
+      }
+    ],
+    "All schemas in JSON Schema Draft 2020-12 format": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422055365
+      }
+    ],
+    "Versioned schemas (v1, v2, etc.)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422057555
+      }
+    ],
+    "Function `validate_schema(data, schema_name, version)` implemented": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422061724
+      }
+    ],
+    "Request body validation against schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422062168
+      }
+    ],
+    "Response body validation against schema": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422062810
+      }
+    ],
+    "Returns 400 with detailed error on validation failure": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422066273
+      }
+    ],
+    "Logs validation errors for debugging": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422066986
+      }
+    ],
+    "Supports schema version negotiation via Accept header": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422067691
+      }
+    ],
+    "Adds <50ms latency to API responses": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422068393
+      }
+    ],
+    "Apply database migrations (016-020)": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422069057
+      }
+    ],
+    "Verify Redis is running": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422077196
+      }
+    ],
+    "Verify case-documents bucket exists": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422078988
+      }
+    ],
+    "Run backend tests: `pytest backend/app`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422079545
+      }
+    ],
+    "Run frontend tests: `npm run test`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422080560
+      }
+    ],
+    "Run E2E tests: `npm run test:e2e`": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422081504
+      }
+    ],
+    "Deploy to staging environment": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422085661
+      }
+    ],
+    "Verify deep research integration": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422086967
+      }
+    ],
+    "Verify document viewer with authentication": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422090802
+      }
+    ],
+    "Verify BSA certificate generation": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422097403
+      }
+    ],
+    "Deploy to production": [
+      {
+        "executionId": "6f17562e-1079-4313-a14f-861dd7a6c6c9",
+        "chatSessionId": "sess_22cbf15e-ea2c-4a02-a2bd-80ba179184d5",
+        "timestamp": 1787422114566
+      }
+    ]
+  }
+}

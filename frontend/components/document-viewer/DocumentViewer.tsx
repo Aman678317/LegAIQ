@@ -123,14 +123,28 @@ export function DocumentViewer({
     [documents, ids, isControlled, onActiveChange],
   );
 
-  /** Configured fetch for document bytes — used by text/csv/docx/xlsx renderers. */
+  /** Configured fetch for document bytes — used by text/csv/docx/xlsx renderers with token forwarding. */
   const request = useCallback(async () => {
     if (!activeDocument) throw new Error("No active document");
     if (activeDocument.file) return new Response(activeDocument.file);
     const init = resolveInit(requestOptions?.requestInit, activeDocument);
+    const headers = new Headers(init.headers || {});
+    if (!headers.has("Authorization")) {
+      try {
+        const { createClient } = await import("@/lib/supabase");
+        const client = createClient();
+        const { data: { session } } = await client.auth.getSession();
+        if (session?.access_token) {
+          headers.set("Authorization", `Bearer ${session.access_token}`);
+        }
+      } catch {
+        // Fallback for public or mock streams
+      }
+    }
+    const finalInit = { ...init, headers };
     return requestOptions?.requestFile
-      ? requestOptions.requestFile(activeDocument, init)
-      : fetch(source, init);
+      ? requestOptions.requestFile(activeDocument, finalInit)
+      : fetch(source, finalInit);
   }, [activeDocument, requestOptions, source]);
 
   /**

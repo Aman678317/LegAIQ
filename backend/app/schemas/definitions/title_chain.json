@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legaiq.com/schemas/title_chain/v1",
+  "title": "Title Chain",
+  "description": "Ownership title chain DAG structure",
+  "type": "object",
+  "version": "v1",
+  "properties": {
+    "case_id": {"type": "string"},
+    "nodes": {"type": "array"},
+    "edges": {"type": "array"},
+    "gaps": {"type": "array"},
+    "has_breaks": {"type": "boolean"},
+    "confidence_score": {"type": "number"}
+  },
+  "required": ["case_id", "nodes", "edges"]
+}
