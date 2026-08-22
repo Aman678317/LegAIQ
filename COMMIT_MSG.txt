@@ -1,10 +1,6 @@
-fix(backend): restore specialist agent classes, permissions, and orchestration engine
+fix(security): export get_current_user alias and safely unpack AuthContext in routers
 
-- Base Agent Engine (backend/app/ai/agents/base.py):
-  - Restored complete BaseAgent, AgentContext, AgentBudget, UsageTracker, and Permission enum.
-  - Added new_agent_context, execute_agent, and context serialization helpers.
-- Orchestration Engine (backend/app/ai/agents/orchestration.py):
-  - Restored AgentOrchestrator, WorkflowDefinition, WorkflowState, WorkflowNode, WorkflowPersistence, and AIKillSwitch.
-  - Restored pre-built workflow runners (run_property_due_diligence, run_title_search_report, run_contract_intelligence, run_voice_qa).
-- Agents API (backend/app/api/agents.py):
-  - Aligned endpoint handlers with WorkflowState and NodeStatus data models.
+- Auth Security (backend/app/security/auth.py):
+  - Exported get_current_user alias pointing to get_auth_context.
+- Routers (backend/app/api/deep_research.py, backend/app/api/bsa_certificates.py):
+  - Safely unpacked AuthContext from get_case_access dependency.

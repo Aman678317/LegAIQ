@@ -273,3 +273,7 @@ def resource_case_access(table: str, id_field: str):
         return await resolve_case_access(ctx, row.data["case_id"])
 
     return dependency
+
+
+get_current_user = get_auth_context
+

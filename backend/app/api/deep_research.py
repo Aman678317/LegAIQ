@@ -57,12 +57,14 @@ async def start_deep_research(
 
     task_id = str(uuid4())
     db = _db()
+    auth = user[0] if isinstance(user, tuple) else user
+    user_id = str(getattr(auth, "user_id", getattr(auth, "id", "anonymous")))
 
     if db:
         try:
             db.table("deep_research_sessions").insert({
                 "case_id": case_id,
-                "user_id": str(getattr(user, "user_id", getattr(user, "id", "anonymous"))),
+                "user_id": user_id,
                 "task_id": task_id,
                 "question": body.question,
                 "model": body.model,

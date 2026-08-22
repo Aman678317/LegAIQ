@@ -73,9 +73,10 @@ async def generate_certificate(
         "file_bytes": file_bytes,
     }
 
+    auth = user[0] if isinstance(user, tuple) else user
     user_name = "Advocate"
-    if hasattr(user, "email"):
-        user_name = user.email.split("@")[0].capitalize()
+    if hasattr(auth, "email") and auth.email:
+        user_name = auth.email.split("@")[0].capitalize()
 
     custodian = {
         "name": user_name,
@@ -90,12 +91,13 @@ async def generate_certificate(
     )
 
     cert_id = str(uuid4())
+    user_id = str(getattr(auth, "user_id", getattr(auth, "id", "anonymous")))
     if db:
         try:
             db.table("bsa_certificates").insert({
                 "id": cert_id,
                 "document_id": document_id,
-                "user_id": str(getattr(user, "user_id", getattr(user, "id", "anonymous"))),
+                "user_id": user_id,
                 "case_id": case_id,
                 "sha256_hash": hash_value,
                 "file_metadata": {"filename": filename, "size": len(file_bytes)},
@@ -179,12 +181,14 @@ async def sign_certificate(
 ):
     """Sign Section 63 certificate (Part B - custodian sign-off)."""
     db = _db()
+    auth = user[0] if isinstance(user, tuple) else user
+    user_id = str(getattr(auth, "user_id", getattr(auth, "id", "anonymous")))
     if db:
         try:
             db.table("bsa_certificates").update({
                 "part_b_signed": True,
                 "part_b_signed_at": datetime.now(timezone.utc).isoformat(),
-                "part_b_signed_by": str(getattr(user, "user_id", getattr(user, "id", "anonymous"))),
+                "part_b_signed_by": user_id,
                 "status": "FINAL",
             }).eq("document_id", document_id).eq("case_id", case_id).execute()
         except Exception:
