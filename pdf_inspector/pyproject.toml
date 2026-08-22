@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdf-inspector"
+version = "0.2.0"
+description = "Detailed inspection of generated PDFs: chars, words, lines, rects, curves, images, annotations, tables, crops, and visual debug overlays."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["PyMuPDF>=1.24"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+pdfinspect = "pdf_inspector.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pdf_inspector*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
