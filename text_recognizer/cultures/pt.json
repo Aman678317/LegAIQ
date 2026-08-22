@@ -1,0 +1,539 @@
+{
+  "culture": "pt",
+  "number": {
+    "decimalMark": ",",
+    "groupMark": ".",
+    "spaceGroup": false,
+    "grouping": "western",
+    "ordinalSuffixes": [
+      "º",
+      "ª",
+      ".º"
+    ],
+    "ordinalWords": {
+      "primeiro": 1,
+      "primeira": 1,
+      "segundo": 2,
+      "segunda": 2,
+      "terceiro": 3,
+      "terceira": 3,
+      "quarto": 4,
+      "quarta": 4,
+      "quinto": 5,
+      "quinta": 5,
+      "sexto": 6,
+      "sexta": 6,
+      "sétimo": 7,
+      "oitavo": 8,
+      "nono": 9,
+      "décimo": 10
+    },
+    "atoms": {
+      "zero": 0,
+      "um": 1,
+      "uma": 1,
+      "dois": 2,
+      "duas": 2,
+      "três": 3,
+      "quatro": 4,
+      "cinco": 5,
+      "seis": 6,
+      "sete": 7,
+      "oito": 8,
+      "nove": 9,
+      "dez": 10,
+      "onze": 11,
+      "doze": 12,
+      "treze": 13,
+      "catorze": 14,
+      "quatorze": 14,
+      "quinze": 15,
+      "dezesseis": 16,
+      "dezasseis": 16,
+      "dezessete": 17,
+      "dezassete": 17,
+      "dezoito": 18,
+      "dezenove": 19,
+      "dezanove": 19,
+      "vinte": 20,
+      "trinta": 30,
+      "quarenta": 40,
+      "cinquenta": 50,
+      "sessenta": 60,
+      "setenta": 70,
+      "oitenta": 80,
+      "noventa": 90
+    },
+    "scales": {
+      "cem": 100,
+      "cento": 100,
+      "mil": 1000,
+      "milhão": 1000000,
+      "milhões": 1000000
+    },
+    "connectors": [
+      "e"
+    ],
+    "negativeWords": [
+      "menos"
+    ],
+    "articleNumerals": [
+      "um",
+      "uma"
+    ]
+  },
+  "percentage": {
+    "suffixes": [
+      "%",
+      "por cento"
+    ],
+    "prefixes": []
+  },
+  "dimension": [
+    {
+      "canonical": "Metro",
+      "base": "Metro",
+      "factor": 1.0,
+      "patterns": [
+        "m",
+        "metro",
+        "metros"
+      ]
+    },
+    {
+      "canonical": "Quilometro",
+      "base": "Metro",
+      "factor": 1000.0,
+      "patterns": [
+        "km",
+        "quilômetro",
+        "quilômetros",
+        "quilómetro",
+        "quilómetros"
+      ]
+    },
+    {
+      "canonical": "Centimetro",
+      "base": "Metro",
+      "factor": 0.01,
+      "patterns": [
+        "cm",
+        "centímetro",
+        "centímetros"
+      ]
+    },
+    {
+      "canonical": "Milimetro",
+      "base": "Metro",
+      "factor": 0.001,
+      "patterns": [
+        "mm",
+        "milímetro",
+        "milímetros"
+      ]
+    },
+    {
+      "canonical": "Milha",
+      "base": "Metro",
+      "factor": 1609.344,
+      "patterns": [
+        "milha",
+        "milhas"
+      ]
+    },
+    {
+      "canonical": "Quilograma",
+      "base": "Quilograma",
+      "factor": 1.0,
+      "patterns": [
+        "kg",
+        "quilograma",
+        "quilogramas"
+      ]
+    },
+    {
+      "canonical": "Grama",
+      "base": "Quilograma",
+      "factor": 0.001,
+      "patterns": [
+        "g",
+        "grama",
+        "gramas"
+      ]
+    },
+    {
+      "canonical": "Libra",
+      "base": "Quilograma",
+      "factor": 0.45359237,
+      "patterns": [
+        "libra",
+        "libras"
+      ]
+    },
+    {
+      "canonical": "MetroQuadrado",
+      "base": "MetroQuadrado",
+      "factor": 1.0,
+      "patterns": [
+        "m2",
+        "m²",
+        "metro quadrado",
+        "metros quadrados"
+      ]
+    },
+    {
+      "canonical": "QuilometroQuadrado",
+      "base": "MetroQuadrado",
+      "factor": 1000000.0,
+      "patterns": [
+        "km2",
+        "km²",
+        "quilômetro quadrado",
+        "quilômetros quadrados"
+      ]
+    },
+    {
+      "canonical": "Hectare",
+      "base": "MetroQuadrado",
+      "factor": 10000.0,
+      "patterns": [
+        "ha",
+        "hectare",
+        "hectares"
+      ]
+    },
+    {
+      "canonical": "Litro",
+      "base": "Litro",
+      "factor": 1.0,
+      "patterns": [
+        "l",
+        "litro",
+        "litros"
+      ]
+    },
+    {
+      "canonical": "Mililitro",
+      "base": "Litro",
+      "factor": 0.001,
+      "patterns": [
+        "ml",
+        "mililitro",
+        "mililitros"
+      ]
+    },
+    {
+      "canonical": "MetroCubico",
+      "base": "Litro",
+      "factor": 1000.0,
+      "patterns": [
+        "m3",
+        "m³",
+        "metro cúbico",
+        "metros cúbicos"
+      ]
+    },
+    {
+      "canonical": "QuilometroHora",
+      "base": "QuilometroHora",
+      "factor": 1.0,
+      "patterns": [
+        "km/h"
+      ]
+    },
+    {
+      "canonical": "Megabyte",
+      "base": "Byte",
+      "factor": 1000000.0,
+      "patterns": [
+        "mb"
+      ]
+    },
+    {
+      "canonical": "Gigabyte",
+      "base": "Byte",
+      "factor": 1000000000.0,
+      "patterns": [
+        "gb"
+      ]
+    }
+  ],
+  "duration": [
+    {
+      "canonical": "Segundo",
+      "base": "Second",
+      "factor": 1.0,
+      "patterns": [
+        "segundo",
+        "segundos"
+      ]
+    },
+    {
+      "canonical": "Minuto",
+      "base": "Second",
+      "factor": 60.0,
+      "patterns": [
+        "minuto",
+        "minutos",
+        "min"
+      ]
+    },
+    {
+      "canonical": "Hora",
+      "base": "Second",
+      "factor": 3600.0,
+      "patterns": [
+        "hora",
+        "horas"
+      ]
+    },
+    {
+      "canonical": "Dia",
+      "base": "Second",
+      "factor": 86400.0,
+      "patterns": [
+        "dia",
+        "dias"
+      ]
+    },
+    {
+      "canonical": "Semana",
+      "base": "Second",
+      "factor": 604800.0,
+      "patterns": [
+        "semana",
+        "semanas"
+      ]
+    },
+    {
+      "canonical": "Mes",
+      "base": "Second",
+      "factor": 2629746.0,
+      "patterns": [
+        "mês",
+        "meses"
+      ]
+    },
+    {
+      "canonical": "Ano",
+      "base": "Second",
+      "factor": 31556952.0,
+      "patterns": [
+        "ano",
+        "anos"
+      ]
+    }
+  ],
+  "currency": [
+    {
+      "canonical": "Dolar",
+      "iso": "USD",
+      "symbols": [
+        "$"
+      ],
+      "names": [
+        "dólar",
+        "dólares",
+        "dolares"
+      ]
+    },
+    {
+      "canonical": "Euro",
+      "iso": "EUR",
+      "symbols": [
+        "€"
+      ],
+      "names": [
+        "euro",
+        "euros"
+      ]
+    },
+    {
+      "canonical": "Libra",
+      "iso": "GBP",
+      "symbols": [
+        "£"
+      ],
+      "names": [
+        "libra esterlina"
+      ]
+    },
+    {
+      "canonical": "Rupia",
+      "iso": "INR",
+      "symbols": [
+        "₹"
+      ],
+      "names": [
+        "rupia",
+        "rúpias",
+        "rupias"
+      ]
+    },
+    {
+      "canonical": "Iene",
+      "iso": "JPY",
+      "symbols": [
+        "¥"
+      ],
+      "names": [
+        "iene",
+        "ien"
+      ]
+    }
+  ],
+  "temperature": [
+    {
+      "canonical": "Celsius",
+      "base": "Kelvin",
+      "factor": 1.0,
+      "offset": 273.15,
+      "patterns": [
+        "° c",
+        "°c",
+        "celsius",
+        "grau celsius",
+        "graus celsius"
+      ]
+    },
+    {
+      "canonical": "Fahrenheit",
+      "base": "Kelvin",
+      "factor": 0.5555555555555556,
+      "offset": 255.3722222222222,
+      "patterns": [
+        "° f",
+        "°f",
+        "fahrenheit",
+        "grau fahrenheit",
+        "graus fahrenheit"
+      ]
+    }
+  ],
+  "age": {
+    "unit": "Year",
+    "patterns": [
+      "anos de idade"
+    ]
+  },
+  "datetime": {
+    "dateOrder": "DMY",
+    "monthDayFormats": [
+      "day-first"
+    ],
+    "months": [
+      [
+        "janeiro",
+        "jan"
+      ],
+      [
+        "fevereiro",
+        "fev"
+      ],
+      [
+        "março"
+      ],
+      [
+        "abril",
+        "abr"
+      ],
+      [
+        "maio"
+      ],
+      [
+        "junho",
+        "jun"
+      ],
+      [
+        "julho",
+        "jul"
+      ],
+      [
+        "agosto",
+        "ago"
+      ],
+      [
+        "setembro",
+        "set"
+      ],
+      [
+        "outubro",
+        "out"
+      ],
+      [
+        "novembro",
+        "nov"
+      ],
+      [
+        "dezembro",
+        "dez"
+      ]
+    ],
+    "weekdays": [
+      [
+        "segunda-feira",
+        "segunda"
+      ],
+      [
+        "terça-feira",
+        "terça"
+      ],
+      [
+        "quarta-feira",
+        "quarta"
+      ],
+      [
+        "quinta-feira",
+        "quinta"
+      ],
+      [
+        "sexta-feira",
+        "sexta"
+      ],
+      [
+        "sábado"
+      ],
+      [
+        "domingo"
+      ]
+    ],
+    "daySuffixes": [],
+    "dayMonthConnector": "de",
+    "yearConnector": "de",
+    "relativeDays": {
+      "hoje": 0,
+      "amanhã": 1,
+      "ontem": -1
+    },
+    "now": [
+      "agora"
+    ],
+    "timeSeparators": [
+      ":"
+    ],
+    "ampm": {
+      "am": [
+        "am",
+        "da manhã",
+        "da madrugada"
+      ],
+      "pm": [
+        "pm",
+        "da tarde",
+        "da noite",
+        "da noite"
+      ]
+    },
+    "hourSuffixes": [],
+    "dateTimeConnectors": [
+      "às",
+      "à",
+      "as"
+    ],
+    "numericDateSeparators": [
+      "/",
+      "-",
+      "."
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Inga.Recognizers.Text</RootNamespace>
+    <AssemblyName>Inga.Recognizers.Text</AssemblyName>
+    <PackageId>Inga.Recognizers.Text</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Inga Legal</Authors>
+    <Description>Multilingual text recognition of numbers, percentages, units, dates and times with normalized results. Culture data and specs are shared with the Python/TypeScript ports of this library.</Description>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- single source of truth: the same culture JSON files used by every port -->
+    <EmbeddedResource Include="..\..\..\cultures\*.json" Link="cultures\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

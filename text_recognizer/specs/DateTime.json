@@ -1,0 +1,817 @@
+[
+  {
+    "Culture": "en",
+    "Input": "due on 05/22/2026",
+    "Results": [
+      {
+        "Text": "05/22/2026",
+        "TypeName": "datetime",
+        "Start": 7,
+        "End": 16,
+        "Resolution": {
+          "timex": "2026-05-22",
+          "value": "2026-05-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "on August 22, 2026 at 3pm",
+    "Results": [
+      {
+        "Text": "August 22, 2026 at 3pm",
+        "TypeName": "datetime",
+        "Start": 3,
+        "End": 24,
+        "Resolution": {
+          "timex": "2026-08-22T15:00",
+          "value": "2026-08-22T15:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "signed 22 August 2026",
+    "Results": [
+      {
+        "Text": "22 August 2026",
+        "TypeName": "datetime",
+        "Start": 7,
+        "End": 20,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "deadline March 1st, 2026",
+    "Results": [
+      {
+        "Text": "March 1st, 2026",
+        "TypeName": "datetime",
+        "Start": 9,
+        "End": 23,
+        "Resolution": {
+          "timex": "2026-03-01",
+          "value": "2026-03-01T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "meeting on Jan 5",
+    "Results": [
+      {
+        "Text": "Jan 5",
+        "TypeName": "datetime",
+        "Start": 11,
+        "End": 15,
+        "Resolution": {
+          "timex": "XXXX-01-05",
+          "value": "2026-01-05T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "arrives at 14:30",
+    "Results": [
+      {
+        "Text": "14:30",
+        "TypeName": "datetime",
+        "Start": 11,
+        "End": 15,
+        "Resolution": {
+          "timex": "T14:30",
+          "value": "2026-08-22T14:30:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "see you tomorrow",
+    "Results": [
+      {
+        "Text": "tomorrow",
+        "TypeName": "datetime",
+        "Start": 8,
+        "End": 15,
+        "Resolution": {
+          "timex": "2026-08-23",
+          "value": "2026-08-23T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "we met yesterday",
+    "Results": [
+      {
+        "Text": "yesterday",
+        "TypeName": "datetime",
+        "Start": 7,
+        "End": 15,
+        "Resolution": {
+          "timex": "2026-08-21",
+          "value": "2026-08-21T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "the filing is due Monday",
+    "Results": [
+      {
+        "Text": "Monday",
+        "TypeName": "datetime",
+        "Start": 18,
+        "End": 23,
+        "Resolution": {
+          "timex": "2026-08-17",
+          "value": "2026-08-17T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "as of 2026-08-22",
+    "Results": [
+      {
+        "Text": "2026-08-22",
+        "TypeName": "datetime",
+        "Start": 6,
+        "End": 15,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "gültig ab 22.08.2026",
+    "Results": [
+      {
+        "Text": "22.08.2026",
+        "TypeName": "datetime",
+        "Start": 10,
+        "End": 19,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "ab dem 5. Januar 2026 um 14:30",
+    "Results": [
+      {
+        "Text": "5. Januar 2026 um 14:30",
+        "TypeName": "datetime",
+        "Start": 7,
+        "End": 29,
+        "Resolution": {
+          "timex": "2026-01-05T14:30",
+          "value": "2026-01-05T14:30:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "heute ist Freitag",
+    "Results": [
+      {
+        "Text": "heute",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 4,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      },
+      {
+        "Text": "Freitag",
+        "TypeName": "datetime",
+        "Start": 10,
+        "End": 16,
+        "Resolution": {
+          "timex": "2026-08-21",
+          "value": "2026-08-21T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "um 14 Uhr",
+    "Results": [
+      {
+        "Text": "14 Uhr",
+        "TypeName": "datetime",
+        "Start": 3,
+        "End": 8,
+        "Resolution": {
+          "timex": "T14:00",
+          "value": "2026-08-22T14:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "am Montag",
+    "Results": [
+      {
+        "Text": "Montag",
+        "TypeName": "datetime",
+        "Start": 3,
+        "End": 8,
+        "Resolution": {
+          "timex": "2026-08-17",
+          "value": "2026-08-17T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "signé le 22/08/2026",
+    "Results": [
+      {
+        "Text": "22/08/2026",
+        "TypeName": "datetime",
+        "Start": 9,
+        "End": 18,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "du 5 janvier 2026 à 14h30",
+    "Results": [
+      {
+        "Text": "5 janvier 2026 à 14h30",
+        "TypeName": "datetime",
+        "Start": 3,
+        "End": 24,
+        "Resolution": {
+          "timex": "2026-01-05T14:30",
+          "value": "2026-01-05T14:30:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "réunion à 2 h 30 du matin",
+    "Results": [
+      {
+        "Text": "2 h 30 du matin",
+        "TypeName": "datetime",
+        "Start": 10,
+        "End": 24,
+        "Resolution": {
+          "timex": "T02:30",
+          "value": "2026-08-22T02:30:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "aujourd'hui",
+    "Results": [
+      {
+        "Text": "aujourd'hui",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 10,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "desde el 22/08/2026",
+    "Results": [
+      {
+        "Text": "22/08/2026",
+        "TypeName": "datetime",
+        "Start": 9,
+        "End": 18,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "el 5 de enero de 2026 a las 3 de la tarde",
+    "Results": [
+      {
+        "Text": "5 de enero de 2026 a las 3 de la tarde",
+        "TypeName": "datetime",
+        "Start": 3,
+        "End": 40,
+        "Resolution": {
+          "timex": "2026-01-05T15:00",
+          "value": "2026-01-05T15:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "hoy no hay audiencia",
+    "Results": [
+      {
+        "Text": "hoy",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 2,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "hasta mañana",
+    "Results": [
+      {
+        "Text": "mañana",
+        "TypeName": "datetime",
+        "Start": 6,
+        "End": 11,
+        "Resolution": {
+          "timex": "2026-08-23",
+          "value": "2026-08-23T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "desde 22/08/2026",
+    "Results": [
+      {
+        "Text": "22/08/2026",
+        "TypeName": "datetime",
+        "Start": 6,
+        "End": 15,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "5 de janeiro de 2026 às 14:30",
+    "Results": [
+      {
+        "Text": "5 de janeiro de 2026 às 14:30",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 28,
+        "Resolution": {
+          "timex": "2026-01-05T14:30",
+          "value": "2026-01-05T14:30:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "hoje",
+    "Results": [
+      {
+        "Text": "hoje",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 3,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "dal 22/08/2026",
+    "Results": [
+      {
+        "Text": "22/08/2026",
+        "TypeName": "datetime",
+        "Start": 4,
+        "End": 13,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "il 5 gennaio 2026 alle 14:30",
+    "Results": [
+      {
+        "Text": "5 gennaio 2026 alle 14:30",
+        "TypeName": "datetime",
+        "Start": 3,
+        "End": 27,
+        "Resolution": {
+          "timex": "2026-01-05T14:30",
+          "value": "2026-01-05T14:30:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "oggi",
+    "Results": [
+      {
+        "Text": "oggi",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 3,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "22.08.2026 tarihinde",
+    "Results": [
+      {
+        "Text": "22.08.2026",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 9,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "5 Ocak 2026 saat 14:30",
+    "Results": [
+      {
+        "Text": "5 Ocak 2026 saat 14:30",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 21,
+        "Resolution": {
+          "timex": "2026-01-05T14:30",
+          "value": "2026-01-05T14:30:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "yarın mahkeme",
+    "Results": [
+      {
+        "Text": "yarın",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 4,
+        "Resolution": {
+          "timex": "2026-08-23",
+          "value": "2026-08-23T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "bugün",
+    "Results": [
+      {
+        "Text": "bugün",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 4,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "22/08/2026 से",
+    "Results": [
+      {
+        "Text": "22/08/2026",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 9,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "५ जनवरी २०२६ को",
+    "Results": [
+      {
+        "Text": "५ जनवरी २०२६",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 11,
+        "Resolution": {
+          "timex": "2026-01-05",
+          "value": "2026-01-05T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "शाम 3 बजे मीटिंग",
+    "Results": [
+      {
+        "Text": "शाम 3 बजे",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 8,
+        "Resolution": {
+          "timex": "T15:00",
+          "value": "2026-08-22T15:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "आज छुट्टी है",
+    "Results": [
+      {
+        "Text": "आज",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 1,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "सोमवार को सुनवाई",
+    "Results": [
+      {
+        "Text": "सोमवार",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 5,
+        "Resolution": {
+          "timex": "2026-08-17",
+          "value": "2026-08-17T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": " geldig vanaf 22-08-2026",
+    "Results": [
+      {
+        "Text": "22-08-2026",
+        "TypeName": "datetime",
+        "Start": 14,
+        "End": 23,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "op 5 januari 2026 om 14.30 uur",
+    "Results": [
+      {
+        "Text": "5 januari 2026 om 14.30",
+        "TypeName": "datetime",
+        "Start": 3,
+        "End": 25,
+        "Resolution": {
+          "timex": "2026-01-05T14:30",
+          "value": "2026-01-05T14:30:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "vandaag",
+    "Results": [
+      {
+        "Text": "vandaag",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 6,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "morgen",
+    "Results": [
+      {
+        "Text": "morgen",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 5,
+        "Resolution": {
+          "timex": "2026-08-23",
+          "value": "2026-08-23T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "2026年8月22日开庭",
+    "Results": [
+      {
+        "Text": "2026年8月22日",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 9,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "8月22日截止",
+    "Results": [
+      {
+        "Text": "8月22日",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 4,
+        "Resolution": {
+          "timex": "XXXX-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "2026年1月5日下午3点提交",
+    "Results": [
+      {
+        "Text": "2026年1月5日下午3点",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 12,
+        "Resolution": {
+          "timex": "2026-01-05T15:00",
+          "value": "2026-01-05T15:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "今天休息",
+    "Results": [
+      {
+        "Text": "今天",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 1,
+        "Resolution": {
+          "timex": "2026-08-22",
+          "value": "2026-08-22T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "明天见",
+    "Results": [
+      {
+        "Text": "明天",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 1,
+        "Resolution": {
+          "timex": "2026-08-23",
+          "value": "2026-08-23T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "星期一开庭",
+    "Results": [
+      {
+        "Text": "星期一",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 2,
+        "Resolution": {
+          "timex": "2026-08-17",
+          "value": "2026-08-17T00:00:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "下午3点30分开始",
+    "Results": [
+      {
+        "Text": "下午3点30分",
+        "TypeName": "datetime",
+        "Start": 0,
+        "End": 6,
+        "Resolution": {
+          "timex": "T15:30",
+          "value": "2026-08-22T15:30:00"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "no dates around here",
+    "Results": []
+  },
+  {
+    "Culture": "en",
+    "Input": "the ratio 24/7 is not a date",
+    "Results": [
+      {
+        "Text": "24",
+        "TypeName": "number",
+        "Start": 10,
+        "End": 11,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "24"
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,938 @@
+[
+  {
+    "Culture": "en",
+    "Input": "the tunnel is 3 km long",
+    "Results": [
+      {
+        "Text": "3 km",
+        "TypeName": "dimension",
+        "Start": 14,
+        "End": 17,
+        "Resolution": {
+          "value": "3",
+          "unit": "Kilometer",
+          "normalizedValue": "3000",
+          "normalizedUnit": "Meter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "a parcel weighing 2.5 kg",
+    "Results": [
+      {
+        "Text": "2.5 kg",
+        "TypeName": "dimension",
+        "Start": 18,
+        "End": 23,
+        "Resolution": {
+          "value": "2.5",
+          "unit": "Kilogram"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "it was 30 °C outside",
+    "Results": [
+      {
+        "Text": "30 °C",
+        "TypeName": "temperature",
+        "Start": 7,
+        "End": 11,
+        "Resolution": {
+          "value": "30",
+          "unit": "Celsius",
+          "normalizedValue": "303.15",
+          "normalizedUnit": "Kelvin"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "the fee is $1,200.50",
+    "Results": [
+      {
+        "Text": "$1,200.50",
+        "TypeName": "currency",
+        "Start": 11,
+        "End": 19,
+        "Resolution": {
+          "value": "1200.5",
+          "unit": "Dollar",
+          "iso": "USD"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "costs 2000 dollars",
+    "Results": [
+      {
+        "Text": "2000 dollars",
+        "TypeName": "currency",
+        "Start": 6,
+        "End": 17,
+        "Resolution": {
+          "value": "2000",
+          "unit": "Dollar",
+          "iso": "USD"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "my son is 7 years old",
+    "Results": [
+      {
+        "Text": "7 years old",
+        "TypeName": "age",
+        "Start": 10,
+        "End": 20,
+        "Resolution": {
+          "value": "7",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "runs for 30 minutes",
+    "Results": [
+      {
+        "Text": "30 minutes",
+        "TypeName": "duration",
+        "Start": 9,
+        "End": 18,
+        "Resolution": {
+          "value": "30",
+          "unit": "Minute",
+          "normalizedValue": "1800",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "speeding at 60 mph",
+    "Results": [
+      {
+        "Text": "60 mph",
+        "TypeName": "dimension",
+        "Start": 12,
+        "End": 17,
+        "Resolution": {
+          "value": "60",
+          "unit": "MilePerHour",
+          "normalizedValue": "96.56064",
+          "normalizedUnit": "KilometerPerHour"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "an area of 100 sq ft",
+    "Results": [
+      {
+        "Text": "100 sq ft",
+        "TypeName": "dimension",
+        "Start": 11,
+        "End": 19,
+        "Resolution": {
+          "value": "100",
+          "unit": "SquareFoot",
+          "normalizedValue": "9.290304",
+          "normalizedUnit": "SquareMeter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "a tank of 4 gallons",
+    "Results": [
+      {
+        "Text": "4 gallons",
+        "TypeName": "dimension",
+        "Start": 10,
+        "End": 18,
+        "Resolution": {
+          "value": "4",
+          "unit": "Gallon",
+          "normalizedValue": "15.141647136",
+          "normalizedUnit": "Liter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "a file of 500 MB",
+    "Results": [
+      {
+        "Text": "500 MB",
+        "TypeName": "dimension",
+        "Start": 10,
+        "End": 15,
+        "Resolution": {
+          "value": "500",
+          "unit": "Megabyte",
+          "normalizedValue": "500000000",
+          "normalizedUnit": "Byte"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "rent is ₹2,500 per month",
+    "Results": [
+      {
+        "Text": "₹2,500",
+        "TypeName": "currency",
+        "Start": 8,
+        "End": 13,
+        "Resolution": {
+          "value": "2500",
+          "unit": "Rupee",
+          "iso": "INR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "5 Kilometer entfernt",
+    "Results": [
+      {
+        "Text": "5 Kilometer",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 10,
+        "Resolution": {
+          "value": "5",
+          "unit": "Kilometer",
+          "normalizedValue": "5000",
+          "normalizedUnit": "Meter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "dreizehn Kilogramm Gepäck",
+    "Results": [
+      {
+        "Text": "dreizehn Kilogramm",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 17,
+        "Resolution": {
+          "value": "13",
+          "unit": "Kilogramm"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "20 °C im Sommer",
+    "Results": [
+      {
+        "Text": "20 °C",
+        "TypeName": "temperature",
+        "Start": 0,
+        "End": 4,
+        "Resolution": {
+          "value": "20",
+          "unit": "Celsius",
+          "normalizedValue": "293.15",
+          "normalizedUnit": "Kelvin"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "1.234,56 Euro Gebühr",
+    "Results": [
+      {
+        "Text": "1.234,56 Euro",
+        "TypeName": "currency",
+        "Start": 0,
+        "End": 12,
+        "Resolution": {
+          "value": "1234.56",
+          "unit": "Euro",
+          "iso": "EUR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "er ist 3 Jahre alt",
+    "Results": [
+      {
+        "Text": "3 Jahre alt",
+        "TypeName": "age",
+        "Start": 7,
+        "End": 17,
+        "Resolution": {
+          "value": "3",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "zwei Stunden warten",
+    "Results": [
+      {
+        "Text": "zwei Stunden",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 11,
+        "Resolution": {
+          "value": "2",
+          "unit": "Stunde",
+          "normalizedValue": "7200",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "10 kilomètres à pied",
+    "Results": [
+      {
+        "Text": "10 kilomètres",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 12,
+        "Resolution": {
+          "value": "10",
+          "unit": "Kilometre",
+          "normalizedValue": "10000",
+          "normalizedUnit": "Metre"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "il fait 25 °C",
+    "Results": [
+      {
+        "Text": "25 °C",
+        "TypeName": "temperature",
+        "Start": 8,
+        "End": 12,
+        "Resolution": {
+          "value": "25",
+          "unit": "Celsius",
+          "normalizedValue": "298.15",
+          "normalizedUnit": "Kelvin"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "un enfant de trois ans",
+    "Results": [
+      {
+        "Text": "trois ans",
+        "TypeName": "age",
+        "Start": 13,
+        "End": 21,
+        "Resolution": {
+          "value": "3",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "5 heures de route",
+    "Results": [
+      {
+        "Text": "5 heures",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 7,
+        "Resolution": {
+          "value": "5",
+          "unit": "Heure",
+          "normalizedValue": "18000",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "2 500 euros de loyer",
+    "Results": [
+      {
+        "Text": "2 500 euros",
+        "TypeName": "currency",
+        "Start": 0,
+        "End": 10,
+        "Resolution": {
+          "value": "2500",
+          "unit": "Euro",
+          "iso": "EUR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "10 kilómetros de distancia",
+    "Results": [
+      {
+        "Text": "10 kilómetros",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 12,
+        "Resolution": {
+          "value": "10",
+          "unit": "Kilometro",
+          "normalizedValue": "10000",
+          "normalizedUnit": "Metro"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "un niño de 5 años de edad",
+    "Results": [
+      {
+        "Text": "5 años de edad",
+        "TypeName": "age",
+        "Start": 11,
+        "End": 24,
+        "Resolution": {
+          "value": "5",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "2 horas de espera",
+    "Results": [
+      {
+        "Text": "2 horas",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 6,
+        "Resolution": {
+          "value": "2",
+          "unit": "Hora",
+          "normalizedValue": "7200",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "cuesta 5 dólares",
+    "Results": [
+      {
+        "Text": "5 dólares",
+        "TypeName": "currency",
+        "Start": 7,
+        "End": 15,
+        "Resolution": {
+          "value": "5",
+          "unit": "Dolar",
+          "iso": "USD"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "10 quilômetros de distância",
+    "Results": [
+      {
+        "Text": "10 quilômetros",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 13,
+        "Resolution": {
+          "value": "10",
+          "unit": "Quilometro",
+          "normalizedValue": "10000",
+          "normalizedUnit": "Metro"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "uma criança de 5 anos de idade",
+    "Results": [
+      {
+        "Text": "5 anos de idade",
+        "TypeName": "age",
+        "Start": 15,
+        "End": 29,
+        "Resolution": {
+          "value": "5",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "2 horas de espera",
+    "Results": [
+      {
+        "Text": "2 horas",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 6,
+        "Resolution": {
+          "value": "2",
+          "unit": "Hora",
+          "normalizedValue": "7200",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "10 chilometri di distanza",
+    "Results": [
+      {
+        "Text": "10 chilometri",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 12,
+        "Resolution": {
+          "value": "10",
+          "unit": "Chilometro",
+          "normalizedValue": "10000",
+          "normalizedUnit": "Metro"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "un bambino di 5 anni di età",
+    "Results": [
+      {
+        "Text": "5 anni di età",
+        "TypeName": "age",
+        "Start": 14,
+        "End": 26,
+        "Resolution": {
+          "value": "5",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "2 ore di attesa",
+    "Results": [
+      {
+        "Text": "2 ore",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 4,
+        "Resolution": {
+          "value": "2",
+          "unit": "Ora",
+          "normalizedValue": "7200",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "10 kilometre uzaklıkta",
+    "Results": [
+      {
+        "Text": "10 kilometre",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 11,
+        "Resolution": {
+          "value": "10",
+          "unit": "Kilometre",
+          "normalizedValue": "10000",
+          "normalizedUnit": "Metre"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "5 yaşında bir çocuk",
+    "Results": [
+      {
+        "Text": "5 yaşında",
+        "TypeName": "age",
+        "Start": 0,
+        "End": 8,
+        "Resolution": {
+          "value": "5",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "2 saat bekleme",
+    "Results": [
+      {
+        "Text": "2 saat",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 5,
+        "Resolution": {
+          "value": "2",
+          "unit": "Saat",
+          "normalizedValue": "7200",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "1.000 lira ceza",
+    "Results": [
+      {
+        "Text": "1.000 lira",
+        "TypeName": "currency",
+        "Start": 0,
+        "End": 9,
+        "Resolution": {
+          "value": "1000",
+          "unit": "TurkLirasi",
+          "iso": "TRY"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "5 किलोमीटर दूर",
+    "Results": [
+      {
+        "Text": "5 किलोमीटर",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 9,
+        "Resolution": {
+          "value": "5",
+          "unit": "Kilometer",
+          "normalizedValue": "5000",
+          "normalizedUnit": "Meter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "१० किलोमीटर दूरी",
+    "Results": [
+      {
+        "Text": "१० किलोमीटर",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 10,
+        "Resolution": {
+          "value": "10",
+          "unit": "Kilometer",
+          "normalizedValue": "10000",
+          "normalizedUnit": "Meter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "बेटी ५ साल की है",
+    "Results": [
+      {
+        "Text": "५ साल की",
+        "TypeName": "age",
+        "Start": 5,
+        "End": 12,
+        "Resolution": {
+          "value": "5",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "2 घंटे का सफर",
+    "Results": [
+      {
+        "Text": "2 घंटे",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 5,
+        "Resolution": {
+          "value": "2",
+          "unit": "Hour",
+          "normalizedValue": "7200",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "कुल ५०० रुपये",
+    "Results": [
+      {
+        "Text": "५०० रुपये",
+        "TypeName": "currency",
+        "Start": 4,
+        "End": 12,
+        "Resolution": {
+          "value": "500",
+          "unit": "Rupee",
+          "iso": "INR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "10 kilometer verderop",
+    "Results": [
+      {
+        "Text": "10 kilometer",
+        "TypeName": "dimension",
+        "Start": 0,
+        "End": 11,
+        "Resolution": {
+          "value": "10",
+          "unit": "Kilometer",
+          "normalizedValue": "10000",
+          "normalizedUnit": "Meter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "hij is 3 jaar oud",
+    "Results": [
+      {
+        "Text": "3 jaar oud",
+        "TypeName": "age",
+        "Start": 7,
+        "End": 16,
+        "Resolution": {
+          "value": "3",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "2 uur wachten",
+    "Results": [
+      {
+        "Text": "2 uur",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 4,
+        "Resolution": {
+          "value": "2",
+          "unit": "Uur",
+          "normalizedValue": "7200",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "€25 per dag",
+    "Results": [
+      {
+        "Text": "€25",
+        "TypeName": "currency",
+        "Start": 0,
+        "End": 2,
+        "Resolution": {
+          "value": "25",
+          "unit": "Euro",
+          "iso": "EUR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "面积约3万平方米",
+    "Results": [
+      {
+        "Text": "3万平方米",
+        "TypeName": "dimension",
+        "Start": 3,
+        "End": 7,
+        "Resolution": {
+          "value": "30000",
+          "unit": "SquareMeter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "限速60公里",
+    "Results": [
+      {
+        "Text": "60公里",
+        "TypeName": "dimension",
+        "Start": 2,
+        "End": 5,
+        "Resolution": {
+          "value": "60",
+          "unit": "Kilometer",
+          "normalizedValue": "60000",
+          "normalizedUnit": "Meter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "气温30摄氏度",
+    "Results": [
+      {
+        "Text": "30摄氏度",
+        "TypeName": "temperature",
+        "Start": 2,
+        "End": 6,
+        "Resolution": {
+          "value": "30",
+          "unit": "Celsius",
+          "normalizedValue": "303.15",
+          "normalizedUnit": "Kelvin"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "租金500元",
+    "Results": [
+      {
+        "Text": "500元",
+        "TypeName": "currency",
+        "Start": 2,
+        "End": 5,
+        "Resolution": {
+          "value": "500",
+          "unit": "ChineseYuan",
+          "iso": "CNY"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "租期12个月",
+    "Results": [
+      {
+        "Text": "12个月",
+        "TypeName": "duration",
+        "Start": 2,
+        "End": 5,
+        "Resolution": {
+          "value": "12",
+          "unit": "Month",
+          "normalizedValue": "31556952",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "他花了十分钟",
+    "Results": [
+      {
+        "Text": "十分钟",
+        "TypeName": "duration",
+        "Start": 3,
+        "End": 5,
+        "Resolution": {
+          "value": "10",
+          "unit": "Minute",
+          "normalizedValue": "600",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "他今年三十岁",
+    "Results": [
+      {
+        "Text": "三十岁",
+        "TypeName": "age",
+        "Start": 3,
+        "End": 5,
+        "Resolution": {
+          "value": "30",
+          "unit": "Year"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "面积5亩",
+    "Results": [
+      {
+        "Text": "5亩",
+        "TypeName": "dimension",
+        "Start": 2,
+        "End": 3,
+        "Resolution": {
+          "value": "5",
+          "unit": "Mu",
+          "normalizedValue": "3333.3333333333",
+          "normalizedUnit": "SquareMeter"
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,482 @@
+{
+  "culture": "hi",
+  "number": {
+    "decimalMark": ".",
+    "groupMark": ",",
+    "spaceGroup": false,
+    "grouping": "indian",
+    "ordinalSuffixes": [
+      "वाँ",
+      "वां",
+      "वें",
+      "वीं"
+    ],
+    "ordinalWords": {
+      "पहला": 1,
+      "पहली": 1,
+      "दूसरा": 2,
+      "दूसरी": 2,
+      "तीसरा": 3,
+      "तीसरी": 3,
+      "चौथा": 4,
+      "चौथी": 4,
+      "पाँचवाँ": 5,
+      "पांचवां": 5,
+      "छठा": 6,
+      "सातवाँ": 7,
+      "आठवाँ": 8,
+      "नौवाँ": 9,
+      "दसवाँ": 10
+    },
+    "atoms": {
+      "शून्य": 0,
+      "एक": 1,
+      "दो": 2,
+      "तीन": 3,
+      "चार": 4,
+      "पाँच": 5,
+      "पांच": 5,
+      "छह": 6,
+      "छः": 6,
+      "सात": 7,
+      "आठ": 8,
+      "नौ": 9,
+      "दस": 10,
+      "ग्यारह": 11,
+      "बारह": 12,
+      "तेरह": 13,
+      "चौदह": 14,
+      "पंद्रह": 15,
+      "सोलह": 16,
+      "सत्रह": 17,
+      "अठारह": 18,
+      "उन्नीस": 19,
+      "बीस": 20,
+      "तीस": 30,
+      "चालीस": 40,
+      "पचास": 50,
+      "साठ": 60,
+      "सत्तर": 70,
+      "अस्सी": 80,
+      "नब्बे": 90
+    },
+    "scales": {
+      "सौ": 100,
+      "हज़ार": 1000,
+      "हजार": 1000,
+      "लाख": 100000,
+      "करोड़": 10000000
+    },
+    "connectors": [],
+    "negativeWords": [
+      "ऋण"
+    ]
+  },
+  "percentage": {
+    "suffixes": [
+      "%",
+      "प्रतिशत"
+    ],
+    "prefixes": []
+  },
+  "dimension": [
+    {
+      "canonical": "Meter",
+      "base": "Meter",
+      "factor": 1.0,
+      "patterns": [
+        "मीटर",
+        "m"
+      ]
+    },
+    {
+      "canonical": "Kilometer",
+      "base": "Meter",
+      "factor": 1000.0,
+      "patterns": [
+        "किलोमीटर",
+        "km"
+      ]
+    },
+    {
+      "canonical": "Centimeter",
+      "base": "Meter",
+      "factor": 0.01,
+      "patterns": [
+        "सेंटीमीटर",
+        "cm"
+      ]
+    },
+    {
+      "canonical": "Millimeter",
+      "base": "Meter",
+      "factor": 0.001,
+      "patterns": [
+        "मिलीमीटर",
+        "mm"
+      ]
+    },
+    {
+      "canonical": "Kilogram",
+      "base": "Kilogram",
+      "factor": 1.0,
+      "patterns": [
+        "किलोग्राम",
+        "किलो",
+        "kg"
+      ]
+    },
+    {
+      "canonical": "Gram",
+      "base": "Kilogram",
+      "factor": 0.001,
+      "patterns": [
+        "ग्राम",
+        "g"
+      ]
+    },
+    {
+      "canonical": "SquareMeter",
+      "base": "SquareMeter",
+      "factor": 1.0,
+      "patterns": [
+        "वर्ग मीटर",
+        "m2",
+        "m²"
+      ]
+    },
+    {
+      "canonical": "SquareKilometer",
+      "base": "SquareMeter",
+      "factor": 1000000.0,
+      "patterns": [
+        "वर्ग किलोमीटर",
+        "km2",
+        "km²"
+      ]
+    },
+    {
+      "canonical": "Hectare",
+      "base": "SquareMeter",
+      "factor": 10000.0,
+      "patterns": [
+        "हेक्टेयर",
+        "ha"
+      ]
+    },
+    {
+      "canonical": "Acre",
+      "base": "SquareMeter",
+      "factor": 4046.8564224,
+      "patterns": [
+        "एकड़",
+        "एकड़े",
+        "acre"
+      ]
+    },
+    {
+      "canonical": "Liter",
+      "base": "Liter",
+      "factor": 1.0,
+      "patterns": [
+        "लीटर",
+        "l"
+      ]
+    },
+    {
+      "canonical": "Milliliter",
+      "base": "Liter",
+      "factor": 0.001,
+      "patterns": [
+        "मिलीलीटर",
+        "ml"
+      ]
+    },
+    {
+      "canonical": "KilometerPerHour",
+      "base": "KilometerPerHour",
+      "factor": 1.0,
+      "patterns": [
+        "किमी/घंटा",
+        "km/h"
+      ]
+    },
+    {
+      "canonical": "Megabyte",
+      "base": "Byte",
+      "factor": 1000000.0,
+      "patterns": [
+        "mb"
+      ]
+    },
+    {
+      "canonical": "Gigabyte",
+      "base": "Byte",
+      "factor": 1000000000.0,
+      "patterns": [
+        "gb"
+      ]
+    }
+  ],
+  "duration": [
+    {
+      "canonical": "Second",
+      "base": "Second",
+      "factor": 1.0,
+      "patterns": [
+        "सेकंड",
+        "सेकेंड"
+      ]
+    },
+    {
+      "canonical": "Minute",
+      "base": "Second",
+      "factor": 60.0,
+      "patterns": [
+        "मिनट"
+      ]
+    },
+    {
+      "canonical": "Hour",
+      "base": "Second",
+      "factor": 3600.0,
+      "patterns": [
+        "घंटा",
+        "घंटे"
+      ]
+    },
+    {
+      "canonical": "Day",
+      "base": "Second",
+      "factor": 86400.0,
+      "patterns": [
+        "दिन"
+      ]
+    },
+    {
+      "canonical": "Week",
+      "base": "Second",
+      "factor": 604800.0,
+      "patterns": [
+        "सप्ताह",
+        "हफ्ते",
+        "हफ्ता"
+      ]
+    },
+    {
+      "canonical": "Month",
+      "base": "Second",
+      "factor": 2629746.0,
+      "patterns": [
+        "महीना",
+        "महीने"
+      ]
+    },
+    {
+      "canonical": "Year",
+      "base": "Second",
+      "factor": 31556952.0,
+      "patterns": [
+        "साल",
+        "वर्ष"
+      ]
+    }
+  ],
+  "currency": [
+    {
+      "canonical": "Rupee",
+      "iso": "INR",
+      "symbols": [
+        "₹"
+      ],
+      "names": [
+        "रुपया",
+        "रुपये",
+        "रु"
+      ]
+    },
+    {
+      "canonical": "Dollar",
+      "iso": "USD",
+      "symbols": [
+        "$"
+      ],
+      "names": [
+        "डॉलर"
+      ]
+    },
+    {
+      "canonical": "Euro",
+      "iso": "EUR",
+      "symbols": [
+        "€"
+      ],
+      "names": [
+        "यूरो"
+      ]
+    },
+    {
+      "canonical": "PoundSterling",
+      "iso": "GBP",
+      "symbols": [
+        "£"
+      ],
+      "names": [
+        "पाउंड"
+      ]
+    },
+    {
+      "canonical": "Yen",
+      "iso": "JPY",
+      "symbols": [
+        "¥"
+      ],
+      "names": [
+        "येन"
+      ]
+    }
+  ],
+  "temperature": [
+    {
+      "canonical": "Celsius",
+      "base": "Kelvin",
+      "factor": 1.0,
+      "offset": 273.15,
+      "patterns": [
+        "° c",
+        "°c",
+        "डिग्री सेल्सियस",
+        "सेल्सियस"
+      ]
+    },
+    {
+      "canonical": "Fahrenheit",
+      "base": "Kelvin",
+      "factor": 0.5555555555555556,
+      "offset": 255.3722222222222,
+      "patterns": [
+        "° f",
+        "°f",
+        "फ़ारेनहाइट"
+      ]
+    }
+  ],
+  "age": {
+    "unit": "Year",
+    "patterns": [
+      "साल का",
+      "साल की",
+      "साल के"
+    ]
+  },
+  "datetime": {
+    "dateOrder": "DMY",
+    "monthDayFormats": [
+      "day-first"
+    ],
+    "months": [
+      [
+        "जनवरी"
+      ],
+      [
+        "फ़रवरी",
+        "फरवरी"
+      ],
+      [
+        "मार्च"
+      ],
+      [
+        "अप्रैल"
+      ],
+      [
+        "मई"
+      ],
+      [
+        "जून"
+      ],
+      [
+        "जुलाई"
+      ],
+      [
+        "अगस्त"
+      ],
+      [
+        "सितंबर",
+        "सितम्बर"
+      ],
+      [
+        "अक्टूबर"
+      ],
+      [
+        "नवंबर",
+        "नवम्बर"
+      ],
+      [
+        "दिसंबर",
+        "दिसम्बर"
+      ]
+    ],
+    "weekdays": [
+      [
+        "सोमवार"
+      ],
+      [
+        "मंगलवार"
+      ],
+      [
+        "बुधवार"
+      ],
+      [
+        "गुरुवार",
+        "बृहस्पतिवार"
+      ],
+      [
+        "शुक्रवार"
+      ],
+      [
+        "शनिवार"
+      ],
+      [
+        "रविवार"
+      ]
+    ],
+    "daySuffixes": [],
+    "relativeDays": {
+      "आज": 0
+    },
+    "now": [
+      "अभी",
+      "अब"
+    ],
+    "timeSeparators": [
+      ":",
+      "."
+    ],
+    "ampm": {
+      "am": [],
+      "pm": []
+    },
+    "hourSuffixes": [],
+    "hiPartOfDay": {
+      "am": [
+        "सुबह",
+        "पहाल"
+      ],
+      "pm": [
+        "दोपहर",
+        "शाम",
+        "रात"
+      ]
+    },
+    "hiOClock": "बजे",
+    "dateTimeConnectors": [
+      "को",
+      "पर"
+    ],
+    "numericDateSeparators": [
+      "/",
+      ".",
+      "-"
+    ]
+  }
+}

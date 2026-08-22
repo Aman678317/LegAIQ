@@ -1,0 +1,111 @@
+{
+  "culture": "en",
+  "number": {
+    "decimalMark": ".",
+    "groupMark": ",",
+    "spaceGroup": false,
+    "grouping": "western",
+    "ordinalSuffixes": ["st", "nd", "rd", "th"],
+    "ordinalWords": {
+      "first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5,
+      "sixth": 6, "seventh": 7, "eighth": 8, "ninth": 9, "tenth": 10,
+      "eleventh": 11, "twelfth": 12, "thirteenth": 13, "fifteenth": 15,
+      "twentieth": 20, "thirtieth": 30, "hundredth": 100, "thousandth": 1000
+    },
+    "atoms": {
+      "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+      "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+      "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
+      "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
+      "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+      "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90
+    },
+    "scales": { "hundred": 100, "thousand": 1000, "million": 1000000, "billion": 1000000000 },
+    "connectors": ["and"],
+    "negativeWords": ["minus", "negative"]
+  },
+  "percentage": {
+    "suffixes": ["%", "percent"],
+    "prefixes": []
+  },
+  "dimension": [
+    { "canonical": "Meter", "base": "Meter", "factor": 1.0, "patterns": ["m", "meter", "meters"] },
+    { "canonical": "Kilometer", "base": "Meter", "factor": 1000.0, "patterns": ["km", "kilometer", "kilometers", "kilometre", "kilometres"] },
+    { "canonical": "Centimeter", "base": "Meter", "factor": 0.01, "patterns": ["cm", "centimeter", "centimeters", "centimetre", "centimetres"] },
+    { "canonical": "Millimeter", "base": "Meter", "factor": 0.001, "patterns": ["mm", "millimeter", "millimeters", "millimetre", "millimetres"] },
+    { "canonical": "Mile", "base": "Meter", "factor": 1609.344, "patterns": ["mi", "mile", "miles"] },
+    { "canonical": "Yard", "base": "Meter", "factor": 0.9144, "patterns": ["yd", "yard", "yards"] },
+    { "canonical": "Foot", "base": "Meter", "factor": 0.3048, "patterns": ["ft", "foot", "feet"] },
+    { "canonical": "Inch", "base": "Meter", "factor": 0.0254, "patterns": ["in", "inch", "inches"] },
+    { "canonical": "Kilogram", "base": "Kilogram", "factor": 1.0, "patterns": ["kg", "kilogram", "kilograms"] },
+    { "canonical": "Gram", "base": "Kilogram", "factor": 0.001, "patterns": ["g", "gram", "grams"] },
+    { "canonical": "Milligram", "base": "Kilogram", "factor": 1e-06, "patterns": ["mg", "milligram", "milligrams"] },
+    { "canonical": "Pound", "base": "Kilogram", "factor": 0.45359237, "patterns": ["lb", "lbs", "pound", "pounds"] },
+    { "canonical": "Ounce", "base": "Kilogram", "factor": 0.028349523125, "patterns": ["oz", "ounce", "ounces"] },
+    { "canonical": "SquareMeter", "base": "SquareMeter", "factor": 1.0, "patterns": ["m2", "m²", "sq m", "square meter", "square meters", "square metre", "square metres"] },
+    { "canonical": "SquareKilometer", "base": "SquareMeter", "factor": 1000000.0, "patterns": ["km2", "km²", "sq km", "square kilometer", "square kilometers", "square kilometre", "square kilometres"] },
+    { "canonical": "Hectare", "base": "SquareMeter", "factor": 10000.0, "patterns": ["ha", "hectare", "hectares"] },
+    { "canonical": "Acre", "base": "SquareMeter", "factor": 4046.8564224, "patterns": ["acre", "acres"] },
+    { "canonical": "SquareFoot", "base": "SquareMeter", "factor": 0.09290304, "patterns": ["sq ft", "square foot", "square feet"] },
+    { "canonical": "Liter", "base": "Liter", "factor": 1.0, "patterns": ["l", "liter", "liters", "litre", "litres"] },
+    { "canonical": "Milliliter", "base": "Liter", "factor": 0.001, "patterns": ["ml", "milliliter", "milliliters", "millilitre", "millilitres"] },
+    { "canonical": "CubicMeter", "base": "Liter", "factor": 1000.0, "patterns": ["m3", "m³", "cubic meter", "cubic meters", "cubic metre", "cubic metres"] },
+    { "canonical": "Gallon", "base": "Liter", "factor": 3.785411784, "patterns": ["gal", "gallon", "gallons"] },
+    { "canonical": "KilometerPerHour", "base": "KilometerPerHour", "factor": 1.0, "patterns": ["km/h", "kph", "kmh"] },
+    { "canonical": "MilePerHour", "base": "KilometerPerHour", "factor": 1.609344, "patterns": ["mph"] },
+    { "canonical": "Megabyte", "base": "Byte", "factor": 1000000.0, "patterns": ["mb"] },
+    { "canonical": "Gigabyte", "base": "Byte", "factor": 1000000000.0, "patterns": ["gb"] },
+    { "canonical": "Terabyte", "base": "Byte", "factor": 1000000000000.0, "patterns": ["tb"] },
+    { "canonical": "Kilobyte", "base": "Byte", "factor": 1000.0, "patterns": ["kb"] }
+  ],
+  "duration": [
+    { "canonical": "Second", "base": "Second", "factor": 1.0, "patterns": ["sec", "secs", "second", "seconds"] },
+    { "canonical": "Minute", "base": "Second", "factor": 60.0, "patterns": ["min", "mins", "minute", "minutes"] },
+    { "canonical": "Hour", "base": "Second", "factor": 3600.0, "patterns": ["h", "hr", "hrs", "hour", "hours"] },
+    { "canonical": "Day", "base": "Second", "factor": 86400.0, "patterns": ["day", "days"] },
+    { "canonical": "Week", "base": "Second", "factor": 604800.0, "patterns": ["week", "weeks"] },
+    { "canonical": "Month", "base": "Second", "factor": 2629746.0, "patterns": ["month", "months"] },
+    { "canonical": "Year", "base": "Second", "factor": 31556952.0, "patterns": ["year", "years"] }
+  ],
+  "currency": [
+    { "canonical": "Dollar", "iso": "USD", "symbols": ["$"], "names": ["dollar", "dollars", "usd"] },
+    { "canonical": "Euro", "iso": "EUR", "symbols": ["€"], "names": ["euro", "euros", "eur"] },
+    { "canonical": "PoundSterling", "iso": "GBP", "symbols": ["£"], "names": ["pound sterling", "british pound", "gbp"] },
+    { "canonical": "Rupee", "iso": "INR", "symbols": ["₹"], "names": ["rupee", "rupees", "rs", "inr"] },
+    { "canonical": "Yen", "iso": "JPY", "symbols": ["¥"], "names": ["yen", "jpy"] }
+  ],
+  "temperature": [
+    { "canonical": "Celsius", "base": "Kelvin", "factor": 1.0, "offset": 273.15, "patterns": ["° c", "°c", "celsius", "degree celsius", "degrees celsius", "centigrade"] },
+    { "canonical": "Fahrenheit", "base": "Kelvin", "factor": 0.5555555555555556, "offset": 255.3722222222222222, "patterns": ["° f", "°f", "fahrenheit", "degree fahrenheit", "degrees fahrenheit"] },
+    { "canonical": "Kelvin", "base": "Kelvin", "factor": 1.0, "offset": 0.0, "patterns": ["k", "kelvin", "kelvins"] }
+  ],
+  "age": {
+    "unit": "Year",
+    "patterns": ["years? old", "year old", "y/o", "yrs? old"]
+  },
+  "datetime": {
+    "dateOrder": "MDY",
+    "monthDayFormats": ["month-first", "day-first"],
+    "months": [
+      ["january", "jan"], ["february", "feb"], ["march", "mar"], ["april", "apr"],
+      ["may"], ["june", "jun"], ["july", "jul"], ["august", "aug"],
+      ["september", "sep", "sept"], ["october", "oct"], ["november", "nov"], ["december", "dec"]
+    ],
+    "weekdays": [
+      ["monday", "mon"], ["tuesday", "tue", "tues"], ["wednesday", "wed"],
+      ["thursday", "thu", "thur", "thurs"], ["friday", "fri"],
+      ["saturday", "sat"], ["sunday", "sun"]
+    ],
+    "daySuffixes": ["st", "nd", "rd", "th"],
+    "relativeDays": { "today": 0, "tomorrow": 1, "yesterday": -1 },
+    "now": ["now"],
+    "timeSeparators": [":"],
+    "ampm": {
+      "am": ["am", "a.m.", "in the morning"],
+      "pm": ["pm", "p.m.", "in the afternoon", "in the evening", "at night"]
+    },
+    "hourTokens": [],
+    "dateTimeConnectors": ["at", "on"],
+    "numericDateSeparators": ["/", "-", "."]
+  }
+}

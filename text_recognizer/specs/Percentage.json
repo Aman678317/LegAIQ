@@ -1,0 +1,247 @@
+[
+  {
+    "Culture": "en",
+    "Input": "a rise of 15% last year",
+    "Results": [
+      {
+        "Text": "15%",
+        "TypeName": "percentage",
+        "Start": 10,
+        "End": 12,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "fifty percent of voters",
+    "Results": [
+      {
+        "Text": "fifty percent",
+        "TypeName": "percentage",
+        "Start": 0,
+        "End": 12,
+        "Resolution": {
+          "value": "50",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "15 percent more",
+    "Results": [
+      {
+        "Text": "15 percent",
+        "TypeName": "percentage",
+        "Start": 0,
+        "End": 9,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "eine Erhöhung um 15 Prozent",
+    "Results": [
+      {
+        "Text": "15 Prozent",
+        "TypeName": "percentage",
+        "Start": 17,
+        "End": 26,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "une hausse de 15 pour cent",
+    "Results": [
+      {
+        "Text": "15 pour cent",
+        "TypeName": "percentage",
+        "Start": 14,
+        "End": 25,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "un aumento del 15 por ciento",
+    "Results": [
+      {
+        "Text": "15 por ciento",
+        "TypeName": "percentage",
+        "Start": 15,
+        "End": 27,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "um aumento de 15 por cento",
+    "Results": [
+      {
+        "Text": "15 por cento",
+        "TypeName": "percentage",
+        "Start": 14,
+        "End": 25,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "un aumento del 15 per cento",
+    "Results": [
+      {
+        "Text": "15 per cento",
+        "TypeName": "percentage",
+        "Start": 15,
+        "End": 26,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "yüzde 15 artış",
+    "Results": [
+      {
+        "Text": "yüzde 15",
+        "TypeName": "percentage",
+        "Start": 0,
+        "End": 7,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "zam oranı %30",
+    "Results": [
+      {
+        "Text": "%30",
+        "TypeName": "percentage",
+        "Start": 10,
+        "End": 12,
+        "Resolution": {
+          "value": "30",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "15 प्रतिशत वृद्धि",
+    "Results": [
+      {
+        "Text": "15 प्रतिशत",
+        "TypeName": "percentage",
+        "Start": 0,
+        "End": 9,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "३० प्रतिशत लाभ",
+    "Results": [
+      {
+        "Text": "३० प्रतिशत",
+        "TypeName": "percentage",
+        "Start": 0,
+        "End": 9,
+        "Resolution": {
+          "value": "30",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "een stijging van 15 procent",
+    "Results": [
+      {
+        "Text": "15 procent",
+        "TypeName": "percentage",
+        "Start": 17,
+        "End": 26,
+        "Resolution": {
+          "value": "15",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "涨幅为百分之三十",
+    "Results": [
+      {
+        "Text": "百分之三十",
+        "TypeName": "percentage",
+        "Start": 3,
+        "End": 7,
+        "Resolution": {
+          "value": "30",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "涨幅为30%",
+    "Results": [
+      {
+        "Text": "30%",
+        "TypeName": "percentage",
+        "Start": 3,
+        "End": 5,
+        "Resolution": {
+          "value": "30",
+          "unit": "%"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "no ratios in here at all",
+    "Results": []
+  }
+]

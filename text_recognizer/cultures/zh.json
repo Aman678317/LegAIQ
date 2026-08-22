@@ -1,0 +1,358 @@
+{
+  "culture": "zh",
+  "number": {
+    "decimalMark": ".",
+    "groupMark": ",",
+    "spaceGroup": false,
+    "grouping": "western",
+    "ordinalSuffixes": [],
+    "ordinalWords": {},
+    "atoms": {},
+    "scales": {},
+    "connectors": [],
+    "negativeWords": []
+  },
+  "percentage": {
+    "suffixes": [
+      "%"
+    ],
+    "prefixes": [
+      "%",
+      "百分之"
+    ]
+  },
+  "dimension": [
+    {
+      "canonical": "Meter",
+      "base": "Meter",
+      "factor": 1.0,
+      "patterns": [
+        "米",
+        "m"
+      ]
+    },
+    {
+      "canonical": "Kilometer",
+      "base": "Meter",
+      "factor": 1000.0,
+      "patterns": [
+        "公里",
+        "千米",
+        "km"
+      ]
+    },
+    {
+      "canonical": "Centimeter",
+      "base": "Meter",
+      "factor": 0.01,
+      "patterns": [
+        "厘米",
+        "cm"
+      ]
+    },
+    {
+      "canonical": "Millimeter",
+      "base": "Meter",
+      "factor": 0.001,
+      "patterns": [
+        "毫米",
+        "mm"
+      ]
+    },
+    {
+      "canonical": "Kilogram",
+      "base": "Kilogram",
+      "factor": 1.0,
+      "patterns": [
+        "公斤",
+        "千克",
+        "kg"
+      ]
+    },
+    {
+      "canonical": "Gram",
+      "base": "Kilogram",
+      "factor": 0.001,
+      "patterns": [
+        "克",
+        "g"
+      ]
+    },
+    {
+      "canonical": "SquareMeter",
+      "base": "SquareMeter",
+      "factor": 1.0,
+      "patterns": [
+        "平方米",
+        "m2",
+        "m²"
+      ]
+    },
+    {
+      "canonical": "SquareKilometer",
+      "base": "SquareMeter",
+      "factor": 1000000.0,
+      "patterns": [
+        "平方公里",
+        "km2",
+        "km²"
+      ]
+    },
+    {
+      "canonical": "Hectare",
+      "base": "SquareMeter",
+      "factor": 10000.0,
+      "patterns": [
+        "公顷",
+        "ha"
+      ]
+    },
+    {
+      "canonical": "Mu",
+      "base": "SquareMeter",
+      "factor": 666.6666666666667,
+      "patterns": [
+        "亩"
+      ]
+    },
+    {
+      "canonical": "Liter",
+      "base": "Liter",
+      "factor": 1.0,
+      "patterns": [
+        "升",
+        "l"
+      ]
+    },
+    {
+      "canonical": "Milliliter",
+      "base": "Liter",
+      "factor": 0.001,
+      "patterns": [
+        "毫升",
+        "ml"
+      ]
+    },
+    {
+      "canonical": "KilometerPerHour",
+      "base": "KilometerPerHour",
+      "factor": 1.0,
+      "patterns": [
+        "km/h"
+      ]
+    },
+    {
+      "canonical": "Megabyte",
+      "base": "Byte",
+      "factor": 1000000.0,
+      "patterns": [
+        "mb"
+      ]
+    },
+    {
+      "canonical": "Gigabyte",
+      "base": "Byte",
+      "factor": 1000000000.0,
+      "patterns": [
+        "gb"
+      ]
+    }
+  ],
+  "duration": [
+    {
+      "canonical": "Second",
+      "base": "Second",
+      "factor": 1.0,
+      "patterns": [
+        "秒"
+      ]
+    },
+    {
+      "canonical": "Minute",
+      "base": "Second",
+      "factor": 60.0,
+      "patterns": [
+        "分钟",
+        "分"
+      ]
+    },
+    {
+      "canonical": "Hour",
+      "base": "Second",
+      "factor": 3600.0,
+      "patterns": [
+        "小时"
+      ]
+    },
+    {
+      "canonical": "Day",
+      "base": "Second",
+      "factor": 86400.0,
+      "patterns": [
+        "天"
+      ]
+    },
+    {
+      "canonical": "Week",
+      "base": "Second",
+      "factor": 604800.0,
+      "patterns": [
+        "周",
+        "星期"
+      ]
+    },
+    {
+      "canonical": "Year",
+      "base": "Second",
+      "factor": 31556952.0,
+      "patterns": [
+        "年"
+      ]
+    },
+    {
+      "canonical": "Month",
+      "base": "Second",
+      "factor": 2629746.0,
+      "patterns": [
+        "个月",
+        "月"
+      ]
+    }
+  ],
+  "currency": [
+    {
+      "canonical": "ChineseYuan",
+      "iso": "CNY",
+      "symbols": [
+        "¥",
+        "￥",
+        "元"
+      ],
+      "names": [
+        "人民币",
+        "元",
+        "块"
+      ]
+    },
+    {
+      "canonical": "Dollar",
+      "iso": "USD",
+      "symbols": [
+        "$"
+      ],
+      "names": [
+        "美元"
+      ]
+    },
+    {
+      "canonical": "Euro",
+      "iso": "EUR",
+      "symbols": [
+        "€"
+      ],
+      "names": [
+        "欧元"
+      ]
+    },
+    {
+      "canonical": "PoundSterling",
+      "iso": "GBP",
+      "symbols": [
+        "£"
+      ],
+      "names": [
+        "英镑"
+      ]
+    },
+    {
+      "canonical": "Rupee",
+      "iso": "INR",
+      "symbols": [
+        "₹"
+      ],
+      "names": [
+        "卢比"
+      ]
+    },
+    {
+      "canonical": "Yen",
+      "iso": "JPY",
+      "symbols": [],
+      "names": [
+        "日元"
+      ]
+    }
+  ],
+  "temperature": [
+    {
+      "canonical": "Celsius",
+      "base": "Kelvin",
+      "factor": 1.0,
+      "offset": 273.15,
+      "patterns": [
+        "° c",
+        "°c",
+        "摄氏度",
+        "摄氏"
+      ]
+    },
+    {
+      "canonical": "Fahrenheit",
+      "base": "Kelvin",
+      "factor": 0.5555555555555556,
+      "offset": 255.3722222222222,
+      "patterns": [
+        "° f",
+        "°f",
+        "华氏度",
+        "华氏"
+      ]
+    }
+  ],
+  "age": {
+    "unit": "Year",
+    "patterns": [
+      "岁"
+    ]
+  },
+  "datetime": {
+    "dateOrder": "YMD",
+    "monthDayFormats": [],
+    "months": [],
+    "weekdays": [],
+    "daySuffixes": [],
+    "relativeDays": {
+      "今天": 0,
+      "明天": 1,
+      "昨天": -1
+    },
+    "now": [
+      "现在"
+    ],
+    "timeSeparators": [
+      ":"
+    ],
+    "ampm": {
+      "am": [],
+      "pm": []
+    },
+    "zhAmpm": {
+      "am": [
+        "凌晨",
+        "早上",
+        "上午"
+      ],
+      "pm": [
+        "下午",
+        "傍晚",
+        "晚上"
+      ]
+    },
+    "hourMarkers": [
+      "点",
+      "时"
+    ],
+    "dateTimeConnectors": [],
+    "numericDateSeparators": []
+  }
+}

@@ -1,0 +1,575 @@
+{
+  "culture": "nl",
+  "number": {
+    "decimalMark": ",",
+    "groupMark": ".",
+    "spaceGroup": false,
+    "grouping": "western",
+    "ordinalSuffixes": [
+      "ste",
+      "e"
+    ],
+    "ordinalWords": {
+      "eerste": 1,
+      "tweede": 2,
+      "derde": 3,
+      "vierde": 4,
+      "vijfde": 5,
+      "zesde": 6,
+      "zevende": 7,
+      "achtste": 8,
+      "negende": 9,
+      "tiende": 10,
+      "elfde": 11,
+      "twaalfde": 12,
+      "twintigste": 20
+    },
+    "atoms": {
+      "nul": 0,
+      "een": 1,
+      "één": 1,
+      "twee": 2,
+      "drie": 3,
+      "vier": 4,
+      "vijf": 5,
+      "zes": 6,
+      "zeven": 7,
+      "acht": 8,
+      "negen": 9,
+      "tien": 10,
+      "elf": 11,
+      "twaalf": 12,
+      "dertien": 13,
+      "veertien": 14,
+      "vijftien": 15,
+      "zestien": 16,
+      "zeventien": 17,
+      "achttien": 18,
+      "negentien": 19,
+      "twintig": 20,
+      "dertig": 30,
+      "veertig": 40,
+      "vijftig": 50,
+      "zestig": 60,
+      "zeventig": 70,
+      "tachtig": 80,
+      "negentig": 90,
+      "eenentwintig": 21,
+      "tweeëntwintig": 22,
+      "drieëntwintig": 23,
+      "vierentwintig": 24,
+      "vijfentwintig": 25,
+      "zesentwintig": 26,
+      "zevenentwintig": 27,
+      "achtentwintig": 28,
+      "negenentwintig": 29,
+      "eenendertig": 31,
+      "tweeëndertig": 32,
+      "drieëndertig": 33,
+      "vierendertig": 34,
+      "vijfendertig": 35,
+      "zesendertig": 36,
+      "zevenendertig": 37,
+      "achtendertig": 38,
+      "negenendertig": 39,
+      "eenenveertig": 41,
+      "tweeënveertig": 42,
+      "drieënveertig": 43,
+      "vierenveertig": 44,
+      "vijfenveertig": 45,
+      "zesenveertig": 46,
+      "zevenenveertig": 47,
+      "achtenveertig": 48,
+      "negenenveertig": 49,
+      "eenenvijftig": 51,
+      "tweeënvijftig": 52,
+      "drieënvijftig": 53,
+      "vierenvijftig": 54,
+      "vijfenvijftig": 55,
+      "zesenvijftig": 56,
+      "zevenenvijftig": 57,
+      "achtenvijftig": 58,
+      "negenenvijftig": 59,
+      "eenenzestig": 61,
+      "tweeënzestig": 62,
+      "drieënzestig": 63,
+      "vierenzestig": 64,
+      "vijfenzestig": 65,
+      "zesenzestig": 66,
+      "zevenenzestig": 67,
+      "achtenzestig": 68,
+      "negenenzestig": 69,
+      "eenenzeventig": 71,
+      "tweeënzeventig": 72,
+      "drieënzeventig": 73,
+      "vierenzeventig": 74,
+      "vijfenzeventig": 75,
+      "zesenzeventig": 76,
+      "zevenenzeventig": 77,
+      "achtenzeventig": 78,
+      "negenenzeventig": 79,
+      "eenentachtig": 81,
+      "tweeëntachtig": 82,
+      "drieëntachtig": 83,
+      "vierentachtig": 84,
+      "vijfentachtig": 85,
+      "zesentachtig": 86,
+      "zevenentachtig": 87,
+      "achtentachtig": 88,
+      "negenentachtig": 89,
+      "eenennegentig": 91,
+      "tweeënnegentig": 92,
+      "drieënnegentig": 93,
+      "vierennegentig": 94,
+      "vijfennegentig": 95,
+      "zesennegentig": 96,
+      "zevenennegentig": 97,
+      "achtennegentig": 98,
+      "negenennegentig": 99
+    },
+    "scales": {
+      "honderd": 100,
+      "duizend": 1000,
+      "miljoen": 1000000,
+      "miljard": 1000000000
+    },
+    "connectors": [],
+    "negativeWords": [
+      "min"
+    ],
+    "articleNumerals": [
+      "een",
+      "één"
+    ]
+  },
+  "percentage": {
+    "suffixes": [
+      "%",
+      "procent"
+    ],
+    "prefixes": []
+  },
+  "dimension": [
+    {
+      "canonical": "Meter",
+      "base": "Meter",
+      "factor": 1.0,
+      "patterns": [
+        "m",
+        "meter"
+      ]
+    },
+    {
+      "canonical": "Kilometer",
+      "base": "Meter",
+      "factor": 1000.0,
+      "patterns": [
+        "km",
+        "kilometer"
+      ]
+    },
+    {
+      "canonical": "Centimeter",
+      "base": "Meter",
+      "factor": 0.01,
+      "patterns": [
+        "cm",
+        "centimeter"
+      ]
+    },
+    {
+      "canonical": "Millimeter",
+      "base": "Meter",
+      "factor": 0.001,
+      "patterns": [
+        "mm",
+        "millimeter"
+      ]
+    },
+    {
+      "canonical": "Mijl",
+      "base": "Meter",
+      "factor": 1609.344,
+      "patterns": [
+        "mijl",
+        "mijlen"
+      ]
+    },
+    {
+      "canonical": "Kilogram",
+      "base": "Kilogram",
+      "factor": 1.0,
+      "patterns": [
+        "kg",
+        "kilogram"
+      ]
+    },
+    {
+      "canonical": "Gram",
+      "base": "Kilogram",
+      "factor": 0.001,
+      "patterns": [
+        "g",
+        "gram"
+      ]
+    },
+    {
+      "canonical": "Pond",
+      "base": "Kilogram",
+      "factor": 0.5,
+      "patterns": [
+        "pond"
+      ]
+    },
+    {
+      "canonical": "VierkanteMeter",
+      "base": "VierkanteMeter",
+      "factor": 1.0,
+      "patterns": [
+        "m2",
+        "m²",
+        "vierkante meter",
+        "vierkante meters"
+      ]
+    },
+    {
+      "canonical": "VierkanteKilometer",
+      "base": "VierkanteMeter",
+      "factor": 1000000.0,
+      "patterns": [
+        "km2",
+        "km²",
+        "vierkante kilometer",
+        "vierkante kilometers"
+      ]
+    },
+    {
+      "canonical": "Hectare",
+      "base": "VierkanteMeter",
+      "factor": 10000.0,
+      "patterns": [
+        "ha",
+        "hectare",
+        "hectaren"
+      ]
+    },
+    {
+      "canonical": "Liter",
+      "base": "Liter",
+      "factor": 1.0,
+      "patterns": [
+        "l",
+        "liter"
+      ]
+    },
+    {
+      "canonical": "Milliliter",
+      "base": "Liter",
+      "factor": 0.001,
+      "patterns": [
+        "ml",
+        "milliliter"
+      ]
+    },
+    {
+      "canonical": "KubiekeMeter",
+      "base": "Liter",
+      "factor": 1000.0,
+      "patterns": [
+        "m3",
+        "m³",
+        "kubieke meter",
+        "kubieke meters"
+      ]
+    },
+    {
+      "canonical": "KilometerPerUur",
+      "base": "KilometerPerUur",
+      "factor": 1.0,
+      "patterns": [
+        "km/u",
+        "km/h",
+        "km/uur"
+      ]
+    },
+    {
+      "canonical": "Megabyte",
+      "base": "Byte",
+      "factor": 1000000.0,
+      "patterns": [
+        "mb"
+      ]
+    },
+    {
+      "canonical": "Gigabyte",
+      "base": "Byte",
+      "factor": 1000000000.0,
+      "patterns": [
+        "gb"
+      ]
+    }
+  ],
+  "duration": [
+    {
+      "canonical": "Seconde",
+      "base": "Second",
+      "factor": 1.0,
+      "patterns": [
+        "seconde",
+        "seconden",
+        "sec"
+      ]
+    },
+    {
+      "canonical": "Minuut",
+      "base": "Second",
+      "factor": 60.0,
+      "patterns": [
+        "minuut",
+        "minuten",
+        "min"
+      ]
+    },
+    {
+      "canonical": "Uur",
+      "base": "Second",
+      "factor": 3600.0,
+      "patterns": [
+        "uur",
+        "u"
+      ]
+    },
+    {
+      "canonical": "Dag",
+      "base": "Second",
+      "factor": 86400.0,
+      "patterns": [
+        "dag",
+        "dagen"
+      ]
+    },
+    {
+      "canonical": "Week",
+      "base": "Second",
+      "factor": 604800.0,
+      "patterns": [
+        "week",
+        "weken"
+      ]
+    },
+    {
+      "canonical": "Maand",
+      "base": "Second",
+      "factor": 2629746.0,
+      "patterns": [
+        "maand",
+        "maanden"
+      ]
+    },
+    {
+      "canonical": "Jaar",
+      "base": "Second",
+      "factor": 31556952.0,
+      "patterns": [
+        "jaar",
+        "jaren"
+      ]
+    }
+  ],
+  "currency": [
+    {
+      "canonical": "Euro",
+      "iso": "EUR",
+      "symbols": [
+        "€"
+      ],
+      "names": [
+        "euro"
+      ]
+    },
+    {
+      "canonical": "Dollar",
+      "iso": "USD",
+      "symbols": [
+        "$"
+      ],
+      "names": [
+        "dollar",
+        "dollars"
+      ]
+    },
+    {
+      "canonical": "PondSterling",
+      "iso": "GBP",
+      "symbols": [
+        "£"
+      ],
+      "names": [
+        "pond sterling"
+      ]
+    },
+    {
+      "canonical": "Roepie",
+      "iso": "INR",
+      "symbols": [
+        "₹"
+      ],
+      "names": [
+        "roepie",
+        "roepies"
+      ]
+    },
+    {
+      "canonical": "Yen",
+      "iso": "JPY",
+      "symbols": [
+        "¥"
+      ],
+      "names": [
+        "yen"
+      ]
+    }
+  ],
+  "temperature": [
+    {
+      "canonical": "Celsius",
+      "base": "Kelvin",
+      "factor": 1.0,
+      "offset": 273.15,
+      "patterns": [
+        "° c",
+        "°c",
+        "celsius",
+        "graden celsius"
+      ]
+    },
+    {
+      "canonical": "Fahrenheit",
+      "base": "Kelvin",
+      "factor": 0.5555555555555556,
+      "offset": 255.3722222222222,
+      "patterns": [
+        "° f",
+        "°f",
+        "fahrenheit",
+        "graden fahrenheit"
+      ]
+    }
+  ],
+  "age": {
+    "unit": "Year",
+    "patterns": [
+      "jaar oud",
+      "jaar oude"
+    ]
+  },
+  "datetime": {
+    "dateOrder": "DMY",
+    "monthDayFormats": [
+      "day-first"
+    ],
+    "months": [
+      [
+        "januari",
+        "jan"
+      ],
+      [
+        "februari",
+        "feb"
+      ],
+      [
+        "maart"
+      ],
+      [
+        "april"
+      ],
+      [
+        "mei"
+      ],
+      [
+        "juni",
+        "jun"
+      ],
+      [
+        "juli",
+        "jul"
+      ],
+      [
+        "augustus",
+        "aug"
+      ],
+      [
+        "september",
+        "sep"
+      ],
+      [
+        "oktober",
+        "okt"
+      ],
+      [
+        "november",
+        "nov"
+      ],
+      [
+        "december",
+        "dec"
+      ]
+    ],
+    "weekdays": [
+      [
+        "maandag"
+      ],
+      [
+        "dinsdag"
+      ],
+      [
+        "woensdag"
+      ],
+      [
+        "donderdag"
+      ],
+      [
+        "vrijdag"
+      ],
+      [
+        "zaterdag"
+      ],
+      [
+        "zondag"
+      ]
+    ],
+    "daySuffixes": [],
+    "relativeDays": {
+      "vandaag": 0,
+      "morgen": 1,
+      "gisteren": -1
+    },
+    "now": [
+      "nu"
+    ],
+    "timeSeparators": [
+      ":",
+      "."
+    ],
+    "ampm": {
+      "am": [
+        "'s ochtends",
+        "'s morgens",
+        "'s nachts"
+      ],
+      "pm": [
+        "'s middags",
+        "'s avonds"
+      ]
+    },
+    "hourSuffixes": [],
+    "dateTimeConnectors": [
+      "om"
+    ],
+    "numericDateSeparators": [
+      "-",
+      "/",
+      "."
+    ]
+  }
+}

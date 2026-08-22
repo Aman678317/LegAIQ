@@ -1,0 +1,482 @@
+{
+  "culture": "tr",
+  "number": {
+    "decimalMark": ",",
+    "groupMark": ".",
+    "spaceGroup": false,
+    "grouping": "western",
+    "ordinalSuffixes": [
+      "."
+    ],
+    "ordinalWords": {
+      "birinci": 1,
+      "ilk": 1,
+      "ikinci": 2,
+      "üçüncü": 3,
+      "dördüncü": 4,
+      "beşinci": 5,
+      "altıncı": 6,
+      "yedinci": 7,
+      "sekizinci": 8,
+      "dokuzuncu": 9,
+      "onuncu": 10
+    },
+    "atoms": {
+      "sıfır": 0,
+      "bir": 1,
+      "iki": 2,
+      "üç": 3,
+      "dört": 4,
+      "beş": 5,
+      "altı": 6,
+      "yedi": 7,
+      "sekiz": 8,
+      "dokuz": 9,
+      "on": 10,
+      "yirmi": 20,
+      "otuz": 30,
+      "kırk": 40,
+      "elli": 50,
+      "altmış": 60,
+      "yetmiş": 70,
+      "seksen": 80,
+      "doksan": 90
+    },
+    "scales": {
+      "yüz": 100,
+      "bin": 1000,
+      "milyon": 1000000,
+      "milyar": 1000000000
+    },
+    "connectors": [],
+    "negativeWords": [
+      "eksi"
+    ],
+    "articleNumerals": [
+      "bir"
+    ]
+  },
+  "percentage": {
+    "suffixes": [
+      "%"
+    ],
+    "prefixes": [
+      "%",
+      "yüzde"
+    ]
+  },
+  "dimension": [
+    {
+      "canonical": "Metre",
+      "base": "Metre",
+      "factor": 1.0,
+      "patterns": [
+        "m",
+        "metre"
+      ]
+    },
+    {
+      "canonical": "Kilometre",
+      "base": "Metre",
+      "factor": 1000.0,
+      "patterns": [
+        "km",
+        "kilometre"
+      ]
+    },
+    {
+      "canonical": "Santimetre",
+      "base": "Metre",
+      "factor": 0.01,
+      "patterns": [
+        "cm",
+        "santimetre"
+      ]
+    },
+    {
+      "canonical": "Milimetre",
+      "base": "Metre",
+      "factor": 0.001,
+      "patterns": [
+        "mm",
+        "milimetre"
+      ]
+    },
+    {
+      "canonical": "Mil",
+      "base": "Metre",
+      "factor": 1609.344,
+      "patterns": [
+        "mil"
+      ]
+    },
+    {
+      "canonical": "Kilogram",
+      "base": "Kilogram",
+      "factor": 1.0,
+      "patterns": [
+        "kg",
+        "kilogram"
+      ]
+    },
+    {
+      "canonical": "Gram",
+      "base": "Kilogram",
+      "factor": 0.001,
+      "patterns": [
+        "g",
+        "gram"
+      ]
+    },
+    {
+      "canonical": "Milligram",
+      "base": "Kilogram",
+      "factor": 1e-06,
+      "patterns": [
+        "mg",
+        "miligram"
+      ]
+    },
+    {
+      "canonical": "Metrekare",
+      "base": "Metrekare",
+      "factor": 1.0,
+      "patterns": [
+        "m2",
+        "m²",
+        "metrekare"
+      ]
+    },
+    {
+      "canonical": "Kilometrekare",
+      "base": "Metrekare",
+      "factor": 1000000.0,
+      "patterns": [
+        "km2",
+        "km²",
+        "kilometrekare"
+      ]
+    },
+    {
+      "canonical": "Hektar",
+      "base": "Metrekare",
+      "factor": 10000.0,
+      "patterns": [
+        "ha",
+        "hektar"
+      ]
+    },
+    {
+      "canonical": "Dönüm",
+      "base": "Metrekare",
+      "factor": 1000.0,
+      "patterns": [
+        "dönüm",
+        "donum"
+      ]
+    },
+    {
+      "canonical": "Litre",
+      "base": "Litre",
+      "factor": 1.0,
+      "patterns": [
+        "l",
+        "litre"
+      ]
+    },
+    {
+      "canonical": "Mililitre",
+      "base": "Litre",
+      "factor": 0.001,
+      "patterns": [
+        "ml",
+        "mililitre"
+      ]
+    },
+    {
+      "canonical": "Metreküp",
+      "base": "Litre",
+      "factor": 1000.0,
+      "patterns": [
+        "m3",
+        "m³",
+        "metreküp"
+      ]
+    },
+    {
+      "canonical": "KilometreSaat",
+      "base": "KilometreSaat",
+      "factor": 1.0,
+      "patterns": [
+        "km/h",
+        "km-sa"
+      ]
+    },
+    {
+      "canonical": "Megabayt",
+      "base": "Byte",
+      "factor": 1000000.0,
+      "patterns": [
+        "mb"
+      ]
+    },
+    {
+      "canonical": "Gigabayt",
+      "base": "Byte",
+      "factor": 1000000000.0,
+      "patterns": [
+        "gb"
+      ]
+    }
+  ],
+  "duration": [
+    {
+      "canonical": "Saniye",
+      "base": "Second",
+      "factor": 1.0,
+      "patterns": [
+        "saniye",
+        "sn"
+      ]
+    },
+    {
+      "canonical": "Dakika",
+      "base": "Second",
+      "factor": 60.0,
+      "patterns": [
+        "dakika",
+        "dk"
+      ]
+    },
+    {
+      "canonical": "Saat",
+      "base": "Second",
+      "factor": 3600.0,
+      "patterns": [
+        "saat"
+      ]
+    },
+    {
+      "canonical": "Gün",
+      "base": "Second",
+      "factor": 86400.0,
+      "patterns": [
+        "gün"
+      ]
+    },
+    {
+      "canonical": "Hafta",
+      "base": "Second",
+      "factor": 604800.0,
+      "patterns": [
+        "hafta"
+      ]
+    },
+    {
+      "canonical": "Ay",
+      "base": "Second",
+      "factor": 2629746.0,
+      "patterns": [
+        "ay"
+      ]
+    },
+    {
+      "canonical": "Yıl",
+      "base": "Second",
+      "factor": 31556952.0,
+      "patterns": [
+        "yıl"
+      ]
+    }
+  ],
+  "currency": [
+    {
+      "canonical": "TurkLirasi",
+      "iso": "TRY",
+      "symbols": [
+        "₺"
+      ],
+      "names": [
+        "türk lirası",
+        "lira",
+        "tl"
+      ]
+    },
+    {
+      "canonical": "Dolar",
+      "iso": "USD",
+      "symbols": [
+        "$"
+      ],
+      "names": [
+        "dolar"
+      ]
+    },
+    {
+      "canonical": "Euro",
+      "iso": "EUR",
+      "symbols": [
+        "€"
+      ],
+      "names": [
+        "euro"
+      ]
+    },
+    {
+      "canonical": "Sterlin",
+      "iso": "GBP",
+      "symbols": [
+        "£"
+      ],
+      "names": [
+        "sterlin"
+      ]
+    },
+    {
+      "canonical": "Rupi",
+      "iso": "INR",
+      "symbols": [
+        "₹"
+      ],
+      "names": [
+        "rupi"
+      ]
+    }
+  ],
+  "temperature": [
+    {
+      "canonical": "Celsius",
+      "base": "Kelvin",
+      "factor": 1.0,
+      "offset": 273.15,
+      "patterns": [
+        "° c",
+        "°c",
+        "santigrat",
+        "celsius",
+        "derece celsius"
+      ]
+    },
+    {
+      "canonical": "Fahrenheit",
+      "base": "Kelvin",
+      "factor": 0.5555555555555556,
+      "offset": 255.3722222222222,
+      "patterns": [
+        "° f",
+        "°f",
+        "fahrenheit"
+      ]
+    }
+  ],
+  "age": {
+    "unit": "Year",
+    "patterns": [
+      "yaşında",
+      "yaş"
+    ]
+  },
+  "datetime": {
+    "dateOrder": "DMY",
+    "monthDayFormats": [
+      "day-first"
+    ],
+    "months": [
+      [
+        "ocak"
+      ],
+      [
+        "şubat"
+      ],
+      [
+        "mart"
+      ],
+      [
+        "nisan"
+      ],
+      [
+        "mayıs"
+      ],
+      [
+        "haziran"
+      ],
+      [
+        "temmuz"
+      ],
+      [
+        "ağustos"
+      ],
+      [
+        "eylül"
+      ],
+      [
+        "ekim"
+      ],
+      [
+        "kasım"
+      ],
+      [
+        "aralık"
+      ]
+    ],
+    "weekdays": [
+      [
+        "pazartesi"
+      ],
+      [
+        "salı"
+      ],
+      [
+        "çarşamba"
+      ],
+      [
+        "perşembe"
+      ],
+      [
+        "cuma"
+      ],
+      [
+        "cumartesi"
+      ],
+      [
+        "pazar"
+      ]
+    ],
+    "daySuffixes": [],
+    "relativeDays": {
+      "bugün": 0,
+      "yarın": 1,
+      "dün": -1
+    },
+    "now": [
+      "şimdi",
+      "şu an"
+    ],
+    "timeSeparators": [
+      ":"
+    ],
+    "ampm": {
+      "am": [
+        "öö",
+        "ö.ö.",
+        "sabah"
+      ],
+      "pm": [
+        "ös",
+        "ö.s.",
+        "öğleden sonra",
+        "akşam",
+        "gece"
+      ]
+    },
+    "hourSuffixes": [],
+    "dateTimeConnectors": [
+      "saat"
+    ],
+    "numericDateSeparators": [
+      "/",
+      ".",
+      "-"
+    ]
+  }
+}

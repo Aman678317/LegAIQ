@@ -1,0 +1,864 @@
+[
+  {
+    "Culture": "en",
+    "Input": "I have twenty-three apples.",
+    "Results": [
+      {
+        "Text": "twenty-three",
+        "TypeName": "number",
+        "Start": 7,
+        "End": 18,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "23"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "one hundred and twenty three reasons",
+    "Results": [
+      {
+        "Text": "one hundred and twenty three",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 27,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "123"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "two thousand five hundred seats",
+    "Results": [
+      {
+        "Text": "two thousand five hundred",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 24,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "2500"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "a total of 1,234 items and 3.5 liters left",
+    "Results": [
+      {
+        "Text": "1,234",
+        "TypeName": "number",
+        "Start": 11,
+        "End": 15,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "1234"
+        }
+      },
+      {
+        "Text": "3.5 liters",
+        "TypeName": "dimension",
+        "Start": 27,
+        "End": 36,
+        "Resolution": {
+          "value": "3.5",
+          "unit": "Liter"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "temperature dropped to -7 degrees",
+    "Results": [
+      {
+        "Text": "-7",
+        "TypeName": "number",
+        "Start": 23,
+        "End": 24,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "-7"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "she finished 1st and he finished 21st",
+    "Results": [
+      {
+        "Text": "1st",
+        "TypeName": "number",
+        "Start": 13,
+        "End": 15,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "1"
+        }
+      },
+      {
+        "Text": "21st",
+        "TypeName": "number",
+        "Start": 33,
+        "End": 36,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "21"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "the first attempt",
+    "Results": [
+      {
+        "Text": "first",
+        "TypeName": "number",
+        "Start": 4,
+        "End": 8,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "1"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "chapter 7",
+    "Results": [
+      {
+        "Text": "7",
+        "TypeName": "number",
+        "Start": 8,
+        "End": 8,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "7"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "en",
+    "Input": "an unrelated sentence",
+    "Results": []
+  },
+  {
+    "Culture": "en",
+    "Input": "malformed 1,23 stays out",
+    "Results": []
+  },
+  {
+    "Culture": "en",
+    "Input": "version v2.0 is not a number",
+    "Results": []
+  },
+  {
+    "Culture": "de",
+    "Input": "insgesamt 1.234 Besucher",
+    "Results": [
+      {
+        "Text": "1.234",
+        "TypeName": "number",
+        "Start": 10,
+        "End": 14,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "1234"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "Preis 1.234,56 Euro",
+    "Results": [
+      {
+        "Text": "1.234,56 Euro",
+        "TypeName": "currency",
+        "Start": 6,
+        "End": 18,
+        "Resolution": {
+          "value": "1234.56",
+          "unit": "Euro",
+          "iso": "EUR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "dreiundzwanzig Personen",
+    "Results": [
+      {
+        "Text": "dreiundzwanzig",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 13,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "23"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "den 3. Platz",
+    "Results": [
+      {
+        "Text": "3.",
+        "TypeName": "number",
+        "Start": 4,
+        "End": 5,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "3"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "de",
+    "Input": "das erste Mal",
+    "Results": [
+      {
+        "Text": "erste",
+        "TypeName": "number",
+        "Start": 4,
+        "End": 8,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "1"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "1 234 habitants",
+    "Results": [
+      {
+        "Text": "1 234",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 4,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "1234"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "un total de 1 234,56 euros",
+    "Results": [
+      {
+        "Text": "1 234,56 euros",
+        "TypeName": "currency",
+        "Start": 12,
+        "End": 25,
+        "Resolution": {
+          "value": "1234.56",
+          "unit": "Euro",
+          "iso": "EUR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "quatre-vingt-dix-neuf pages",
+    "Results": [
+      {
+        "Text": "quatre-vingt-dix-neuf",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 20,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "99"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "vingt et un élèves",
+    "Results": [
+      {
+        "Text": "vingt et un",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 10,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "21"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "le 1er étage",
+    "Results": [
+      {
+        "Text": "1er",
+        "TypeName": "number",
+        "Start": 3,
+        "End": 5,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "1"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "fr",
+    "Input": "le premier ministre",
+    "Results": [
+      {
+        "Text": "premier",
+        "TypeName": "number",
+        "Start": 3,
+        "End": 9,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "1"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "un total de 1.234,56 euros",
+    "Results": [
+      {
+        "Text": "1.234,56 euros",
+        "TypeName": "currency",
+        "Start": 12,
+        "End": 25,
+        "Resolution": {
+          "value": "1234.56",
+          "unit": "Euro",
+          "iso": "EUR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "veintiuno",
+    "Results": [
+      {
+        "Text": "veintiuno",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 8,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "21"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "treinta y dos días de plazo",
+    "Results": [
+      {
+        "Text": "treinta y dos días",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 17,
+        "Resolution": {
+          "value": "32",
+          "unit": "Dia",
+          "normalizedValue": "2764800",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "gana un millón al año",
+    "Results": [
+      {
+        "Text": "un millón",
+        "TypeName": "number",
+        "Start": 5,
+        "End": 13,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "1000000"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "es",
+    "Input": "una casa nueva",
+    "Results": []
+  },
+  {
+    "Culture": "es",
+    "Input": "el primero de la lista",
+    "Results": [
+      {
+        "Text": "primero",
+        "TypeName": "number",
+        "Start": 3,
+        "End": 9,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "1"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "quarenta e dois anos de serviço",
+    "Results": [
+      {
+        "Text": "quarenta e dois anos",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 19,
+        "Resolution": {
+          "value": "42",
+          "unit": "Ano",
+          "normalizedValue": "1325391984",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "quarenta e dois livros",
+    "Results": [
+      {
+        "Text": "quarenta e dois",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 14,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "42"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "um milhão de reais",
+    "Results": [
+      {
+        "Text": "um milhão",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 8,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "1000000"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "pt",
+    "Input": "uma casa nova",
+    "Results": []
+  },
+  {
+    "Culture": "it",
+    "Input": "1.234,56 in contanti",
+    "Results": [
+      {
+        "Text": "1.234,56",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 7,
+        "Resolution": {
+          "subtype": "decimal",
+          "value": "1234.56"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "ventitré persone",
+    "Results": [
+      {
+        "Text": "ventitré",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 7,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "23"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "due mila spettatori",
+    "Results": [
+      {
+        "Text": "due mila",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 7,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "2000"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "it",
+    "Input": "il primo posto",
+    "Results": [
+      {
+        "Text": "primo",
+        "TypeName": "number",
+        "Start": 3,
+        "End": 7,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "1"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "1.234,56 ceza",
+    "Results": [
+      {
+        "Text": "1.234,56",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 7,
+        "Resolution": {
+          "subtype": "decimal",
+          "value": "1234.56"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "yirmi beş kişi",
+    "Results": [
+      {
+        "Text": "yirmi beş",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 8,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "25"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "iki yüz sayfa",
+    "Results": [
+      {
+        "Text": "iki yüz",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 6,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "200"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "tr",
+    "Input": "bir ev aldı",
+    "Results": []
+  },
+  {
+    "Culture": "tr",
+    "Input": "birinci sınıf",
+    "Results": [
+      {
+        "Text": "birinci",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 6,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "1"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "कुल 1,23,456 रुपये",
+    "Results": [
+      {
+        "Text": "1,23,456 रुपये",
+        "TypeName": "currency",
+        "Start": 4,
+        "End": 17,
+        "Resolution": {
+          "value": "123456",
+          "unit": "Rupee",
+          "iso": "INR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "१,२३,४५६ रुपये मिले",
+    "Results": [
+      {
+        "Text": "१,२३,४५६ रुपये",
+        "TypeName": "currency",
+        "Start": 0,
+        "End": 13,
+        "Resolution": {
+          "value": "123456",
+          "unit": "Rupee",
+          "iso": "INR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "पचास किताबें",
+    "Results": [
+      {
+        "Text": "पचास",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 3,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "50"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "दो सौ रुपये दिए",
+    "Results": [
+      {
+        "Text": "दो सौ रुपये",
+        "TypeName": "currency",
+        "Start": 0,
+        "End": 10,
+        "Resolution": {
+          "value": "200",
+          "unit": "Rupee",
+          "iso": "INR"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "hi",
+    "Input": "तीन हज़ार किताबें",
+    "Results": [
+      {
+        "Text": "तीन हज़ार",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 8,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "3000"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "1.234,56 gepind",
+    "Results": [
+      {
+        "Text": "1.234,56",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 7,
+        "Resolution": {
+          "subtype": "decimal",
+          "value": "1234.56"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "tweeëntwintig boeken",
+    "Results": [
+      {
+        "Text": "tweeëntwintig",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 12,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "22"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "honderd jaar geleden",
+    "Results": [
+      {
+        "Text": "honderd jaar",
+        "TypeName": "duration",
+        "Start": 0,
+        "End": 11,
+        "Resolution": {
+          "value": "100",
+          "unit": "Jaar",
+          "normalizedValue": "3155695200",
+          "normalizedUnit": "Second"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "nl",
+    "Input": "een huis aan de gracht",
+    "Results": []
+  },
+  {
+    "Culture": "nl",
+    "Input": "de eerste plaats",
+    "Results": [
+      {
+        "Text": "eerste",
+        "TypeName": "number",
+        "Start": 3,
+        "End": 8,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "1"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "总投资三千五百万元",
+    "Results": [
+      {
+        "Text": "三千五百万元",
+        "TypeName": "currency",
+        "Start": 3,
+        "End": 8,
+        "Resolution": {
+          "value": "35000000",
+          "unit": "ChineseYuan",
+          "iso": "CNY"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "增长了三点五个百分点",
+    "Results": [
+      {
+        "Text": "三点五",
+        "TypeName": "number",
+        "Start": 3,
+        "End": 5,
+        "Resolution": {
+          "subtype": "decimal",
+          "value": "3.5"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "销量达3万件",
+    "Results": [
+      {
+        "Text": "3万",
+        "TypeName": "number",
+        "Start": 3,
+        "End": 4,
+        "Resolution": {
+          "subtype": "integer",
+          "value": "30000"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "第5条条款",
+    "Results": [
+      {
+        "Text": "第5",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 1,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "5"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "第三被告",
+    "Results": [
+      {
+        "Text": "第三",
+        "TypeName": "number",
+        "Start": 0,
+        "End": 1,
+        "Resolution": {
+          "subtype": "ordinal",
+          "value": "3"
+        }
+      }
+    ]
+  },
+  {
+    "Culture": "zh",
+    "Input": "位于统一路",
+    "Results": []
+  },
+  {
+    "Culture": "zh",
+    "Input": "统一意见很重要",
+    "Results": []
+  }
+]
