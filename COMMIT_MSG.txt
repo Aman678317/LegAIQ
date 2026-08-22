@@ -1,6 +1,5 @@
-fix(frontend): resolve path alias and dynamic import in DocumentViewer for Vitest
+fix(frontend): add missing safeApiUrl import in useCaseEvents.ts
 
-- Frontend (frontend/components/document-viewer/DocumentViewer.tsx):
-  - Updated dynamic import to relative path '../../lib/supabase'.
-- Frontend Test Config (frontend/vitest.config.mjs):
-  - Used path.resolve with __dirname for path aliases (@, @/components, @/lib, @/hooks, @/types, @/tokens) to ensure seamless resolution across all test environments.
+- Frontend (frontend/lib/useCaseEvents.ts):
+  - Added safeApiUrl to imports from '@/lib/api'.
+  - Preserved createClient import from '@/lib/supabase'.

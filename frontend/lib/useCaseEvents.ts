@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
-import { api, isDemoMode } from "@/lib/api";
+import { api, isDemoMode, safeApiUrl } from "@/lib/api";
 
 export interface JobEvent {
   id: string;
