@@ -45,7 +45,9 @@ class TestAllProvidersStreamComplete:
 
         assert len(tokens) > 0
         joined = "".join(tokens)
-        assert "Jurisiva AI Mock Legal Reasoning" in joined
+        # MockLLMProvider now returns intelligent legal content instead of a placeholder string
+        assert len(joined) > 50  # meaningful content was streamed
+        assert "Legal" in joined or "legal" in joined  # legal content present
 
     @pytest.mark.asyncio
     async def test_mock_provider_stream_complete_json_mode(self):
