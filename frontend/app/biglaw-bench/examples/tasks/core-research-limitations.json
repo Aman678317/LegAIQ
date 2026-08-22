@@ -1,0 +1,23 @@
+{
+  "id": "core-research-limitations",
+  "part": "core",
+  "category": "Legal Research",
+  "minutes": 35,
+  "title": "Limitation-period research memo",
+  "instructions": "The client discovered a defective shipment delivered 2 years and 10 months ago and wants to know if a breach-of-contract claim is still viable. Draft a short research memo (max 600 words) with an authority table: for each authority, give the citation, the rule it states, and the part of the analysis it supports. Address the accrual rule, any discovery-of-breach exception, and tolling facts that could change the answer.",
+  "inputs": [
+    {"name": "facts-memo.pdf", "kind": "Facts", "description": "Client memo: delivery dates, inspection history, discovery timeline."},
+    {"name": "jurisdiction-note.md", "kind": "Scope note", "description": "Governing law is the UCC as enacted in the forum state; treat section 2-725 as controlling."}
+  ],
+  "sample_answer": "RESEARCH MEMO — Contract limitations\n\nQuestion: Is a claim for the defective February shipment still timely, discovered last month?\n\nShort answer: Yes — the claim is still timely. UCC section 2-725 imposes a four-year limitation period on breach-of-contract claims, but the clock runs from when the breach was or should have been discovered, not from delivery. Because the defect was discovered one month ago and reasonably could not have been found earlier despite regular inspections, accrual started at discovery, leaving nearly the full period available. Conclusion: the claim is still timely; the decisive fact is the inspection history showing the defect was not discoverable at delivery.\n\nAuthority table\n| Citation | Rule | Used for |\n|---|---|---|\n| UCC section 2-725(1) | Four-year limitation period | limitation length |\n| UCC section 2-725(2) | Accrual on discovery where breach could not reasonably be discovered | accrual analysis |\n\nTolling note: if the buyer amended its complaint to add a new theory, relate-back doctrine may affect timing but does not shorten the period here.",
+  "rubric": [
+    {"id": "AQ1", "dimension": "answer_quality", "points": 3, "criterion": "States the four-year limitation period and its statutory source (UCC section 2-725)", "check": {"contains_any": ["2-725", "four-year", "4-year"]}},
+    {"id": "AQ2", "dimension": "answer_quality", "points": 3, "criterion": "Applies the discovery-of-breach accrual rule to the timeline", "check": {"contains_any": ["discovery", "accrual"]}},
+    {"id": "AQ3", "dimension": "answer_quality", "points": 1, "criterion": "Notes the contractual-reduction boundary (cannot go below one year)", "check": {"contains_any": ["one year", "1 year"]}},
+    {"id": "AQ4", "dimension": "answer_quality", "points": 2, "criterion": "Concludes clearly on viability with the decisive fact identified", "check": {"contains_any": ["conclusion", "still timely", "viable"]}},
+    {"id": "AQ5", "dimension": "answer_quality", "points": -3, "criterion": "Relies on a rule not supported by any cited authority (penalty)", "check": {"not_contains_any": ["general principles of law override the code", "notwithstanding section 2-725"]}},
+    {"id": "SR1", "dimension": "source_reliability", "points": 3, "criterion": "Authority table present with citation, rule, and use-in-analysis for each entry", "check": {"contains_any": ["authority table"]}},
+    {"id": "SR2", "dimension": "source_reliability", "points": 2, "criterion": "Citations are verifiable and matched to the propositions they support", "check": {"contains_all": ["verified", "official text"]}},
+    {"id": "SR3", "dimension": "source_reliability", "points": -4, "criterion": "Cites an authority that does not exist or does not say what is claimed (penalty)", "check": {"not_contains_any": ["Restatement (Second) of Conflict"]}}
+  ]
+}

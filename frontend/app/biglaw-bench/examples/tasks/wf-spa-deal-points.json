@@ -1,0 +1,116 @@
+{
+  "id": "wf-spa-deal-points",
+  "part": "workflows",
+  "category": "SPA Deal Points",
+  "minutes": 45,
+  "title": "Extract deal points from a Share Purchase Agreement",
+  "instructions": "Read the attached Share Purchase Agreement in full. Extract every deal point into a table with: Deal point, Section, Value/Terms, and any conditions or cross-references that qualify it. The deal points must include purchase price and adjustments, escrow/holdback (amount and release conditions), indemnity basket/cap and carve-outs, closing conditions, termination rights and their triggers, restrictive covenants and durations, and governing law/forum. Where a deal point depends on a defined term, resolve the definition and note it.",
+  "inputs": [
+    {
+      "name": "spa-full.pdf",
+      "kind": "Agreement",
+      "description": "Share Purchase Agreement, 84 pages, heavy defined terms and cross-references."
+    },
+    {
+      "name": "extraction-schema.json",
+      "kind": "Output schema",
+      "description": "Required columns and accepted value formats."
+    }
+  ],
+  "sample_answer": "DEAL POINTS EXTRACTION — SPA\n\n| Deal point | Section | Value/Terms | Conditions |\n|---|---|---|---|\n| Purchase price | 2.1 | USD 42,000,000, subject to working capital adjustment | Adjustment measured against 1.5M peg (s. 2.3) |\n| Escrow | 2.5 | 10% of Purchase Price held 12 months | Released against indemnity claims; 'Losses' per s. 9.1 |\n| Indemnity basket | 9.3 | 0.75% of Purchase Price | Deductible, not a tipping point |\n| Indemnity cap | 9.4 | 15% of Purchase Price | Carve-outs: fraud, breach of s. 5 fundamental reps |\n| Termination | 10.1 | Either party may terminate | Outside date 2027-03-31; regulatory failure; material breach uncured 30 days |\n| Non-compete | 7.2 | 36 months, founder only | Geographic scope: states where Target operates |\n| Governing law | 11.1 | Delaware | Exclusive forum: Delaware Court of Chancery |",
+  "rubric": [
+    {
+      "id": "AQ1",
+      "dimension": "answer_quality",
+      "points": 3,
+      "criterion": "Extracts purchase price mechanism including the working-capital adjustment",
+      "check": {
+        "contains_all": [
+          "purchase price",
+          "working capital"
+        ]
+      }
+    },
+    {
+      "id": "AQ2",
+      "dimension": "answer_quality",
+      "points": 2,
+      "criterion": "Captures escrow/holdback amount AND release conditions",
+      "check": {
+        "contains_all": [
+          "escrow",
+          "released"
+        ]
+      }
+    },
+    {
+      "id": "AQ3",
+      "dimension": "answer_quality",
+      "points": 3,
+      "criterion": "Captures indemnity basket, cap, and carve-outs as separate fields",
+      "check": {
+        "contains_all": [
+          "basket",
+          "cap",
+          "carve-out"
+        ]
+      }
+    },
+    {
+      "id": "AQ4",
+      "dimension": "answer_quality",
+      "points": 3,
+      "criterion": "Lists termination rights with their actual triggers",
+      "check": {
+        "contains_all": [
+          "termination",
+          "outside date"
+        ]
+      }
+    },
+    {
+      "id": "AQ5",
+      "dimension": "answer_quality",
+      "points": 2,
+      "criterion": "Resolves defined terms the deal points depend on",
+      "check": {
+        "contains_any": [
+          "as defined in",
+          "as defined in section"
+        ]
+      }
+    },
+    {
+      "id": "AQ6",
+      "dimension": "answer_quality",
+      "points": -4,
+      "criterion": "Reports a deal point value that contradicts the agreement text (penalty)",
+      "check": {
+        "not_contains_any": [
+          "purchase price of usd 99"
+        ]
+      }
+    },
+    {
+      "id": "SR1",
+      "dimension": "source_reliability",
+      "points": 3,
+      "criterion": "Every row cites the SPA section it came from",
+      "check": {
+        "regex": "\\|\\s*\\d{1,2}\\.\\d{1,2}\\s*\\|"
+      }
+    },
+    {
+      "id": "SR2",
+      "dimension": "source_reliability",
+      "points": 2,
+      "criterion": "Conditions/qualifiers column reflects the agreement's actual conditions",
+      "check": {
+        "contains_any": [
+          "conditions",
+          "qualifier"
+        ]
+      }
+    }
+  ]
+}

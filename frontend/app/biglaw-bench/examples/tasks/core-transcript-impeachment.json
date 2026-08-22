@@ -1,0 +1,21 @@
+{
+  "id": "core-transcript-impeachment",
+  "part": "core",
+  "category": "Transcript Analysis",
+  "minutes": 20,
+  "title": "Impeachment points from a deposition excerpt",
+  "instructions": "You are second chair in a wage-and-hour class action. Compare the witness's deposition testimony against their prior declarations and payroll records. For each contradiction: cite the deposition page:line and the conflicting prior statement, quote both, and draft the impeachment question you would ask at trial.",
+  "inputs": [
+    {"name": "depo-excerpt.pdf", "kind": "Transcript", "description": "Nair deposition, 14 pages with condensed page:line numbering."},
+    {"name": "prior-statements.pdf", "kind": "Sworn statements", "description": "Two declarations and selected payroll registers."}
+  ],
+  "sample_answer": "IMPEACHMENT OUTLINE — Nair deposition\n\n1. Rest-break policy knowledge\n   Deposition 42:7 — 'I never reviewed the rest-break policy.'\n   Declaration paragraph 5 — 'I reviewed and approved the rest-break policy in 2023.'\n   Q: Ma'am, you swore in your declaration that you reviewed and approved the rest-break policy in 2023, correct? And today you testified you never reviewed it. Which statement is true?\n\n2. Payroll approval authority\n   Deposition 55:12 — 'I did not sign off on payroll.'\n   Payroll register PR-118 — bears Nair's approval initials for six pay periods.\n   Q: You told us today you never signed off on payroll; these registers bear your initials — did you or did you not approve them?",
+  "rubric": [
+    {"id": "AQ1", "dimension": "answer_quality", "points": 3, "criterion": "Identifies each direct contradiction between testimony and prior statement", "check": {"any_of": ["contradiction", "never reviewed", "did not sign off"]}},
+    {"id": "AQ2", "dimension": "answer_quality", "points": 2, "criterion": "Drafts a proper impeachment question (commit, credit, confront)", "check": {"contains_any": ["which statement is true", "did you or did you not", "correct?"]}},
+    {"id": "AQ3", "dimension": "answer_quality", "points": 2, "criterion": "Distinguishes actual contradictions from mere ambiguity", "check": {"contains_any": ["direct contradiction", "actual contradiction"]}},
+    {"id": "AQ4", "dimension": "answer_quality", "points": -2, "criterion": "Treats an ambiguous difference as a hard contradiction (penalty)", "check": {"not_contains_any": ["flatly contradicted on the color of the office walls"]}},
+    {"id": "SR1", "dimension": "source_reliability", "points": 3, "criterion": "Every point carries page:line cites for both sources", "check": {"regex": "\\d{1,3}:\\d{1,2}"}},
+    {"id": "SR3", "dimension": "source_reliability", "points": -4, "criterion": "Miscites a page:line or misattributes a quote (penalty)", "check": {"not_contains_any": ["deposition 999:99"]}}
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "id": "ret-discovery-emails",
+  "part": "retrieval",
+  "category": "Discovery Emails",
+  "minutes": 15,
+  "title": "Retrieve a responsive email thread",
+  "instructions": "The discovery request seeks: all emails between custodian P. Nair and Western Foods regarding pricing commitments, from 2026-01-01 to 2026-06-30. Retrieve the responsive thread(s): full thread (not fragments), with date, sender, recipients, and subject for each message. Flag any message in the thread that falls outside the date window but is part of the same chain.",
+  "inputs": [
+    {
+      "name": "discovery-corpus/",
+      "kind": "Corpus",
+      "description": "High-volume short documents: email with threading, headers, and metadata."
+    },
+    {
+      "name": "request.md",
+      "kind": "Request",
+      "description": "The discovery request with custodians, entities, date range, and topics."
+    }
+  ],
+  "sample_answer": "RESPONSIVE THREAD — Nair / Western Foods pricing\n\nThread T-2214 (5 messages):\n  msg-0192  2026-02-14  From: P. Nair  To: R. Mellor (Western Foods)  Subj: Q2 pricing commitments — draft schedule\n  msg-0207  2026-02-17  From: R. Mellor  To: P. Nair  Cc: procurement@westernfoods  Subj: RE: Q2 pricing commitments — draft schedule\n  msg-0211  2026-03-02  From: P. Nair  To: R. Mellor  Subj: RE: Q2 pricing commitments — draft schedule (v2 attached)\n  msg-0266  2026-05-09  From: R. Mellor  To: P. Nair  Subj: RE: Q2 pricing commitments — draft schedule\n  msg-0301  2025-12-19  From: R. Mellor  To: P. Nair  Subj: RE: pricing framework (prior thread) — FLAGGED: same chain ancestry, outside the 2026-01-01 window\n\nAll four in-window messages returned in full with headers intact; the 2025-12-19 ancestor is flagged rather than silently dropped.",
+  "rubric": [
+    {
+      "id": "AQ1",
+      "dimension": "answer_quality",
+      "points": 3,
+      "criterion": "Retrieves the correct thread(s) for the named custodian and counterparty",
+      "check": {
+        "contains_all": [
+          "nair",
+          "western foods"
+        ]
+      }
+    },
+    {
+      "id": "AQ2",
+      "dimension": "answer_quality",
+      "points": 2,
+      "criterion": "Respects the date window while keeping the chain intact",
+      "check": {
+        "contains_any": [
+          "date window",
+          "outside the",
+          "2026-01-01"
+        ]
+      }
+    },
+    {
+      "id": "AQ3",
+      "dimension": "answer_quality",
+      "points": 2,
+      "criterion": "Returns complete threads, not isolated fragments",
+      "check": {
+        "contains_any": [
+          "complete chain",
+          "full thread",
+          "thread (5 messages"
+        ]
+      }
+    },
+    {
+      "id": "AQ4",
+      "dimension": "answer_quality",
+      "points": -3,
+      "criterion": "Includes messages from unrelated threads or custodians (penalty)",
+      "check": {
+        "not_contains_any": [
+          "unrelated thread included for completeness",
+          "msg-7777 from jdoe re: office supplies"
+        ]
+      }
+    },
+    {
+      "id": "SR1",
+      "dimension": "source_reliability",
+      "points": 2,
+      "criterion": "Each message identified by message-id or header citation",
+      "check": {
+        "regex": "msg-\\d{4}"
+      }
+    },
+    {
+      "id": "SR2",
+      "dimension": "source_reliability",
+      "points": 2,
+      "criterion": "Metadata (date/sender/recipients) reported matches the corpus",
+      "check": {
+        "contains_all": [
+          "from:",
+          "subj:"
+        ]
+      }
+    }
+  ]
+}

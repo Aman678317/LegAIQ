@@ -1,0 +1,120 @@
+{
+  "id": "core-drafting-indemnity",
+  "part": "core",
+  "category": "Drafting",
+  "minutes": 25,
+  "title": "Redline an indemnification clause",
+  "instructions": "You are counsel to the buyer (Kestrel Systems) in a software acquisition. The target's form SPA contains a one-way indemnification clause with no cap. Produce (1) a redline of the clause making the indemnity mutual, adding a basket and a cap at 15% of purchase price, and carving out fraud, IP infringement, and breach of confidentiality obligations from the cap, and (2) a one-sentence negotiation rationale for each change.",
+  "inputs": [
+    {
+      "name": "spa-excerpt.pdf",
+      "kind": "Agreement excerpt",
+      "description": "Section 9 (Indemnification) of the target's form SPA, 3 pages."
+    },
+    {
+      "name": "buyer-positions.md",
+      "kind": "Playbook",
+      "description": "Kestrel's approved indemnity positions and fallbacks."
+    }
+  ],
+  "sample_answer": "INDEMNIFICATION — PROPOSED REDLINE (Section 9)\n\n9.1 Mutual Indemnity. [INSERT: 'Each of Buyer and the Target shall indemnify the other'] against Losses arising from (a) breach of this Agreement by the indemnifying party, and (b) fraud.\n\n9.2 Cap. The indemnifying party's aggregate liability shall not exceed fifteen percent (15%) of the Purchase Price. Rationale: playbook position — cap sized to deal risk.\n\n9.3 Carve-outs. The cap does not apply to (a) fraud, (b) infringement of intellectual property rights, or (c) breach of confidentiality obligations. Rationale: carve-outs track items where damages are hardest to bound.\n\nNote: threshold mechanics to follow in the next draft.",
+  "rubric": [
+    {
+      "id": "AQ1",
+      "dimension": "answer_quality",
+      "points": 2,
+      "criterion": "Makes the indemnity expressly mutual",
+      "check": {
+        "contains_any": [
+          "mutual",
+          "each of buyer and the target"
+        ]
+      }
+    },
+    {
+      "id": "AQ2",
+      "dimension": "answer_quality",
+      "points": 2,
+      "criterion": "Adds a damages cap set at 15% of the purchase price",
+      "check": {
+        "contains_any": [
+          "15%",
+          "fifteen percent"
+        ]
+      }
+    },
+    {
+      "id": "AQ3",
+      "dimension": "answer_quality",
+      "points": 3,
+      "criterion": "Carves out fraud, IP infringement, and confidentiality breaches from the cap",
+      "check": {
+        "contains_all": [
+          "fraud",
+          "intellectual property",
+          "confidentiality"
+        ]
+      }
+    },
+    {
+      "id": "AQ4",
+      "dimension": "answer_quality",
+      "points": 1,
+      "criterion": "Adds a deductible/basket before indemnity claims are payable",
+      "check": {
+        "any_of": [
+          "basket",
+          "deductible",
+          "true-up threshold"
+        ]
+      }
+    },
+    {
+      "id": "AQ5",
+      "dimension": "answer_quality",
+      "points": 2,
+      "criterion": "Provides a one-sentence rationale tied to the playbook for each edit",
+      "check": {
+        "contains_any": [
+          "rationale"
+        ]
+      }
+    },
+    {
+      "id": "AQ6",
+      "dimension": "answer_quality",
+      "points": -3,
+      "criterion": "Invents obligations that appear in neither the excerpt nor the playbook (penalty)",
+      "check": {
+        "not_contains_any": [
+          "environmental remediation obligations",
+          "pension funding indemnity"
+        ]
+      }
+    },
+    {
+      "id": "SR1",
+      "dimension": "source_reliability",
+      "points": 2,
+      "criterion": "Each redline element is anchored to a quoted phrase from the source or playbook",
+      "check": {
+        "contains_any": [
+          "quoted from section 9",
+          "per playbook",
+          "playbook position"
+        ]
+      }
+    },
+    {
+      "id": "SR3",
+      "dimension": "source_reliability",
+      "points": -3,
+      "criterion": "Fabricates a quote that does not exist in the source documents (penalty)",
+      "check": {
+        "not_contains_any": [
+          "as stated in section 9.7"
+        ]
+      }
+    }
+  ]
+}

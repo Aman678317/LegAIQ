@@ -1,0 +1,91 @@
+{
+  "id": "ret-contracts-defined-terms",
+  "part": "retrieval",
+  "category": "Contracts — Merger Agreements & SPAs",
+  "minutes": 15,
+  "title": "Resolve defined-term cross-references in a merger agreement",
+  "instructions": "For each queried term: return (1) the definition verbatim with its section, (2) every section where the term creates or modifies an obligation, quoted briefly, and (3) any related defined terms the definition itself depends on. Precision matters more than recall — returning the wrong passage is worse than returning fewer, exact ones.",
+  "inputs": [
+    {
+      "name": "merger-agreement-corpus/",
+      "kind": "Corpus",
+      "description": "Long-form agreements with dense cross-references and defined-term chains."
+    },
+    {
+      "name": "queries.json",
+      "kind": "Query set",
+      "description": "Terms to resolve, one per query."
+    }
+  ],
+  "sample_answer": "DEFINED-TERM RESOLUTION\n\nTerm: Company Material Adverse Effect\nDefinition (verbatim, s. 3.1(f)): 'any event, change, circumstance or effect that, individually or in the aggregate with all other such events, has had or would reasonably be expected to have a material adverse effect on the business, assets, or financial condition of the Company and its Subsidiaries, taken as a whole.'\nRelated terms: 'Subsidiaries' (s. 3.1(g)); see the materiality definitions annex.\nOperative uses: s. 6.2(a) (closing condition — no CMAE since signing); s. 9.1(b) (termination right if CMAE persists 90 days).\n\nTerm: Working Capital\nDefinition (verbatim, s. 2.3(h)) — retrieved: 'the current assets minus current liabilities of the Company, determined in accordance with GAAP as in effect at signing.'\nOperative uses: s. 2.3 (purchase price adjustment against the peg).",
+  "rubric": [
+    {
+      "id": "AQ1",
+      "dimension": "answer_quality",
+      "points": 3,
+      "criterion": "Returns the verbatim definition with the correct section for each query",
+      "check": {
+        "contains_any": [
+          "verbatim",
+          "definition (verbatim"
+        ]
+      }
+    },
+    {
+      "id": "AQ2",
+      "dimension": "answer_quality",
+      "points": 3,
+      "criterion": "Identifies the sections where the term drives an obligation",
+      "check": {
+        "contains_any": [
+          "operative use",
+          "closing condition",
+          "termination right"
+        ]
+      }
+    },
+    {
+      "id": "AQ3",
+      "dimension": "answer_quality",
+      "points": 2,
+      "criterion": "Follows defined-term chains the definition depends on",
+      "check": {
+        "contains_any": [
+          "depends on",
+          "per the materiality"
+        ]
+      }
+    },
+    {
+      "id": "AQ4",
+      "dimension": "answer_quality",
+      "points": -4,
+      "criterion": "Returns a passage that is not the definition or an operative use (penalty)",
+      "check": {
+        "not_contains_any": [
+          "the recitals mention the founders' vision"
+        ]
+      }
+    },
+    {
+      "id": "SR1",
+      "dimension": "source_reliability",
+      "points": 2,
+      "criterion": "Every returned passage carries its section reference",
+      "check": {
+        "regex": "s\\. \\d{1,2}\\.\\d{1,2}\\([a-z]\\)"
+      }
+    },
+    {
+      "id": "SR2",
+      "dimension": "source_reliability",
+      "points": 2,
+      "criterion": "Verbatim quotes match the corpus exactly",
+      "check": {
+        "contains_any": [
+          "taken as a whole"
+        ]
+      }
+    }
+  ]
+}
