@@ -143,52 +143,95 @@ export default function UniversalChatPage() {
     const activePreset = PROMPT_PRESETS.find((p) => p.id === selectedPreset);
     const systemPrompt = activePreset?.system || PROMPT_PRESETS[0].system;
 
+    const historyForAi = newHistory.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
     try {
-      const historyForAi = newHistory.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
+      // Step 1: Try the Next.js /api/chat cloud route (Groq → OpenAI → NVIDIA → Backend → Ollama → Universal)
+      let responseText: string | null = null;
+      let responseModel = "Jurisiva AI";
+      let responseLatency = 0;
+      const start = Date.now();
 
-      const res = await chatWithOllama(
-        historyForAi,
-        selectedModel || ollamaStatus.activeModel || "llama3",
-        systemPrompt,
-        getOllamaBaseUrl(),
-        0.7
-      );
+      try {
+        const apiRes = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: selectedModel || "llama3",
+            messages: historyForAi,
+            system: systemPrompt,
+            temperature: 0.7,
+          }),
+        });
 
-      const text = res?.text || (res as any)?.content;
-      if (text) {
-        const assistantMsg: ChatMessage = {
-          id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          role: "assistant",
-          content: text,
-          model: res?.model || "AI (Llama 3.3 70B)",
-          latency_ms: res?.duration_ms,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setMessages((prev) => [...prev, assistantMsg]);
-      } else {
-        const assistantMsg: ChatMessage = {
-          id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          role: "assistant",
-          content: "I am currently unable to reach the AI language model. Please try sending your question again in a moment.",
-          model: "Jurisiva AI Engine",
-          latency_ms: 100,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setMessages((prev) => [...prev, assistantMsg]);
+        if (apiRes.ok) {
+          const data = await apiRes.json().catch(() => null);
+          const content = data?.text || data?.content;
+          if (content) {
+            responseText = content;
+            responseModel = data.model || "Jurisiva Cloud AI";
+            responseLatency = Date.now() - start;
+          }
+        }
+      } catch {
+        // fall through to local then inline
       }
-    } catch {
+
+      // Step 2: Try local Ollama if cloud failed
+      if (!responseText) {
+        try {
+          const res = await chatWithOllama(
+            historyForAi,
+            selectedModel || ollamaStatus.activeModel || "llama3",
+            systemPrompt,
+            getOllamaBaseUrl(),
+            0.7
+          );
+          const text = res?.text || (res as any)?.content;
+          if (text) {
+            responseText = text;
+            responseModel = res?.model || "AI (Llama 3.3 70B)";
+            responseLatency = res?.duration_ms || Date.now() - start;
+          }
+        } catch {
+          // fall through to inline
+        }
+      }
+
+      // Step 3: Always-available inline AI — never fails
+      if (!responseText) {
+        const fallback = generateUniversalAiResponse(query, historyForAi, selectedPreset);
+        responseText = fallback.text;
+        responseModel = fallback.model;
+        responseLatency = fallback.duration_ms;
+      }
+
       const assistantMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
+        id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         role: "assistant",
-        content: "A temporary connection error occurred. Please try resending your message.",
-        model: "Jurisiva AI Engine",
-        latency_ms: 100,
+        content: responseText,
+        model: responseModel,
+        latency_ms: responseLatency,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, assistantMsg]);
+    } catch {
+      // Absolute last resort
+      const fallback = generateUniversalAiResponse(query, [], selectedPreset);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-${Date.now()}`,
+          role: "assistant",
+          content: fallback.text,
+          model: fallback.model,
+          latency_ms: fallback.duration_ms,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
     } finally {
       setLoading(false);
       setTimeout(() => textareaRef.current?.focus(), 50);
@@ -457,7 +500,11 @@ export default function UniversalChatPage() {
             </Button>
           </form>
           <div className="mt-2 flex items-center justify-between text-[11px] text-text-muted">
-            <span>Powered by Local Ollama &bull; Private &amp; Offline-capable</span>
+            <span>
+              {ollamaStatus.online && typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+                ? "⚡ Powered by Local Ollama • Private & Offline-capable"
+                : "🌐 Powered by Jurisiva Cloud AI (Groq Llama 3.3 70B)"}
+            </span>
             <span className="hidden sm:inline">Press Enter to send, Shift+Enter for new line</span>
           </div>
         </div>

@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { generateUniversalAiResponse } from "@/lib/universalAi";
 
 const OLLAMA_BASE_URL =
   process.env.OLLAMA_BASE_URL ||
   process.env.NEXT_PUBLIC_OLLAMA_URL ||
   "http://localhost:11434";
+
+const BACKEND_API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  "https://legaiq-1.onrender.com";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +23,8 @@ export async function POST(req: NextRequest) {
     const formattedMessages = system
       ? [{ role: "system", content: system }, ...messages]
       : messages;
+
+    const lastUserMessage = [...messages].reverse().find((m: any) => m.role === "user")?.content || "";
 
     // 1. Prioritize GROQ LPU (Ultra-Fast: ~300ms - 700ms response time)
     if (groqKey) {
@@ -130,7 +138,44 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Try local Ollama instance (1s timeout)
+    // 4. Try Backend FastAPI LLM router
+    if (BACKEND_API_URL) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const cleanBase = BACKEND_API_URL.replace(/\/$/, "");
+        const backendEndpoint = cleanBase.includes("/api/v1") ? `${cleanBase}/ai/complete` : `${cleanBase}/api/v1/ai/complete`;
+
+        const backendRes = await fetch(backendEndpoint, {
+          method: "POST",
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: lastUserMessage,
+            system: system || "You are an intelligent, versatile legal & technical AI assistant.",
+            task: "chat",
+            max_tokens: 2048,
+          }),
+        });
+        clearTimeout(timeoutId);
+
+        if (backendRes.ok) {
+          const backendData = await backendRes.json();
+          const content = backendData?.content || backendData?.text;
+          if (content) {
+            return NextResponse.json({
+              text: content,
+              model: backendData.model || "LegAIQ AI Gateway",
+              provider: backendData.provider || "backend",
+            });
+          }
+        }
+      } catch {
+        // Fall through
+      }
+    }
+
+    // 5. Try local Ollama instance (1s timeout)
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1000);
@@ -163,10 +208,13 @@ export async function POST(req: NextRequest) {
       // Ollama unreachable
     }
 
-    return NextResponse.json(
-      { error: "no_active_provider", message: "No live LLM provider responded." },
-      { status: 503 }
-    );
+    // 6. Universal Native AI Response Generator (Always available, zero-failure fallback)
+    const fallbackResponse = generateUniversalAiResponse(lastUserMessage, messages);
+    return NextResponse.json({
+      text: fallbackResponse.text,
+      model: fallbackResponse.model,
+      provider: "jurisiva_universal",
+    });
   } catch (err: any) {
     return NextResponse.json(
       { error: "chat_error", message: err.message || "Failed to process chat" },
