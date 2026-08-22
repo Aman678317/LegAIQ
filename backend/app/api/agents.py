@@ -47,17 +47,12 @@ async def orchestrate_agents(
     workflow = WorkflowState(
         workflow_id=job_id,
         case_id=case_id,
-        workflow_type=body.workflow_type,
         status=WorkflowStatus.RUNNING,
+        metadata={"workflow_type": body.workflow_type, "agents": body.agent_order},
     )
 
     for agent_name in body.agent_order:
-        node = WorkflowNode(
-            agent_name=agent_name,
-            agent_role=agent_name.replace("_", " ").title(),
-            status=NodeStatus.COMPLETED if body.parallel else NodeStatus.RUNNING,
-        )
-        workflow.add_node(node)
+        workflow.node_statuses[agent_name] = NodeStatus.COMPLETED if body.parallel else NodeStatus.RUNNING
 
     _active_workflows[job_id] = workflow
 
@@ -81,16 +76,14 @@ async def get_orchestration_status(
         return {
             "job_id": wf.workflow_id,
             "case_id": wf.case_id,
-            "workflow_type": wf.workflow_type,
+            "workflow_type": wf.metadata.get("workflow_type", "custom"),
             "status": wf.status.value,
             "nodes": [
                 {
-                    "node_id": n.node_id,
-                    "agent_name": n.agent_name,
-                    "agent_role": n.agent_role,
-                    "status": n.status.value,
+                    "agent_name": name,
+                    "status": status.value,
                 }
-                for n in wf.nodes.values()
+                for name, status in wf.node_statuses.items()
             ],
         }
 
