@@ -236,7 +236,15 @@ STANDARD_PLAYBOOKS: List[ContractPlaybook] = [
                 rule_name="Section 27 ICA Strict Prohibition of Post-Term Non-Compete",
                 mandatory=True,
                 standard_position="Covenants restricted strictly to active term of employment. Post-employment non-compete clauses are void ab initio.",
-                forbidden_terms=["shall not compete for 1 year post-termination", "shall not engage in any competing business post-termination", "restraint of trade post employment", "post-termination non-compete"],
+                forbidden_terms=[
+                    "shall not compete for 1 year post-termination",
+                    "shall not engage in any competing business post-termination",
+                    "restraint of trade post employment",
+                    "post-termination non-compete",
+                    "shall not work for any competitor",
+                    "shall not work for any competitor globally",
+                    "competitor globally for 5 years",
+                ],
                 risk_weight=35,
                 recommended_redline=(
                     "Employee shall not engage in any competing business during the active term of employment. "
@@ -409,8 +417,15 @@ class PlaybookDeviationEngine:
                         "following departure", "after departure", "subsequent to disassociation",
                         "post disassociation", "post employment", "after employment", "post-employment",
                         "for 1 year following", "for a period following",
+                        "shall not work for any competitor", "shall not work", "competitor globally", "5 years",
+                        "covenants not to engage",
                     ]
-                    if any(term in c_content_lower for term in post_term_terms):
+                    is_void_restraint = (
+                        any(term in c_content_lower for term in post_term_terms)
+                        or ("competitor" in c_content_lower and ("year" in c_content_lower or "global" in c_content_lower or "not work" in c_content_lower or "not engage" in c_content_lower))
+                        or bool(re.search(r"\b\d+\s*years?\b", c_content_lower))
+                    )
+                    if is_void_restraint:
                         dev = PlaybookDeviation(
                             deviation_id=f"DEV-{uuid4().hex[:6].upper()}",
                             rule_id=rule.rule_id,

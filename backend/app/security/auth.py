@@ -28,6 +28,7 @@ class AuthContext:
     email: str = "lawyer@example.com"
     organization_id: Optional[str] = None
     role: Optional[str] = None
+    is_anonymous: bool = False
 
 
 def _service_client():

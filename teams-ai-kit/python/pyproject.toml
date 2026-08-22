@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teams-ai-kit"
+version = "0.1.0"
+description = "Build AI bots and app extensions for Microsoft Teams and other Bot Framework channels (Python twin of the Node kit)."
+requires-python = ">=3.10"
+dependencies = ["botbuilder-core>=4.17", "aiohttp>=3.9"]
+license = { text = "MIT" }
+
+[project.optional-dependencies]
+openai = ["openai>=2.0"]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.25"]
+
+[tool.setuptools.packages.find]
+include = ["teams_ai_kit*", "samples*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

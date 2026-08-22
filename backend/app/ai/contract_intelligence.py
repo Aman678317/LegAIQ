@@ -133,6 +133,8 @@ class RedlineChange:
     original_text: str
     modified_text: str
     clause_id: Optional[str] = None
+    clause_type: Optional[str] = None
+    severity: Optional[str] = None
     position: int = 0
     author: Optional[str] = None
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

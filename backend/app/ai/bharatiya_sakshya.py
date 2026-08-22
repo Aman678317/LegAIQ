@@ -82,7 +82,7 @@ class EvidenceItem:
     evidence_id: str
     evidence_type: EvidenceType
     description: str
-    source: str  # Origin of evidence
+    source: str = "Unknown Source"  # Origin of evidence
     date_created: Optional[datetime] = None
     date_received: Optional[datetime] = None
     

@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: teams-ai-kit
+Version: 0.1.0
+Summary: Build AI bots and app extensions for Microsoft Teams and other Bot Framework channels (Python twin of the Node kit).
+License: MIT
+Requires-Python: >=3.10
+Requires-Dist: botbuilder-core>=4.17
+Requires-Dist: aiohttp>=3.9
+Provides-Extra: openai
+Requires-Dist: openai>=2.0; extra == "openai"
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.25; extra == "dev"

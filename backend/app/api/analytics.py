@@ -49,8 +49,8 @@ class TeamProductivityMetrics(BaseModel):
     """Team productivity metrics for an organization."""
     organization_id: str
     period: TimeRange
-    period_start: datetime
-    period_end: datetime
+    period_start: Optional[datetime] = None
+    period_end: Optional[datetime] = None
     
     # Case metrics
     total_cases: int = 0
@@ -93,9 +93,14 @@ class CaseVelocityMetrics(BaseModel):
     case_id: Optional[str] = None
     organization_id: str
     period: TimeRange
-    period_start: datetime
-    period_end: datetime
+    period_start: Optional[datetime] = None
+    period_end: Optional[datetime] = None
     
+    # Turnaround time metrics
+    average_turnaround_days: Optional[float] = 0.0
+    fastest_case_hours: Optional[float] = 0.0
+    slowest_case_days: Optional[float] = 0.0
+
     # Velocity metrics
     cases_created: int = 0
     cases_completed: int = 0
@@ -125,8 +130,8 @@ class AIROIMetrics(BaseModel):
     """AI Return on Investment metrics."""
     organization_id: str
     period: TimeRange
-    period_start: datetime
-    period_end: datetime
+    period_start: Optional[datetime] = None
+    period_end: Optional[datetime] = None
     
     # Usage metrics
     total_ai_calls: int = 0

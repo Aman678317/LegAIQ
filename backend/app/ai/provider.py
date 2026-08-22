@@ -191,11 +191,13 @@ class GroqProvider(BaseLLMProvider):
                             break
                         try:
                             chunk = json.loads(raw)
-                            delta = chunk.get("choices", [{}])[0].get("delta", {})
-                            token = delta.get("content", "")
-                            if token:
-                                yield token
-                        except json.JSONDecodeError:
+                            choices = chunk.get("choices")
+                            if choices and isinstance(choices, list) and len(choices) > 0:
+                                delta = choices[0].get("delta", {})
+                                token = delta.get("content", "")
+                                if token:
+                                    yield token
+                        except Exception:
                             continue
 
 
@@ -306,11 +308,13 @@ class NvidiaProvider(BaseLLMProvider):
                             break
                         try:
                             chunk = json.loads(raw)
-                            delta = chunk.get("choices", [{}])[0].get("delta", {})
-                            token = delta.get("content", "")
-                            if token:
-                                yield token
-                        except json.JSONDecodeError:
+                            choices = chunk.get("choices")
+                            if choices and isinstance(choices, list) and len(choices) > 0:
+                                delta = choices[0].get("delta", {})
+                                token = delta.get("content", "")
+                                if token:
+                                    yield token
+                        except Exception:
                             continue
 
 
@@ -380,11 +384,13 @@ class OpenAIProvider(BaseLLMProvider):
                             break
                         try:
                             chunk = json.loads(raw)
-                            delta = chunk.get("choices", [{}])[0].get("delta", {})
-                            token = delta.get("content", "")
-                            if token:
-                                yield token
-                        except json.JSONDecodeError:
+                            choices = chunk.get("choices")
+                            if choices and isinstance(choices, list) and len(choices) > 0:
+                                delta = choices[0].get("delta", {})
+                                token = delta.get("content", "")
+                                if token:
+                                    yield token
+                        except Exception:
                             continue
 
 
@@ -710,14 +716,22 @@ class ModelRouter:
             resp = LLMResponse(content=f"error: {err}", provider=provider.name, model="error", latency_ms=0)
 
         # If primary provider returned an error/unreachable, gracefully fall back
-        if ("unavailable" in resp.content or "error" in resp.content or "timeout" in resp.content):
+        if ("unavailable" in resp.content or "error" in resp.content or "timeout" in resp.content or "429" in resp.content or "503" in resp.content):
             # Try any other configured provider
             for p in _PROVIDERS.values():
                 if p.is_configured() and p.name != provider.name and p.name != "mock":
                     try:
-                        return await p.complete(request)
+                        candidate = await p.complete(request)
+                        if not ("unavailable" in candidate.content or "error" in candidate.content or "timeout" in candidate.content or "429" in candidate.content or "503" in candidate.content):
+                            return candidate
                     except Exception:
                         pass
+            # Fall back to mock if available and primary provider errored
+            if "mock" in _PROVIDERS and provider.name != "mock":
+                try:
+                    return await _PROVIDERS["mock"].complete(request)
+                except Exception:
+                    pass
         return resp
 
     async def stream_complete(self, request: LLMRequest) -> AsyncIterator[str]:

@@ -227,7 +227,7 @@ class OwnershipChainAnalyzer:
                 severity=TitleBreakSeverity.CRITICAL,
                 break_type="CIRCULAR_TRANSFER_DETECTED",
                 title="Circular Title Transfer Detected",
-                description=f"Circular conveyance chain detected: {cycle_desc}. Title cannot legally transfer in a closed loop without invalidating bona fide ownership flow.",
+                description=f"Circular conveyance cycle detected: {cycle_desc}. Title cannot legally transfer in a closed loop cycle without invalidating bona fide ownership flow.",
                 affected_nodes=cycle_nodes,
                 recommended_remedy="Investigate sham transactions, title fraud, or cross-conveyance validity.",
             ))
